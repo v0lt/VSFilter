@@ -47,7 +47,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CoordGeom.cpp" />
-    <ClCompile Include="DX9SubPic.cpp" />
     <ClCompile Include="MemSubPic.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -55,12 +54,9 @@
     <ClCompile Include="SubPicImpl.cpp" />
     <ClCompile Include="SubPicProviderImpl.cpp" />
     <ClCompile Include="SubPicQueueImpl.cpp" />
-    <ClCompile Include="XySubPicProvider.cpp" />
-    <ClCompile Include="XySubPicQueueImpl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CoordGeom.h" />
-    <ClInclude Include="DX9SubPic.h" />
     <ClInclude Include="ISubPic.h" />
     <ClInclude Include="ISubRender.h" />
     <ClInclude Include="MemSubPic.h" />
@@ -68,8 +64,6 @@
     <ClInclude Include="SubPicImpl.h" />
     <ClInclude Include="SubPicProviderImpl.h" />
     <ClInclude Include="SubPicQueueImpl.h" />
-    <ClInclude Include="XySubPicProvider.h" />
-    <ClInclude Include="XySubPicQueueImpl.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
