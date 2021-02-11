@@ -566,7 +566,7 @@ namespace Plugin
 			}
 
 			void StringProc(const VDXFilterActivation* fa, const VDXFilterFunctions* ff, char* str) {
-				sprintf(str, " (%s)", !GetFileName().IsEmpty() ? CStringA(GetFileName()) : " (empty)");
+				sprintf_s(str, STRING_PROC_BUFFER_SIZE, " (%s)", !GetFileName().IsEmpty() ? CStringA(GetFileName()) : " (empty)");
 			}
 
 			bool FssProc(VDXFilterActivation* fa, const VDXFilterFunctions* ff, char* buf, int buflen) {
@@ -611,9 +611,9 @@ namespace Plugin
 
 			void StringProc(const VDXFilterActivation* fa, const VDXFilterFunctions* ff, char* str) {
 				if (!GetFileName().IsEmpty()) {
-					sprintf(str, " (%s, %d)", CStringA(GetFileName()), GetCharSet());
+					sprintf_s(str, STRING_PROC_BUFFER_SIZE, " (%s, %d)", CStringA(GetFileName()), GetCharSet());
 				} else {
-					sprintf(str, " (empty)");
+					sprintf_s(str, STRING_PROC_BUFFER_SIZE, " (empty)");
 				}
 			}
 
