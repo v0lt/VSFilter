@@ -207,7 +207,7 @@ static struct csri_info csri_vsfilter_info = {
 	// 2.46 ASS/SSA rendering improvement
 	"VSFilter/TextSub (MPC-BE)", // longname
 	"Gabest", // author
-	"Copyright 2001-2017 MPC-BE Team" // copyright
+	"Copyright 2001-2021 MPC-BE Team" // copyright
 };
 
 CSRIAPI struct csri_info *csri_renderer_info(csri_rend *rend) {

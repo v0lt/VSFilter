@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2018 see Authors.txt
+ * (C) 2006-2021 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -771,7 +771,7 @@ bool CDVSAboutPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 		case WM_INITDIALOG: {
-			SetDlgItemTextW(m_Dlg, IDC_VERSION, _CRT_WIDE("DirectVobSub 2.46." MAKE_STR(REV_NUM) " " VERSION_ARCH "\nCopyright 2001-2017 MPC-BE Team"));
+			SetDlgItemTextW(m_Dlg, IDC_VERSION, _CRT_WIDE("VSFilter (MPC-BE) " VERSION_STR " " VERSION_ARCH " / CSRI API 2.46\nCopyright 2001-2021 MPC-BE Team"));
 		}
 		break;
 		case WM_COMMAND: {
