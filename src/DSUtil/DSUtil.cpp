@@ -25,8 +25,6 @@
 #include <winddk/ntddcdrm.h>
 #include "DSUtil.h"
 #include "Mpeg2Def.h"
-#include "AudioParser.h"
-#include "NullRenderers.h"
 #include <clsids.h>
 #include <moreuuids.h>
 #include <basestruct.h>
@@ -205,44 +203,6 @@ bool IsVideoRenderer(const CLSID clsid)
 	}
 
 	return false;
-}
-
-bool IsAudioWaveRenderer(IBaseFilter* pBF)
-{
-	int nIn, nOut, nInC, nOutC;
-	CountPins(pBF, nIn, nOut, nInC, nOutC);
-
-	if (nInC > 0 && nOut == 0 && CComQIPtr<IBasicAudio>(pBF)) {
-		BeginEnumPins(pBF, pEP, pPin) {
-			AM_MEDIA_TYPE mt;
-			if (S_OK != pPin->ConnectionMediaType(&mt)) {
-				continue;
-			}
-			FreeMediaType(mt);
-
-			return !!(mt.majortype == MEDIATYPE_Audio);
-		}
-		EndEnumPins
-	}
-
-	CLSID clsid = GUID_NULL;
-	pBF->GetClassID(&clsid);
-
-	return (// system
-			clsid == CLSID_DSoundRender ||
-			clsid == CLSID_AudioRender ||
-			// internal
-			clsid == CLSID_MpcAudioRenderer ||
-			clsid == __uuidof(CNullAudioRenderer) ||
-			clsid == __uuidof(CNullUAudioRenderer) ||
-			// external
-			clsid == CLSID_ReClock ||
-			clsid == CLSID_SanearAudioRenderer ||
-			clsid == GUIDFromCString(L"{EC9ED6FC-7B03-4cb6-8C01-4EABE109F26B}") || // MediaPortal Audio Renderer
-			clsid == GUIDFromCString(L"{50063380-2B2F-4855-9A1E-40FCA344C7AC}") || // Surodev ASIO Renderer
-			clsid == GUIDFromCString(L"{8DE31E85-10FC-4088-8861-E0EC8E70744A}") || // MultiChannel ASIO Renderer
-			clsid == GUIDFromCString(L"{205F9417-8EEF-40B4-91CF-C7C6A96936EF}")    // MBSE MultiChannel ASIO Renderer
-	);
 }
 
 IBaseFilter* GetUpStreamFilter(IBaseFilter* pBF, IPin* pInputPin)
@@ -2854,104 +2814,6 @@ HRESULT CreateMPEG2VISimple(CMediaType* mt, BITMAPINFOHEADER* pbmi, REFERENCE_TI
 	return S_OK;
 }
 
-HRESULT CreateAVCfromH264(CMediaType* mt)
-{
-	CheckPointer(mt, E_FAIL);
-
-	if (mt->formattype != FORMAT_MPEG2_VIDEO) {
-		return E_FAIL;
-	}
-
-	MPEG2VIDEOINFO* pm2vi = (MPEG2VIDEOINFO*)mt->pbFormat;
-	if (!pm2vi->cbSequenceHeader) {
-		return E_FAIL;
-	}
-
-	const BYTE* extra     = (BYTE*)&pm2vi->dwSequenceHeader[0];
-	const DWORD extrasize = pm2vi->cbSequenceHeader;
-
-	std::unique_ptr<BYTE[]> dst_ptr(new(std::nothrow) BYTE[extrasize]);
-	if (!dst_ptr) {
-		return E_FAIL;
-	}
-
-	auto dst = dst_ptr.get();
-	DWORD dstSize = 0;
-
-	CH264Nalu Nalu;
-	Nalu.SetBuffer(extra, extrasize);
-	while (Nalu.ReadNext()) {
-		if (Nalu.GetType() == NALU_TYPE_SPS || Nalu.GetType() == NALU_TYPE_PPS) {
-			const size_t nalLength = Nalu.GetDataLength();
-			*(dst + dstSize++) = (BYTE)(nalLength >> 8);
-			*(dst + dstSize++) = nalLength & 0xff;
-
-			memcpy(dst + dstSize, Nalu.GetDataBuffer(), nalLength);
-			dstSize += nalLength;
-		}
-	}
-
-	if (dstSize) {
-		pm2vi = (MPEG2VIDEOINFO*)mt->ReallocFormatBuffer(FIELD_OFFSET(MPEG2VIDEOINFO, dwSequenceHeader) + dstSize);
-
-		mt->subtype = MEDIASUBTYPE_AVC1;
-		pm2vi->hdr.bmiHeader.biCompression = mt->subtype.Data1;
-
-		if (!pm2vi->dwFlags) {
-			pm2vi->dwFlags = 4;
-		}
-
-		pm2vi->cbSequenceHeader = dstSize;
-		memcpy(&pm2vi->dwSequenceHeader[0], dst, dstSize);
-
-		return S_OK;
-	}
-
-	return E_FAIL;
-}
-
-void CreateVorbisMediaType(CMediaType& mt, std::vector<CMediaType>& mts, DWORD Channels, DWORD SamplesPerSec, DWORD BitsPerSample, const BYTE* pData, size_t Count)
-{
-	const BYTE* p = pData;
-	std::vector<int> sizes;
-	int totalsize = 0;
-	for (BYTE n = *p++; n > 0; n--) {
-		int size = 0;
-		do {
-			size += *p;
-		} while (*p++ == 0xff);
-		sizes.push_back(size);
-		totalsize += size;
-	}
-	sizes.push_back(Count - (p - pData) - totalsize);
-	totalsize += sizes[sizes.size()-1];
-
-	if (sizes.size() == 3) {
-		mt.subtype          = MEDIASUBTYPE_Vorbis2;
-		mt.formattype       = FORMAT_VorbisFormat2;
-		VORBISFORMAT2* pvf2 = (VORBISFORMAT2*)mt.AllocFormatBuffer(sizeof(VORBISFORMAT2) + totalsize);
-		memset(pvf2, 0, mt.FormatLength());
-		pvf2->Channels      = Channels;
-		pvf2->SamplesPerSec = SamplesPerSec;
-		pvf2->BitsPerSample = BitsPerSample;
-		BYTE* p2 = mt.Format() + sizeof(VORBISFORMAT2);
-		for (size_t i = 0; i < sizes.size(); p += sizes[i], p2 += sizes[i], i++) {
-			memcpy(p2, p, pvf2->HeaderSize[i] = sizes[i]);
-		}
-
-		mts.push_back(mt);
-	}
-
-	mt.subtype         = MEDIASUBTYPE_Vorbis;
-	mt.formattype      = FORMAT_VorbisFormat;
-	VORBISFORMAT* vf   = (VORBISFORMAT*)mt.AllocFormatBuffer(sizeof(VORBISFORMAT));
-	memset(vf, 0, mt.FormatLength());
-	vf->nChannels      = Channels;
-	vf->nSamplesPerSec = SamplesPerSec;
-	vf->nMinBitsPerSec = vf->nMaxBitsPerSec = vf->nAvgBitsPerSec = DWORD_MAX;
-	mts.push_back(mt);
-}
-
 CStringA VobSubDefHeader(int w, int h, CStringA palette)
 {
 	CStringA hdr;
@@ -2967,31 +2829,6 @@ CStringA VobSubDefHeader(int w, int h, CStringA palette)
 	}
 
 	return hdr;
-}
-
-void CorrectWaveFormatEx(CMediaType& mt)
-{
-	if (mt.majortype == MEDIATYPE_Audio && mt.formattype == FORMAT_WaveFormatEx) {
-		WAVEFORMATEX* wfe = (WAVEFORMATEX*)mt.pbFormat;
-		WAVEFORMATEXTENSIBLE* wfex = (WAVEFORMATEXTENSIBLE*)wfe;
-
-		if (wfe->wFormatTag == WAVE_FORMAT_PCM && (wfe->nChannels > 2 || wfe->wBitsPerSample != 8 && wfe->wBitsPerSample != 16)
-			|| wfe->wFormatTag == WAVE_FORMAT_IEEE_FLOAT && wfe->nChannels > 2) {
-			// convert incorrect WAVEFORMATEX to WAVEFORMATEXTENSIBLE
-
-			wfe = (WAVEFORMATEX*)mt.ReallocFormatBuffer(sizeof(WAVEFORMATEXTENSIBLE));
-			wfex = (WAVEFORMATEXTENSIBLE*)wfe;
-
-			wfex->Format.wFormatTag				= WAVE_FORMAT_EXTENSIBLE;
-			wfex->Format.cbSize					= 22;
-			wfex->Samples.wValidBitsPerSample	= wfe->wBitsPerSample;
-			wfex->dwChannelMask					= GetDefChannelMask(wfe->nChannels);
-			wfex->SubFormat						= mt.subtype;
-		} else if (wfe->wFormatTag == WAVE_FORMAT_EXTENSIBLE && wfex->dwChannelMask == 0) {
-			// fix empty dwChannelMask
-			wfex->dwChannelMask = GetDefChannelMask(wfe->nChannels);
-		}
-	}
 }
 
 inline const LONGLONG GetPerfCounter()

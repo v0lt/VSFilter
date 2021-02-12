@@ -23,16 +23,7 @@
     <ClCompile Include="GolombBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="H264Nalu.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="HdmvClipInfo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MediaTypeEx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="NullRenderers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
@@ -41,28 +32,13 @@
     <ClCompile Include="text.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AudioParser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AudioTools.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VideoParser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="WinAPIUtils.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ApeTag.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MPCSocket.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GUIDString.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CUE.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FileHandle.cpp">
@@ -74,19 +50,10 @@
     <ClCompile Include="Packet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ID3Tag.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MediaDescription.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MFCHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="HTTPAsync.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D3D9Helper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="CPUInfo.cpp">
@@ -96,12 +63,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ResampleRGB32.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DXVAState.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MP4AudioDecoderConfig.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="UrlParser.cpp">
@@ -139,13 +100,7 @@
     <ClInclude Include="HdmvClipInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MediaTypeEx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Mpeg2Def.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="NullRenderers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="stdafx.h">
@@ -154,19 +109,7 @@
     <ClInclude Include="text.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AudioParser.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AudioTools.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VideoParser.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="WinAPIUtils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ApeTag.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MPCSocket.h">
@@ -176,9 +119,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SysVersion.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CUE.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FileHandle.h">
@@ -196,16 +136,10 @@
     <ClInclude Include="ID3Tag.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MediaDescription.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MFCHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HTTPAsync.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="D3D9Helper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CPUInfo.h">
@@ -223,16 +157,7 @@
     <ClInclude Include="FileVersion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DXVAState.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="std_helper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MP4AudioDecoderConfig.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ffmpeg_log.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CUrl.h">

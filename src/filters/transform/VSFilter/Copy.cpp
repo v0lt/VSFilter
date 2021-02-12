@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2020 see Authors.txt
+ * (C) 2006-2021 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -190,11 +190,11 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 	CString msg, tmp;
 
 	if (m_bOSD) {
-		CString input = GetGUIDString(m_pInput->CurrentMediaType().subtype);
+		CString input = MediaSubtype2String(m_pInput->CurrentMediaType().subtype);
 		if (!input.Left(13).CompareNoCase(L"MEDIASUBTYPE_")) {
 			input = input.Mid(13);
 		}
-		CString output = GetGUIDString(m_pOutput->CurrentMediaType().subtype);
+		CString output = MediaSubtype2String(m_pOutput->CurrentMediaType().subtype);
 		if (!output.Left(13).CompareNoCase(L"MEDIASUBTYPE_")) {
 			output = output.Mid(13);
 		}

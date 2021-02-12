@@ -991,7 +991,7 @@ void CDVSColorPPage::UpdateControlData(bool fSave)
 
 		if (pData) {
 			for (UINT i = 0; i < nSize; i++) {
-				CString guid = GetGUIDString(*VSFilterDefaultFormats[i].subtype);
+				CString guid = MediaSubtype2String(*VSFilterDefaultFormats[i].subtype);
 				if (!guid.Left(13).CompareNoCase(L"MEDIASUBTYPE_")) {
 					guid = guid.Mid(13);
 				}

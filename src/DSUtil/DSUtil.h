@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2020 see Authors.txt
+ * (C) 2006-2021 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -22,8 +22,6 @@
 #pragma once
 
 #include <../../external/BaseClasses/streams.h>
-#include "H264Nalu.h"
-#include "MediaTypeEx.h"
 #include "MFCHelper.h"
 #include "text.h"
 #include "Log.h"
@@ -55,7 +53,6 @@ extern bool				IsStreamEnd(IBaseFilter* pBF);
 extern bool				IsVideoDecoder(IBaseFilter* pBF, bool fCountConnectedOnly = false);
 extern bool				IsVideoRenderer(IBaseFilter* pBF);
 extern bool				IsVideoRenderer(const CLSID clsid);
-extern bool				IsAudioWaveRenderer(IBaseFilter* pBF);
 
 extern IBaseFilter*		GetUpStreamFilter(IBaseFilter* pBF, IPin* pInputPin = nullptr);
 extern IPin*			GetUpStreamPin(IBaseFilter* pBF, IPin* pInputPin = nullptr);
@@ -172,12 +169,8 @@ extern bool				MakeMPEG2MediaType(CMediaType& mt, BYTE* seqhdr, DWORD len, int w
 extern HRESULT			CreateMPEG2VIfromAVC(CMediaType* mt, BITMAPINFOHEADER* pbmi, REFERENCE_TIME AvgTimePerFrame, CSize pictAR, BYTE* extra, size_t extralen);
 extern HRESULT			CreateMPEG2VIfromMVC(CMediaType* mt, BITMAPINFOHEADER* pbmi, REFERENCE_TIME AvgTimePerFrame, CSize pictAR, BYTE* extra, size_t extralen);
 extern HRESULT			CreateMPEG2VISimple(CMediaType* mt, BITMAPINFOHEADER* pbmi, REFERENCE_TIME AvgTimePerFrame, CSize pictAR, BYTE* extra, size_t extralen, DWORD dwProfile = 0, DWORD dwLevel = 0, DWORD dwFlags = 0);
-extern HRESULT			CreateAVCfromH264(CMediaType* mt);
-
-extern void				CreateVorbisMediaType(CMediaType& mt, std::vector<CMediaType>& mts, DWORD Channels, DWORD SamplesPerSec, DWORD BitsPerSample, const BYTE* pData, size_t Count);
 
 extern CStringA			VobSubDefHeader(int w, int h, CStringA palette = "");
-extern void				CorrectWaveFormatEx(CMediaType& mt);
 
 extern inline const LONGLONG GetPerfCounter();
 

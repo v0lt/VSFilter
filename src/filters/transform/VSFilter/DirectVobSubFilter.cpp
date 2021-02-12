@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2020 see Authors.txt
+ * (C) 2006-2021 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -43,6 +43,24 @@
 
 /*removeme*/
 bool g_RegOK = true;//false; // doesn't work with the dvd graph builder
+
+LPCWSTR MediaSubtype2String(const GUID& subtype)
+{
+	if (subtype == MEDIASUBTYPE_P010)   { return L"P010";   }
+	if (subtype == MEDIASUBTYPE_P016)   { return L"P016";   }
+	if (subtype == MEDIASUBTYPE_NV12)   { return L"NV12";   }
+	if (subtype == MEDIASUBTYPE_YV12)   { return L"YV12";   }
+	if (subtype == MEDIASUBTYPE_YUY2)   { return L"YUY2";   }
+	if (subtype == MEDIASUBTYPE_I420)   { return L"I420";   }
+	if (subtype == MEDIASUBTYPE_IYUV)   { return L"IYUV";   }
+	if (subtype == MEDIASUBTYPE_ARGB32) { return L"ARGB32"; }
+	if (subtype == MEDIASUBTYPE_RGB32)  { return L"RGB32";  }
+	if (subtype == MEDIASUBTYPE_RGB24)  { return L"RGB24";  }
+	if (subtype == MEDIASUBTYPE_RGB565) { return L"RGB565"; }
+	if (subtype == MEDIASUBTYPE_RGB555) { return L"RGB555"; }
+
+	return L"unknown";
+}
 
 ////////////////////////////////////////////////////////////////////////////
 //
