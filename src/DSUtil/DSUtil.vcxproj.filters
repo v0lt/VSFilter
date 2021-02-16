@@ -11,19 +11,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DSMPropertyBag.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DSUtil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FontInstaller.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GolombBuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="HdmvClipInfo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
@@ -35,9 +26,6 @@
     <ClCompile Include="WinAPIUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MPCSocket.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GUIDString.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -45,9 +33,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FileVersionInfo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Packet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MFCHelper.cpp">
@@ -82,25 +67,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DSMPropertyBag.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DSUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FontInstaller.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GolombBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="H264Nalu.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="HdmvClipInfo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Mpeg2Def.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="stdafx.h">
@@ -110,9 +80,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="WinAPIUtils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MPCSocket.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GUIDString.h">
@@ -130,9 +97,6 @@
     <ClInclude Include="FileVersionInfo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Packet.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ID3Tag.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -146,9 +110,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SimpleBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ResampleRGB32.h">
@@ -176,6 +137,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PixelUtils_VirtualDub.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Mpeg2Def.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
