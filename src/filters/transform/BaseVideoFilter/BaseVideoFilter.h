@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2019 see Authors.txt
+ * (C) 2006-2021 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -40,7 +40,8 @@ struct VIDEO_OUTPUT_FORMATS {
 
 enum DECODER_MODE {
 	MODE_SOFTWARE,
-	MODE_DXVA2
+	MODE_DXVA2,
+	MODE_D3D11
 };
 
 class CBaseVideoFilter : public CTransformFilter
@@ -64,7 +65,7 @@ protected:
 	HRESULT Receive(IMediaSample* pIn);
 	HRESULT GetDeliveryBuffer(int w, int h, IMediaSample** ppOut, REFERENCE_TIME AvgTimePerFrame = 0, DXVA2_ExtendedFormat* dxvaExtFormat = nullptr);
 
-	virtual void GetOutputSize(int& w, int& h, int& arx, int& ary, int& vsfilter) {}
+	virtual void GetOutputSize(int& w, int& h, int& arx, int& ary) {}
 	virtual HRESULT Transform(IMediaSample* pIn) PURE;
 	virtual bool IsVideoInterlaced() { return true; }
 	virtual void GetOutputFormats(int& nNumber, VIDEO_OUTPUT_FORMATS** ppFormats) PURE;
@@ -77,12 +78,12 @@ public:
 	int GetPinCount();
 	CBasePin* GetPin(int n);
 
-	HRESULT CheckInputType(const CMediaType* mtIn);
+	HRESULT CheckInputType(const CMediaType* mtIn) override;
 	HRESULT CheckOutputType(const CMediaType& mtOut);
-	HRESULT CheckTransform(const CMediaType* mtIn, const CMediaType* mtOut);
-	HRESULT DecideBufferSize(IMemAllocator* pAllocator, ALLOCATOR_PROPERTIES* pProperties);
-	HRESULT GetMediaType(int iPosition, CMediaType* pMediaType);
-	HRESULT SetMediaType(PIN_DIRECTION dir, const CMediaType* pmt);
+	HRESULT CheckTransform(const CMediaType* mtIn, const CMediaType* mtOut) override;
+	HRESULT DecideBufferSize(IMemAllocator* pAllocator, ALLOCATOR_PROPERTIES* pProperties) override;
+	virtual HRESULT GetMediaType(int iPosition, CMediaType* pmt) override;
+	HRESULT SetMediaType(PIN_DIRECTION dir, const CMediaType* pmt) override;
 
 	void SetAspect(CSize aspect);
 };

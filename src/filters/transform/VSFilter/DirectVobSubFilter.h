@@ -81,7 +81,7 @@ class __declspec(uuid("93A22E7A-5091-45ef-BA61-6DA26156A5D0"))
 
 protected:
 	void GetOutputFormats(int& nNumber, VIDEO_OUTPUT_FORMATS** ppFormats);
-	void GetOutputSize(int& w, int& h, int& arx, int& ary, int& vsfilter);
+	void GetOutputSize(int& w, int& h, int& arx, int& ary) override;
 	HRESULT Transform(IMediaSample* pIn);
 
 public:
@@ -100,12 +100,13 @@ public:
 	STDMETHODIMP QueryFilterInfo(FILTER_INFO* pInfo);
 
 	// CTransformFilter
-	HRESULT SetMediaType(PIN_DIRECTION dir, const CMediaType* pMediaType),
-			CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePin),
-			BreakConnect(PIN_DIRECTION dir),
-			StartStreaming(),
-			StopStreaming(),
-			NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
+	HRESULT GetMediaType(int iPosition, CMediaType* pMediaType) override;
+	HRESULT SetMediaType(PIN_DIRECTION dir, const CMediaType* pMediaType);
+	HRESULT CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePin);
+	HRESULT BreakConnect(PIN_DIRECTION dir);
+	HRESULT StartStreaming();
+	HRESULT StopStreaming();
+	HRESULT NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
 
 	HRESULT CheckInputType(const CMediaType* mtIn);
 	HRESULT CheckOutputType(const CMediaType& mtOut);

@@ -318,13 +318,12 @@ void CDirectVobSubFilter::GetOutputFormats(int& nNumber, VIDEO_OUTPUT_FORMATS** 
 	*ppFormats = m_VideoOutputFormats.size() ? m_VideoOutputFormats.data() : nullptr;
 }
 
-void CDirectVobSubFilter::GetOutputSize(int& w, int& h, int& arx, int& ary, int& vsfilter)
+void CDirectVobSubFilter::GetOutputSize(int& w, int& h, int& arx, int& ary)
 {
 	CSize s(w, h), os = s;
 	AdjustFrameSize(s);
 	w = s.cx;
 	h = s.cy;
-	vsfilter = 1; // enable workaround, see BaseVideoFilter.cpp
 
 	if (w != os.cx) {
 		while (arx < 100) {
@@ -606,6 +605,83 @@ STDMETHODIMP CDirectVobSubFilter::QueryFilterInfo(FILTER_INFO* pInfo)
 }
 
 // CTransformFilter
+
+HRESULT CDirectVobSubFilter::GetMediaType(int iPosition, CMediaType* pmt)
+{
+	VIDEO_OUTPUT_FORMATS* fmts;
+	int                   nFormatCount;
+
+	if (m_pInput->IsConnected() == FALSE) {
+		return E_UNEXPECTED;
+	}
+
+	GetOutputFormats(nFormatCount, &fmts);
+	if (iPosition < 0) {
+		return E_INVALIDARG;
+	}
+	if (iPosition >= nFormatCount) {
+		return VFW_S_NO_MORE_ITEMS;
+	}
+
+	pmt->majortype = MEDIATYPE_Video;
+	pmt->subtype   = *fmts[iPosition].subtype;
+
+	int w = m_win;
+	int h = m_hin;
+	int arx = m_arxin;
+	int ary = m_aryin;
+	GetOutputSize(w, h, arx, ary);
+
+	m_wout = m_win;
+	m_hout = m_hin;
+	m_arxout = m_arxin;
+	m_aryout = m_aryin;
+
+	if (m_bMVC_Output_TopBottom) {
+		h *= 2;
+		m_hout *= 2;
+
+		ary *= 2;
+		m_aryout *= 2;
+
+		ReduceDim(arx, ary);
+		ReduceDim(m_arxout, m_aryout);
+	}
+
+	BITMAPINFOHEADER bihOut = { 0 };
+	bihOut.biSize        = sizeof(bihOut);
+	bihOut.biWidth       = w;
+	bihOut.biHeight      = h;
+	bihOut.biPlanes      = 1; // this value must be set to 1
+	bihOut.biBitCount    = fmts[iPosition].biBitCount;
+	bihOut.biCompression = fmts[iPosition].biCompression;
+	bihOut.biSizeImage   = DIBSIZE(bihOut);
+
+	pmt->formattype = FORMAT_VideoInfo2;
+	VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)pmt->AllocFormatBuffer(sizeof(VIDEOINFOHEADER2));
+	memset(vih2, 0, sizeof(VIDEOINFOHEADER2));
+	vih2->bmiHeader = bihOut;
+	vih2->dwPictAspectRatioX = arx;
+	vih2->dwPictAspectRatioY = ary;
+	if (IsVideoInterlaced()) {
+		vih2->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_DisplayModeBobOrWeave;
+	}
+
+	if (m_dxvaExtFormat.value && pmt->subtype != MEDIASUBTYPE_RGB32 && pmt->subtype != MEDIASUBTYPE_RGB48) {
+		vih2->dwControlFlags = m_dxvaExtFormat.value;
+	}
+
+	const CMediaType& mtInput = m_pInput->CurrentMediaType();
+
+	// these fields have the same field offset in all four structs
+	((VIDEOINFOHEADER*)pmt->Format())->AvgTimePerFrame = ((VIDEOINFOHEADER*)mtInput.Format())->AvgTimePerFrame;
+	((VIDEOINFOHEADER*)pmt->Format())->dwBitRate       = ((VIDEOINFOHEADER*)mtInput.Format())->dwBitRate;
+	((VIDEOINFOHEADER*)pmt->Format())->dwBitErrorRate  = ((VIDEOINFOHEADER*)mtInput.Format())->dwBitErrorRate;
+
+	pmt->SetSampleSize(bihOut.biSizeImage);
+
+	return S_OK;
+}
 
 HRESULT CDirectVobSubFilter::SetMediaType(PIN_DIRECTION dir, const CMediaType* pmt)
 {
