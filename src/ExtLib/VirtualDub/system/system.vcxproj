@@ -46,7 +46,6 @@
     </ClCompile>
     <Lib>
       <AdditionalOptions>/ignore:4042 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Winmm.lib</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -57,7 +56,6 @@
     </ClCompile>
     <Lib>
       <AdditionalOptions>/ignore:4042 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Winmm.lib</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -69,7 +67,6 @@
     </ClCompile>
     <Lib>
       <AdditionalOptions>/ignore:4042 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Winmm.lib</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -80,7 +77,6 @@
     </ClCompile>
     <Lib>
       <AdditionalOptions>/ignore:4042 %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalDependencies>Winmm.lib</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
