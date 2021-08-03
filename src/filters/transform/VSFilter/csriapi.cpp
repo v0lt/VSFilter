@@ -24,9 +24,9 @@
 #include <afxdlgs.h>
 #include <atlpath.h>
 #include "resource.h"
-#include "../../../Subtitles/VobSubFile.h"
-#include "../../../Subtitles/RTS.h"
-#include "../../../SubPic/MemSubPic.h"
+#include "Subtitles/VobSubFile.h"
+#include "Subtitles/RTS.h"
+#include "SubPic/MemSubPic.h"
 
 #define CSRIAPI extern "C" __declspec(dllexport)
 #define CSRI_OWN_HANDLES

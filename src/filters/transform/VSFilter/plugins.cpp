@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2020 see Authors.txt
+ * (C) 2006-2021 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -23,11 +23,11 @@
 #include <afxdlgs.h>
 #include <atlpath.h>
 #include "resource.h"
-#include "../../../Subtitles/VobSubFile.h"
-#include "../../../Subtitles/RTS.h"
-#include "../../../SubPic/MemSubPic.h"
-#include "../../../SubPic/SubPicQueueImpl.h"
-#include "../../../DSUtil/WinAPIUtils.h"
+#include "Subtitles/VobSubFile.h"
+#include "Subtitles/RTS.h"
+#include "SubPic/MemSubPic.h"
+#include "SubPic/SubPicQueueImpl.h"
+#include "DSUtil/WinAPIUtils.h"
 #include "vfr.h"
 
 #pragma warning(disable: 4706)

@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2017 see Authors.txt
+ * (C) 2006-2021 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -22,7 +22,7 @@
 #pragma once
 #include "resource.h"
 #include <afxwin.h>
-#include "../../../Subtitles/STS.h"
+#include "Subtitles/STS.h"
 
 // CColorStatic dialog
 

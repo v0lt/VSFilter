@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <../../external/BaseClasses/streams.h>
+#include <../external/BaseClasses/streams.h>
 #include "MFCHelper.h"
 #include "text.h"
 #include "Log.h"

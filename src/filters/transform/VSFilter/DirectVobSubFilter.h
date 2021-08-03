@@ -25,7 +25,7 @@
 #include <moreuuids.h>
 #include "DirectVobSub.h"
 #include "../BaseVideoFilter/BaseVideoFilter.h"
-#include "../../../SubPic/ISubPic.h"
+#include "SubPic/ISubPic.h"
 
 struct SystrayIconData {
 	HWND hSystrayWnd;
