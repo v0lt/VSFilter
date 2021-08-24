@@ -824,7 +824,7 @@ static bool OpenTTML(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
 		}
 
 		if (tmp.Find(L"</tt>") != -1) {
-			const auto body = RegExpParse<CString>(tmp.GetString(), LR"(<body[^>]*?>(.*)</body>)");
+			const auto body = RegExpParse(tmp.GetString(), LR"(<body[^>]*?>(.*)</body>)");
 			if (!body.IsEmpty()) {
 				const std::wregex regex(LR"(<p(.*?)</p>)");
 
@@ -896,7 +896,7 @@ static bool OpenTTML(CTextFile* file, CSimpleTextSubtitle& ret, int CharSet)
 							}
 						}
 						if (time_begin != -1 && time_end > time_begin) {
-							auto text = RegExpParse<CString>(line.GetString(), LR"(>(.+))");
+							auto text = RegExpParse(line.GetString(), LR"(>(.+))");
 							if (!text.IsEmpty()) {
 								ret.Add(TTML2SSA(text), file->IsUnicode(), time_begin, time_end);
 							}
@@ -1844,7 +1844,7 @@ static bool OpenSubStationAlpha(CTextFile* file, CSimpleTextSubtitle& ret, int C
 						alpha = GetInt(pszBuff, nBuffLength);
 					}
 					style->charSet = GetInt(pszBuff, nBuffLength);
-					if (sver >= 6)	{
+					if (sver >= 6) {
 						style->relativeTo = (STSStyle::RelativeTo)GetInt(pszBuff, nBuffLength);
 					}
 

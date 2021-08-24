@@ -1,5 +1,5 @@
 /*
- * (C) 2018-2020 see Authors.txt
+ * (C) 2018-2021 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -43,20 +43,21 @@ auto FindInListByPointer(std::list<T>& list, const T* p)
 }
 
 template <class T>
-bool Contains(std::list<T>& list, const T& item)
+bool Contains(const std::list<T>& list, const T& item)
 {
 	return std::find(list.cbegin(), list.cend(), item) != list.cend();
 }
 
 template <class T>
-bool Contains(std::vector<T>& vector, const T& item)
+bool Contains(const std::vector<T>& vector, const T& item)
 {
 	return std::find(vector.cbegin(), vector.cend(), item) != vector.cend();
 }
 
-template <class StringT, class T>
-StringT RegExpParse(const T* szIn, const T* szRE)
+template <class T>
+CStringT<T, StrTraitMFC<T>> RegExpParse(const T* szIn, const T* szRE)
 {
+	using StringT = CStringT<T, StrTraitMFC<T>>;
 	try {
 		const std::basic_regex<T> regex(szRE);
 		std::match_results<const T*> match;
