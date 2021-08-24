@@ -34,8 +34,6 @@
 CBaseVideoFilter::CBaseVideoFilter(TCHAR* pName, LPUNKNOWN lpunk, HRESULT* phr, REFCLSID clsid, long cBuffers)
 	: CTransformFilter(pName, lpunk, clsid)
 	, m_cBuffers(cBuffers)
-	, m_bSendMediaType(false)
-	, m_nDecoderMode(MODE_SOFTWARE)
 {
 	if (phr) {
 		*phr = S_OK;
@@ -171,15 +169,6 @@ HRESULT CBaseVideoFilter::ReconnectOutput(int width, int height, bool bForce/* =
 {
 	CMediaType& mt = m_pOutput->CurrentMediaType();
 
-	auto GetRenderCLSID = [&]() {
-		CLSID renderClsid = CLSID_NULL;
-		CComPtr<IPin> pPin = m_pOutput;
-		for (CComPtr<IBaseFilter> pBF = this; pBF = GetDownStreamFilter(pBF, pPin); pPin = GetFirstPin(pBF, PINDIR_OUTPUT)) {
-			renderClsid = GetCLSID(pBF);
-		}
-		return renderClsid;
-	};
-	static CLSID renderClsid = GetRenderCLSID();
 
 	bool bNeedReconnect = bForce;
 	{
@@ -466,6 +455,8 @@ HRESULT CBaseVideoFilter::SetMediaType(PIN_DIRECTION dir, const CMediaType* pmt)
 		GetOutputSize(m_wout, m_hout, m_arx, m_ary);
 
 		ReduceDim(m_arx, m_ary);
+
+		m_nDecoderMode = MODE_SOFTWARE;
 	}
 
 	return __super::SetMediaType(dir, pmt);
