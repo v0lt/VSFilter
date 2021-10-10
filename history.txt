@@ -1,2 +1,5 @@
 1.5.7
 ----------------------
+Replace the <br> tag with a newline in SubRip subtitles.
+Added support for WebVTT.
+Fixed filter operation when changing the playback speed.
