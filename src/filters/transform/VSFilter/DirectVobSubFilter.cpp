@@ -352,9 +352,8 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 		rtStop = INVALID_TIME;
 	}
 
-	double dRate = m_pInput->CurrentRate();
 	if (rtStart != INVALID_TIME) {
-		m_tPrev = m_pInput->CurrentStartTime() + dRate * rtStart;
+		m_tPrev = m_pInput->CurrentStartTime() + rtStart;
 	}
 
 	if (rtStop != INVALID_TIME) {
@@ -366,6 +365,7 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 			}
 		}
 
+		double dRate = m_pInput->CurrentRate();
 		m_fps = 10000000.0 / rtAvgTimePerFrame / dRate;
 	}
 
