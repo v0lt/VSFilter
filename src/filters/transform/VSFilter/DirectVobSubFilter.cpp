@@ -352,8 +352,9 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 		rtStop = INVALID_TIME;
 	}
 
+	const double dRate = m_pInput->CurrentRate();
 	if (rtStart != INVALID_TIME) {
-		m_tPrev = m_pInput->CurrentStartTime() + rtStart;
+		m_tPrev = m_pInput->CurrentStartTime() + rtStart * (m_bExternalSubtitle ? dRate : 1);
 	}
 
 	if (rtStop != INVALID_TIME) {
@@ -365,7 +366,6 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 			}
 		}
 
-		double dRate = m_pInput->CurrentRate();
 		m_fps = 10000000.0 / rtAvgTimePerFrame / dRate;
 	}
 
@@ -1990,6 +1990,9 @@ bool CDirectVobSubFilter::Open()
 
 	m_frd.files.clear();
 
+	m_bExternalSubtitle = false;
+	m_ExternalSubstreams.clear();
+
 	std::vector<CString> paths;
 
 	for (int i = 0; i < 10; i++) {
@@ -2042,6 +2045,8 @@ bool CDirectVobSubFilter::Open()
 		if (pSubStream) {
 			m_pSubStreams.AddTail(pSubStream);
 			m_frd.files.push_back(sub_fn);
+
+			m_ExternalSubstreams.push_back(pSubStream);
 		}
 	}
 
@@ -2168,6 +2173,8 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 	m_nSubtitleId = (DWORD_PTR)pSubStream;
 
 	if (m_pSubPicQueue) {
+		m_bExternalSubtitle = (std::find(m_ExternalSubstreams.cbegin(), m_ExternalSubstreams.cend(), pSubStream) != m_ExternalSubstreams.cend());
+
 		m_pSubPicQueue->SetSubPicProvider(CComQIPtr<ISubPicProvider>(pSubStream));
 	}
 }
