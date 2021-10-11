@@ -217,6 +217,7 @@ private:
 
 	bool m_bExternalSubtitle = false;
 	std::list<ISubStream*> m_ExternalSubstreams;
+	int get_ExternalSubstreamsLanguageCount();
 };
 
 /* The "auto-loading" version */

@@ -1292,11 +1292,13 @@ STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD*
 	int nLangs = 0;
 	get_LanguageCount(&nLangs);
 
+	int nExternalLangs = get_ExternalSubstreamsLanguageCount();
+
 	if (!(lIndex >= 0 && lIndex < nLangs+2+2)) {
 		return E_INVALIDARG;
 	}
 
-	int i = lIndex-1;
+	int i = lIndex - 1;
 
 	if (ppmt) {
 		*ppmt = CreateMediaType(&m_pInput->CurrentMediaType());
@@ -1319,7 +1321,7 @@ STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD*
 	}
 
 	if (pdwGroup) {
-		*pdwGroup = 0x648E51;
+		(*pdwGroup) = 0x648E51;
 	}
 
 	if (ppszName) {
@@ -1328,19 +1330,30 @@ STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD*
 		CStringW str;
 		if (i == -1) {
 			str = ResStr(IDS_M_SHOWSUBTITLES);
-		} else if (i >= 0 && i < nLangs) {
-			get_LanguageName(i, ppszName);
-		} else if (i == nLangs) {
-			str = ResStr(IDS_M_HIDESUBTITLES);
-		} else if (i == nLangs+1) {
-			str = ResStr(IDS_M_ORIGINALPICTURE);
 			if (pdwGroup) {
 				(*pdwGroup)++;
 			}
-		} else if (i == nLangs+2) {
-			str = ResStr(IDS_M_FLIPPEDPICTURE);
+		} else if (i >= 0 && i < nLangs) {
+			if (nExternalLangs && i >= nExternalLangs) {
+				if (pdwGroup) {
+					(*pdwGroup) += 2;
+				}
+			}
+			get_LanguageName(i, ppszName);
+		} else if (i == nLangs) {
+			str = ResStr(IDS_M_HIDESUBTITLES);
 			if (pdwGroup) {
 				(*pdwGroup)++;
+			}
+		} else if (i == nLangs + 1) {
+			str = ResStr(IDS_M_ORIGINALPICTURE);
+			if (pdwGroup) {
+				(*pdwGroup) += 3;
+			}
+		} else if (i == nLangs + 2) {
+			str = ResStr(IDS_M_FLIPPEDPICTURE);
+			if (pdwGroup) {
+				(*pdwGroup) += 3;
 			}
 		}
 
@@ -2370,4 +2383,22 @@ DWORD CDirectVobSubFilter::ThreadProc()
 	}
 
 	return 0;
+}
+
+int CDirectVobSubFilter::get_ExternalSubstreamsLanguageCount()
+{
+	int nCount = 0;
+	if (!m_ExternalSubstreams.empty()) {
+		CAutoLock cAutolock(&m_csQueueLock);
+
+		POSITION pos = m_pSubStreams.GetHeadPosition();
+		while (pos) {
+			auto pSubStream = m_pSubStreams.GetNext(pos);
+			if (std::find(m_ExternalSubstreams.cbegin(), m_ExternalSubstreams.cend(), pSubStream) != m_ExternalSubstreams.cend()) {
+				nCount += m_pSubStreams.GetNext(pos)->GetStreamCount();
+			}
+		}
+	}
+
+	return nCount;
 }
