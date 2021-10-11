@@ -1321,7 +1321,7 @@ STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD*
 	}
 
 	if (pdwGroup) {
-		(*pdwGroup) = 0x648E51;
+		*pdwGroup = 0x648E51;
 	}
 
 	if (ppszName) {
@@ -1336,7 +1336,7 @@ STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD*
 		} else if (i >= 0 && i < nLangs) {
 			if (nExternalLangs && i >= nExternalLangs) {
 				if (pdwGroup) {
-					(*pdwGroup) += 2;
+					*pdwGroup += 2;
 				}
 			}
 			get_LanguageName(i, ppszName);
@@ -1348,12 +1348,12 @@ STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD*
 		} else if (i == nLangs + 1) {
 			str = ResStr(IDS_M_ORIGINALPICTURE);
 			if (pdwGroup) {
-				(*pdwGroup) += 3;
+				*pdwGroup += 3;
 			}
 		} else if (i == nLangs + 2) {
 			str = ResStr(IDS_M_FLIPPEDPICTURE);
 			if (pdwGroup) {
-				(*pdwGroup) += 3;
+				*pdwGroup += 3;
 			}
 		}
 

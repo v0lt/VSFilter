@@ -1,5 +1,6 @@
 1.5.7
 ----------------------
+The VSFilter project is separated from the MPC-BE project.
 Replace the <br> tag with a newline in SubRip subtitles.
 Added support for WebVTT.
 Fixed filter operation when changing the playback speed.
