@@ -2395,7 +2395,7 @@ int CDirectVobSubFilter::get_ExternalSubstreamsLanguageCount()
 		while (pos) {
 			auto pSubStream = m_pSubStreams.GetNext(pos);
 			if (std::find(m_ExternalSubstreams.cbegin(), m_ExternalSubstreams.cend(), pSubStream) != m_ExternalSubstreams.cend()) {
-				nCount += m_pSubStreams.GetNext(pos)->GetStreamCount();
+				nCount += pSubStream->GetStreamCount();
 			}
 		}
 	}
