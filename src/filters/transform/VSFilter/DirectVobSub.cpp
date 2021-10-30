@@ -27,6 +27,11 @@ CDirectVobSub::CDirectVobSub()
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
+#ifdef _DEBUG
+	DbgSetModuleLevel(LOG_TRACE, DWORD_MAX);
+	DbgSetModuleLevel(LOG_ERROR, DWORD_MAX);
+#endif
+
 	BYTE* pData;
 	UINT nSize;
 

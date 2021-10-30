@@ -1036,7 +1036,9 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	if (AdjustFrameSize(window)) {
 		video += video;
 	}
-	ASSERT(window == CSize(m_win, m_hin));
+	DLogIf(window != CSize(m_win, m_hin),
+		L"CDirectVobSubFilter::InitSubPicQueue() WARNING: window(%dx%d) != CSize(m_win=%d, m_hin=%d)",
+		window.cx, window.cy, m_win, m_hin);
 
 	pSubPicAllocator->SetCurSize(window);
 	pSubPicAllocator->SetCurVidRect(CRect(CPoint((window.cx - video.cx) / 2, (window.cy - video.cy) / 2), video));
@@ -2021,7 +2023,7 @@ bool CDirectVobSubFilter::Open()
 	Subtitle::GetSubFileNames(m_FileName, paths, ret);
 
 	for (const auto& sub_fn : ret) {
-		if (std::find(m_frd.files.cbegin(), m_frd.files.cend(), sub_fn) != m_frd.files.cend()) {
+		if (Contains(m_frd.files, sub_fn)) {
 			continue;
 		}
 
@@ -2186,7 +2188,7 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 	m_nSubtitleId = (DWORD_PTR)pSubStream;
 
 	if (m_pSubPicQueue) {
-		m_bExternalSubtitle = (std::find(m_ExternalSubstreams.cbegin(), m_ExternalSubstreams.cend(), pSubStream) != m_ExternalSubstreams.cend());
+		m_bExternalSubtitle = (Contains(m_ExternalSubstreams, pSubStream));
 
 		m_pSubPicQueue->SetSubPicProvider(CComQIPtr<ISubPicProvider>(pSubStream));
 	}
