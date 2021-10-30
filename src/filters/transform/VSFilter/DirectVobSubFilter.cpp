@@ -1292,13 +1292,13 @@ STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD*
 	int nLangs = 0;
 	get_LanguageCount(&nLangs);
 
-	int nExternalLangs = get_ExternalSubstreamsLanguageCount();
+	const int nExternalLangs = get_ExternalSubstreamsLanguageCount();
 
-	if (!(lIndex >= 0 && lIndex < nLangs+2+2)) {
+	if (lIndex < 0 || lIndex >= nLangs+2+2) {
 		return E_INVALIDARG;
 	}
 
-	int i = lIndex - 1;
+	const int idx = lIndex - 1;
 
 	if (ppmt) {
 		*ppmt = CreateMediaType(&m_pInput->CurrentMediaType());
@@ -1307,11 +1307,11 @@ STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD*
 	if (pdwFlags) {
 		*pdwFlags = 0;
 
-		if (i == -1 && !m_bHideSubtitles
-				|| i >= 0 && i < nLangs && i == m_iSelectedLanguage
-				|| i == nLangs && m_bHideSubtitles
-				|| i == nLangs+1 && !m_bFlipPicture
-				|| i == nLangs+2 && m_bFlipPicture) {
+		if (idx == -1 && !m_bHideSubtitles
+				|| idx >= 0 && idx < nLangs && idx == m_iSelectedLanguage
+				|| idx == nLangs && m_bHideSubtitles
+				|| idx == nLangs+1 && !m_bFlipPicture
+				|| idx == nLangs+2 && m_bFlipPicture) {
 			*pdwFlags |= AMSTREAMSELECTINFO_ENABLED;
 		}
 	}
@@ -1328,29 +1328,29 @@ STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD*
 		*ppszName = nullptr;
 
 		CStringW str;
-		if (i == -1) {
+		if (idx == -1) {
 			str = ResStr(IDS_M_SHOWSUBTITLES);
 			if (pdwGroup) {
 				(*pdwGroup)++;
 			}
-		} else if (i >= 0 && i < nLangs) {
-			if (nExternalLangs && i >= nExternalLangs) {
+		} else if (idx >= 0 && idx < nLangs) {
+			if (nExternalLangs && idx >= nExternalLangs) {
 				if (pdwGroup) {
 					*pdwGroup += 2;
 				}
 			}
-			get_LanguageName(i, ppszName);
-		} else if (i == nLangs) {
+			get_LanguageName(idx, ppszName);
+		} else if (idx == nLangs) {
 			str = ResStr(IDS_M_HIDESUBTITLES);
 			if (pdwGroup) {
 				(*pdwGroup)++;
 			}
-		} else if (i == nLangs + 1) {
+		} else if (idx == nLangs + 1) {
 			str = ResStr(IDS_M_ORIGINALPICTURE);
 			if (pdwGroup) {
 				*pdwGroup += 3;
 			}
-		} else if (i == nLangs + 2) {
+		} else if (idx == nLangs + 2) {
 			str = ResStr(IDS_M_FLIPPEDPICTURE);
 			if (pdwGroup) {
 				*pdwGroup += 3;
@@ -2394,7 +2394,7 @@ int CDirectVobSubFilter::get_ExternalSubstreamsLanguageCount()
 		POSITION pos = m_pSubStreams.GetHeadPosition();
 		while (pos) {
 			auto pSubStream = m_pSubStreams.GetNext(pos);
-			if (std::find(m_ExternalSubstreams.cbegin(), m_ExternalSubstreams.cend(), pSubStream) != m_ExternalSubstreams.cend()) {
+			if (Contains(m_ExternalSubstreams, pSubStream.p)) {
 				nCount += pSubStream->GetStreamCount();
 			}
 		}
