@@ -1290,11 +1290,13 @@ STDMETHODIMP CDirectVobSubFilter::Enable(long lIndex, DWORD dwFlags)
 STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD* pdwFlags, LCID* plcid, DWORD* pdwGroup, WCHAR** ppszName, IUnknown** ppObject, IUnknown** ppUnk)
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+	const int FLAG_CMD            = 1;
+	const int FLAG_EXTERNAL_SUB   = 2;
+	const int FLAG_PICTURE_CMD    = 4;
+	const int FLAG_VISIBILITY_CMD = 8;
 
 	int nLangs = 0;
 	get_LanguageCount(&nLangs);
-
-	const int nExternalLangs = get_ExternalSubstreamsLanguageCount();
 
 	if (lIndex < 0 || lIndex >= nLangs+2+2) {
 		return E_INVALIDARG;
@@ -1323,7 +1325,20 @@ STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD*
 	}
 
 	if (pdwGroup) {
-		*pdwGroup = 0x648E51;
+		*pdwGroup = 0x648E00;
+
+		if (idx >= 0 && idx < nLangs) {
+			const int nExternalLangs = get_ExternalSubstreamsLanguageCount();
+			if (idx < nExternalLangs) {
+				*pdwGroup |= FLAG_EXTERNAL_SUB;
+			}
+		}
+		else if (idx == -1 || idx == nLangs) {
+			*pdwGroup |= FLAG_CMD | FLAG_VISIBILITY_CMD;
+		}
+		else if (idx == nLangs+1 || idx == nLangs+2) {
+			*pdwGroup |= FLAG_CMD | FLAG_PICTURE_CMD;
+		}
 	}
 
 	if (ppszName) {
@@ -1332,31 +1347,18 @@ STDMETHODIMP CDirectVobSubFilter::Info(long lIndex, AM_MEDIA_TYPE** ppmt, DWORD*
 		CStringW str;
 		if (idx == -1) {
 			str = ResStr(IDS_M_SHOWSUBTITLES);
-			if (pdwGroup) {
-				(*pdwGroup)++;
-			}
-		} else if (idx >= 0 && idx < nLangs) {
-			if (nExternalLangs && idx >= nExternalLangs) {
-				if (pdwGroup) {
-					*pdwGroup += 2;
-				}
-			}
+		}
+		else if (idx >= 0 && idx < nLangs) {
 			get_LanguageName(idx, ppszName);
-		} else if (idx == nLangs) {
+		}
+		else if (idx == nLangs) {
 			str = ResStr(IDS_M_HIDESUBTITLES);
-			if (pdwGroup) {
-				(*pdwGroup)++;
-			}
-		} else if (idx == nLangs + 1) {
+		}
+		else if (idx == nLangs + 1) {
 			str = ResStr(IDS_M_ORIGINALPICTURE);
-			if (pdwGroup) {
-				*pdwGroup += 3;
-			}
-		} else if (idx == nLangs + 2) {
+		}
+		else if (idx == nLangs + 2) {
 			str = ResStr(IDS_M_FLIPPEDPICTURE);
-			if (pdwGroup) {
-				*pdwGroup += 3;
-			}
 		}
 
 		if (!str.IsEmpty()) {
