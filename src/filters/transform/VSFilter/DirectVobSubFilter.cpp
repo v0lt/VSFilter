@@ -1880,7 +1880,7 @@ bool CDirectVobSubFilter2::ShouldWeAutoload(IFilterGraph* pGraph)
 #endif
 	};
 
-	for (size_t i = 0; i < _countof(blacklistedapps); i++) {
+	for (size_t i = 0; i < std::size(blacklistedapps); i++) {
 		if (theApp.m_AppName.Find(blacklistedapps[i]) >= 0) {
 			return false;
 		}

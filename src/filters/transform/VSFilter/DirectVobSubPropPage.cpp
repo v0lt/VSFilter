@@ -951,7 +951,7 @@ void CDVSColorPPage::UpdateObjectData(bool fSave)
 
 void CDVSColorPPage::UpdateControlData(bool fSave)
 {
-	const int nCountFmts = _countof(VSFilterDefaultFormats);
+	const int nCountFmts = std::size(VSFilterDefaultFormats);
 
 	if (fSave) {
 		if ((UINT)m_preflist.GetCount() == nCountFmts) {
