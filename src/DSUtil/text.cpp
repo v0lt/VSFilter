@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2019 see Authors.txt
+ * (C) 2006-2021 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -414,7 +414,7 @@ CString FormatNumber(const CString& szNumber, const bool bNoFractionalDigits /*=
 
 	if (bNoFractionalDigits) {
 		WCHAR szNumberFractionalDigits[2] = {0};
-		GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_IDIGITS, szNumberFractionalDigits, _countof(szNumberFractionalDigits));
+		GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_IDIGITS, szNumberFractionalDigits, std::size(szNumberFractionalDigits));
 		int nNumberFractionalDigits = wcstol(szNumberFractionalDigits, nullptr, 10);
 		if (nNumberFractionalDigits) {
 			ret.Truncate(ret.GetLength() - nNumberFractionalDigits - 1);
