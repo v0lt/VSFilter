@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2020 see Authors.txt
+ * (C) 2006-2021 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -20,6 +20,8 @@
  */
 
 #pragma once
+
+#include <string>
 
 template<class T, typename SEP>
 std::enable_if_t<(std::is_same_v<T, CStringW> || std::is_same_v<T, CStringA>), T>
@@ -148,6 +150,7 @@ extern CStringW AltUTF8ToWStr(LPCSTR lpUTF8Str);
 extern CStringW UTF8orLocalToWStr(LPCSTR lpMultiByteStr);
 
 void FixFilename(CStringW& str);
+void EllipsisText(CStringW& text, const int maxlen);
 void EllipsisURL(CStringW& url, const int maxlen);
 void EllipsisPath(CStringW& path, const int maxlen);
 
@@ -180,4 +183,64 @@ template<class T>
 T& FastTrim(T& str)
 {
 	return FastTrimRight(str).TrimLeft();
+}
+
+inline bool StartsWith(const CStringA& str, const char* prefix, int pos = 0)
+{
+	return strncmp(str.GetString() + pos, prefix, std::char_traits<char>::length(prefix)) == 0;
+}
+
+inline bool StartsWith(const CStringW& str, const wchar_t* prefix, int pos = 0)
+{
+	return wcsncmp(str.GetString() + pos, prefix, std::char_traits<wchar_t>::length(prefix)) == 0;
+}
+
+inline bool StartsWithNoCase(const CStringA& str, const char* prefix, int pos = 0)
+{
+	return _strnicmp(str.GetString() + pos, prefix, std::char_traits<char>::length(prefix)) == 0;
+}
+
+inline bool StartsWithNoCase(const CStringW& str, const wchar_t* prefix, int pos = 0)
+{
+	return _wcsnicmp(str.GetString() + pos, prefix, std::char_traits<wchar_t>::length(prefix)) == 0;
+}
+
+inline bool EndsWith(const CStringA& str, const char* suffix)
+{
+	const size_t len = std::char_traits<char>::length(suffix);
+	const int pos = str.GetLength() - (int)len;
+	if (pos >= 0) {
+		return strncmp(str.GetString() + pos, suffix, len) == 0;
+	}
+	return false;
+}
+
+inline bool EndsWith(const CStringW& str, const wchar_t* suffix)
+{
+	const size_t len = std::char_traits<wchar_t>::length(suffix);
+	const int pos = str.GetLength() - (int)len;
+	if (pos >= 0) {
+		return wcsncmp(str.GetString() + pos, suffix, len) == 0;
+	}
+	return false;
+}
+
+inline bool EndsWithNoCase(const CStringA& str, const char* suffix)
+{
+	const size_t len = std::char_traits<char>::length(suffix);
+	const int pos = str.GetLength() - (int)len;
+	if (pos >= 0) {
+		return _strnicmp(str.GetString() + pos, suffix, len) == 0;
+	}
+	return false;
+}
+
+inline bool EndsWithNoCase(const CStringW& str, const wchar_t* suffix)
+{
+	const size_t len = std::char_traits<wchar_t>::length(suffix);
+	const int pos = str.GetLength() - (int)len;
+	if (pos >= 0) {
+		return _wcsnicmp(str.GetString() + pos, suffix, len) == 0;
+	}
+	return false;
 }

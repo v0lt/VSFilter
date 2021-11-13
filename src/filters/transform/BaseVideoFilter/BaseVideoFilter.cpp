@@ -169,7 +169,6 @@ HRESULT CBaseVideoFilter::ReconnectOutput(int width, int height, bool bForce/* =
 {
 	CMediaType& mt = m_pOutput->CurrentMediaType();
 
-
 	bool bNeedReconnect = bForce;
 	{
 		int wout = 0, hout = 0, arxout = 0, aryout = 0;
@@ -242,7 +241,7 @@ HRESULT CBaseVideoFilter::ReconnectOutput(int width, int height, bool bForce/* =
 		ASSERT(SUCCEEDED(hrQA)); // should better not fail, after all "mt" is the current media type, just with a different resolution
 		HRESULT hr = S_OK;
 
-		if (m_nDecoderMode != MODE_SOFTWARE ) {
+		if (m_nDecoderMode != MODE_SOFTWARE) {
 			m_pOutput->SetMediaType(&mt);
 			m_bSendMediaType = true;
 		} else {
@@ -254,8 +253,8 @@ HRESULT CBaseVideoFilter::ReconnectOutput(int width, int height, bool bForce/* =
 					if (SUCCEEDED(hr = m_pOutput->GetDeliveryBuffer(&pOut, nullptr, nullptr, 0))) {
 						AM_MEDIA_TYPE* pmt;
 						if (SUCCEEDED(pOut->GetMediaType(&pmt)) && pmt) {
-							CMediaType mt = *pmt;
-							m_pOutput->SetMediaType(&mt);
+							CMediaType mt2 = *pmt;
+							m_pOutput->SetMediaType(&mt2);
 							DeleteMediaType(pmt);
 						} else {
 							if (m_bOverlayMixer) {

@@ -108,7 +108,7 @@ bool IsVideoDecoder(IBaseFilter* pBF, bool fCountConnectedOnly)
 
 	const CString filterName = GetFilterName(pBF).MakeLower();
 
-	if (filterName.Find(L"directvobsub") == 0) {
+	if (StartsWith(filterName, L"directvobsub")) {
 		return true;
 	}
 	if (filterName.Find(L"video") < 0) {
@@ -597,9 +597,10 @@ void ExtractMediaTypes(IPin* pPin, std::vector<GUID>& types)
 	BeginEnumMediaTypes(pPin, pEM, pmt) {
 		bool fFound = false;
 
-		for (size_t i = 0; !fFound && i < types.size(); i += 2) {
+		for (size_t i = 0; i < types.size(); i += 2) {
 			if (types[i] == pmt->majortype && types[i+1] == pmt->subtype) {
 				fFound = true;
+				break;
 			}
 		}
 
@@ -1281,10 +1282,12 @@ IBaseFilter* AppendFilter(IPin* pPin, IMoniker* pMoniker, IGraphBuilder* pGB)
 			break;
 		}
 
-		CComPtr<IPin> pPinTo;
-		PIN_DIRECTION dir;
-		if (FAILED(pPin->QueryDirection(&dir)) || dir != PINDIR_OUTPUT || SUCCEEDED(pPin->ConnectedTo(&pPinTo))) {
-			break;
+		{
+			CComPtr<IPin> pPinTo;
+			PIN_DIRECTION dir;
+			if (FAILED(pPin->QueryDirection(&dir)) || dir != PINDIR_OUTPUT || SUCCEEDED(pPin->ConnectedTo(&pPinTo))) {
+				break;
+			}
 		}
 
 		CComPtr<IBindCtx> pBindCtx;
@@ -2380,63 +2383,6 @@ void RegisterSourceFilter(const CLSID& clsid, const GUID& subtype2, const std::l
 void UnRegisterSourceFilter(const GUID& subtype)
 {
 	DeleteRegKey(L"Media Type\\" + CStringFromGUID(MEDIATYPE_Stream), CStringFromGUID(subtype));
-}
-
-static const struct {
-	const GUID*  Guid;
-	const WCHAR* Description;
-} s_dxva2_vld_decoders[] = {
-	// MPEG1
-	{&DXVA2_ModeMPEG1_VLD,							L"MPEG-1"},
-	// MPEG2
-	{&DXVA2_ModeMPEG2_VLD,							L"MPEG-2"},
-	{&DXVA2_ModeMPEG2and1_VLD,						L"MPEG-2/MPEG-1"},
-	// MPEG4
-	{&DXVA2_ModeMPEG4pt2_VLD_Simple,				L"MPEG-4 SP"},
-	{&DXVA2_ModeMPEG4pt2_VLD_AdvSimple_NoGMC,		L"MPEG-4 ASP, no GMC"},
-	{&DXVA2_ModeMPEG4pt2_VLD_AdvSimple_GMC,			L"MPEG-4 ASP, GMC"},
-	{&DXVA2_Nvidia_MPEG4_ASP,						L"MPEG-4 ASP (Nvidia)"},
-	// VC-1
-	{&DXVA2_ModeVC1_D,/*DXVA2_ModeVC1_VLD*/			L"VC-1"},
-	{&DXVA2_ModeVC1_D2010,							L"VC-1 (2010)"},
-	{&DXVA2_Intel_VC1_ClearVideo,					L"VC-1 (Intel ClearVideo)"},
-	{&DXVA2_Intel_VC1_ClearVideo_2,					L"VC-1 (Intel ClearVideo 2)"},
-	// H.264
-	{&DXVA2_ModeH264_E,/*DXVA2_ModeH264_VLD_NoFGT*/	L"H.264, no FGT"},
-	{&DXVA2_ModeH264_F,/*DXVA2_ModeH264_VLD_FGT*/	L"H.264, FGT"},
-	{&DXVA2_ModeH264_VLD_WithFMOASO_NoFGT,			L"H.264, no FGT, with FMOASO"},
-	{&DXVA2_Intel_H264_ClearVideo,					L"H.264 (Intel ClearVideo)"},
-	{&DXVA2_ModeH264_Flash,							L"H.264 Flash"},
-	// H.264 stereo
-	{&DXVA2_ModeH264_VLD_Stereo_Progressive_NoFGT,	L"H.264 stereo progressive, no FGT"},
-	{&DXVA2_ModeH264_VLD_Stereo_NoFGT,				L"H.264 stereo, no FGT"},
-	{&DXVA2_ModeH264_VLD_Multiview_NoFGT,			L"H.264 multiview, no FGT"},
-	// HEVC
-	{&DXVA2_ModeHEVC_VLD_Main,						L"HEVC"},
-	{&DXVA2_ModeHEVC_VLD_Main10,					L"HEVC 10-bit"},
-	// VP8
-	{&DXVA2_ModeVP8_VLD,							L"VP8"},
-	// VP9
-	{&DXVA2_ModeVP9_VLD_Profile0,					L"VP9"},
-	{&DXVA2_ModeVP9_VLD_10bit_Profile2,				L"VP9 10-bit"},
-	{&DXVA2_VP9_VLD_Intel,							L"VP9 Intel"},
-	// AV1
-	{&DXVA_ModeAV1_VLD_Profile0,					L"AV1 profile 0"},
-};
-
-CString GetDXVAMode(const GUID& guidDecoder)
-{
-	if (guidDecoder == GUID_NULL) {
-		return L"Not using DXVA";
-	}
-
-	for (const auto& decoder : s_dxva2_vld_decoders) {
-		if (guidDecoder == *decoder.Guid) {
-			return decoder.Description;
-		}
-	}
-
-	return CStringFromGUID(guidDecoder);
 }
 
 // hour, minute, second, millisec

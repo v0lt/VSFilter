@@ -1663,7 +1663,7 @@ MPC_GUID_ENTRY(DXVA2_VP9_VLD_Intel,
 
 // AV1
 // {b8be4ccb-cf53-46ba-8d59-d6b8a6da5d2a}
-MPC_GUID_ENTRY(DXVA_ModeAV1_VLD_Profile0,
+MPC_GUID_ENTRY(DXVA2_ModeAV1_VLD_Profile0,
 			0xb8be4ccb, 0xcf53, 0x46ba, 0x8d, 0x59, 0xd6, 0xb8, 0xa6, 0xda, 0x5d, 0x2a)
 
 // uncompressed

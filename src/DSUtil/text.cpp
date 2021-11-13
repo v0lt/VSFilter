@@ -357,6 +357,27 @@ void FixFilename(CStringW& str)
 	}
 }
 
+void EllipsisText(CStringW& text, const int maxlen)
+{
+	ASSERT(maxlen > 40);
+
+	if (text.GetLength() > maxlen) {
+		int minsize = maxlen - 12;
+		for (int i = maxlen - 1; i > minsize; i--) {
+			auto ch = text[i];
+			if (ch < L'0' || (ch > '9' && ch < 'A') || (ch > 'Z' && ch < 'a') || (ch > 'Z' && ch <= 0xA0)) {
+				text.Truncate(i);
+				break;
+			}
+		}
+		if (text.GetLength() > maxlen) {
+			text.Truncate(maxlen);
+		}
+		text.TrimRight();
+		text.AppendChar(L'\x2026');
+	}
+}
+
 void EllipsisURL(CStringW& url, const int maxlen)
 {
 	if (url.GetLength() > maxlen) {
@@ -373,7 +394,7 @@ void EllipsisURL(CStringW& url, const int maxlen)
 					}
 				}
 				url.Truncate(std::max(maxlen, k));
-				url.Append(L"...");
+				url.AppendChar(L'\x2026');
 			}
 		}
 	}
@@ -383,10 +404,10 @@ void EllipsisPath(CStringW& path, const int maxlen)
 {
 	if (path.GetLength() > maxlen) {
 		int k = -1;
-		if (path.Left(2) == "\\\\") {
+		if (StartsWith(path, L"\\\\")) {
 			k = path.Find('\\', k+1);
 		}
-		else if (path.Mid(1, 2) == ":\\") {
+		else if (StartsWith(path, L":\\", 1)) {
 			k = 2;
 		}
 
@@ -398,7 +419,7 @@ void EllipsisPath(CStringW& path, const int maxlen)
 				while ((q = path.Find('\\', k+1)) > 0 && q < midlen) {
 					k = q;
 				}
-				path = path.Left(k + 1) + L"..." + path.Mid(n);
+				path = path.Left(k + 1) + L'\x2026' + path.Mid(n);
 			}
 		}
 	}
