@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2020 see Authors.txt
+ * (C) 2006-2021 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -40,7 +40,7 @@ protected:
 	virtual void UpdateControlData(bool fSave) {}
 
 protected:
-	CDVSBasePPage(TCHAR* pName, LPUNKNOWN lpunk, int DialogId, int TitleId);
+	CDVSBasePPage(LPCWSTR pName, LPUNKNOWN lpunk, int DialogId, int TitleId);
 	HRESULT OnApplyChanges();
 
 	bool m_bDisableInstantUpdate;

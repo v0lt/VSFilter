@@ -1856,7 +1856,7 @@ HRESULT CDirectVobSubFilter2::CheckInputType(const CMediaType* mtIn)
 bool CDirectVobSubFilter2::ShouldWeAutoload(IFilterGraph* pGraph)
 {
 	// all entries must be lowercase!
-	TCHAR* blacklistedapps[] = {
+	LPCWSTR blacklistedapps[] = {
 		L"wm8eutil.",        // wmp8 encoder's dummy renderer releases the outputted media sample after calling Receive on its input pin (yes, even when dvobsub isn't registered at all)
 		L"explorer.",        // as some users reported thumbnail preview loads dvobsub, I've never experienced this yet...
 		L"producer.",        // this is real's producer
@@ -1880,8 +1880,8 @@ bool CDirectVobSubFilter2::ShouldWeAutoload(IFilterGraph* pGraph)
 #endif
 	};
 
-	for (size_t i = 0; i < std::size(blacklistedapps); i++) {
-		if (theApp.m_AppName.Find(blacklistedapps[i]) >= 0) {
+	for (auto& app : blacklistedapps) {
+		if (theApp.m_AppName.Find(app) >= 0) {
 			return false;
 		}
 	}

@@ -114,7 +114,7 @@ STDMETHODIMP CDVSBasePPage::Activate(HWND hwndParent, LPCRECT pRect, BOOL fModal
 
 /* CDVSBasePPage */
 
-CDVSBasePPage::CDVSBasePPage(TCHAR* pName, LPUNKNOWN lpunk, int DialogId, int TitleId) :
+CDVSBasePPage::CDVSBasePPage(LPCWSTR pName, LPUNKNOWN lpunk, int DialogId, int TitleId) :
 	CBasePropertyPage(pName, lpunk, DialogId, TitleId),
 	m_bIsInitialized(FALSE),
 	m_bAttached(false),
