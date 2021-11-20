@@ -24,7 +24,7 @@
 
 class C_MPCGuidNameList {
 public:
-	const CHAR *operator [] (const GUID& guid);
+	const char *operator [] (const GUID& guid);
 };
 
 extern C_MPCGuidNameList m_GuidNames;
