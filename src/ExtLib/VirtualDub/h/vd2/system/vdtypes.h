@@ -289,7 +289,7 @@ extern void VDDebugPrint(const char *format, ...);
 #endif
 
 
-#if defined(_DEBUG) && !defined(__INTEL_COMPILER) // MPC-BE specific - Cannot use these macros with ICL
+#ifdef _DEBUG
 
 	namespace {
 		template<int line>
@@ -312,15 +312,11 @@ extern void VDDebugPrint(const char *format, ...);
 		template<int lineno>
 		bool VDAssertHelper<lineno>::sbAssertDisabled;
 
-		// Start patch MPC-BE
-		/*
 		template<int lineno>
 		struct VDAssertHelper2 { static bool sDisabled; };
 
 		template<int lineno>
 		bool VDAssertHelper2<lineno>::sDisabled;
-		*/
-		// End patch MPC-BE
 	}
 
 // Start patch MPC-BE

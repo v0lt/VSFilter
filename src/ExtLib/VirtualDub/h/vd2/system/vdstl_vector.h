@@ -146,7 +146,6 @@ vdvector<T,A>::vdvector(size_type n, const T& value, const A& a)
 	resize(n, value);
 }
 
-#if !defined(__INTEL_COMPILER) // MPC-BE specific: ICC 12.0.5 gives an error
 template <class T, class A>
 template <class InputIterator>
 vdvector<T,A>::vdvector(InputIterator first, InputIterator last, const A& a)
@@ -154,7 +153,6 @@ vdvector<T,A>::vdvector(InputIterator first, InputIterator last, const A& a)
 {
 	assign(first, last);
 }
-#endif
 
 template <class T, class A>
 vdvector<T,A>::vdvector(const vdvector<T,A>& x)
