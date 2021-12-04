@@ -84,9 +84,6 @@
     <ClCompile Include="source\memory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\profile.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source\progress.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -94,9 +91,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\refcount.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="source\registry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\strutil.cpp">
@@ -135,9 +129,6 @@
     <ClCompile Include="source\w32assist.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="source\zip.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="source\stdaccel.cpp">
       <Filter>Precompiled Header Support</Filter>
     </ClCompile>
@@ -145,9 +136,6 @@
       <Filter>Precompiled Header Support</Filter>
     </ClCompile>
     <ClCompile Include="source\process.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\h\vd2\system\source\registrymemory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\vdstl_hash.cpp">
@@ -239,9 +227,6 @@
     <ClInclude Include="..\h\vd2\system\memory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\h\vd2\system\profile.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\h\vd2\system\progress.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -249,9 +234,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\h\vd2\system\refcount.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\h\vd2\system\registry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\h\vd2\system\strutil.h">
@@ -311,9 +293,6 @@
     <ClInclude Include="..\h\vd2\system\w32assist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\h\vd2\system\zip.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\h\vd2\system\win32\intrin.h">
       <Filter>Header Files\win32</Filter>
     </ClInclude>
@@ -327,9 +306,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\h\vd2\system\process.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\h\vd2\system\registrymemory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\h\vd2\system\vdstl_hash.h">

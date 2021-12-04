@@ -80,7 +80,6 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\h\vd2\system\source\registrymemory.cpp" />
     <ClCompile Include="source\bitmath.cpp" />
     <ClCompile Include="source\cache.cpp" />
     <ClCompile Include="source\cmdline.cpp" />
@@ -106,11 +105,9 @@
     <ClCompile Include="source\math.cpp" />
     <ClCompile Include="source\memory.cpp" />
     <ClCompile Include="source\process.cpp" />
-    <ClCompile Include="source\profile.cpp" />
     <ClCompile Include="source\progress.cpp" />
     <ClCompile Include="source\protscope.cpp" />
     <ClCompile Include="source\refcount.cpp" />
-    <ClCompile Include="source\registry.cpp" />
     <ClCompile Include="source\strutil.cpp" />
     <ClCompile Include="source\text.cpp" />
     <ClCompile Include="source\thread.cpp" />
@@ -125,7 +122,6 @@
     <ClCompile Include="source\VDString.cpp" />
     <ClCompile Include="source\vectors.cpp" />
     <ClCompile Include="source\w32assist.cpp" />
-    <ClCompile Include="source\zip.cpp" />
     <ClCompile Include="source\stdaccel.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)'=='Release'">true</ExcludedFromBuild>
       <PrecompiledHeader Condition="'$(Configuration)'=='Debug'">NotUsing</PrecompiledHeader>
@@ -160,12 +156,9 @@
     <ClInclude Include="..\h\vd2\system\math.h" />
     <ClInclude Include="..\h\vd2\system\memory.h" />
     <ClInclude Include="..\h\vd2\system\process.h" />
-    <ClInclude Include="..\h\vd2\system\profile.h" />
     <ClInclude Include="..\h\vd2\system\progress.h" />
     <ClInclude Include="..\h\vd2\system\protscope.h" />
     <ClInclude Include="..\h\vd2\system\refcount.h" />
-    <ClInclude Include="..\h\vd2\system\registry.h" />
-    <ClInclude Include="..\h\vd2\system\registrymemory.h" />
     <ClInclude Include="..\h\vd2\system\seh.h" />
     <ClInclude Include="..\h\vd2\system\strutil.h" />
     <ClInclude Include="..\h\vd2\system\text.h" />
@@ -192,7 +185,6 @@
     <ClInclude Include="..\h\vd2\system\vectors_float.h" />
     <ClInclude Include="..\h\vd2\system\vectors_int.h" />
     <ClInclude Include="..\h\vd2\system\w32assist.h" />
-    <ClInclude Include="..\h\vd2\system\zip.h" />
     <ClInclude Include="..\h\vd2\system\win32\intrin.h" />
     <ClInclude Include="..\h\vd2\system\win32\miniwindows.h" />
     <ClInclude Include="h\stdafx.h" />
