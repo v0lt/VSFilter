@@ -358,7 +358,7 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 
 	if (rtStop != INVALID_TIME) {
 		REFERENCE_TIME rtAvgTimePerFrame = rtStop - rtStart;
-		if (CComQIPtr<ISubClock2> pSC2 = m_pSubClock) {
+		if (CComQIPtr<ISubClock2> pSC2 = m_pSubClock.p) {
 			REFERENCE_TIME rt;
 			if (S_OK == pSC2->GetAvgTimePerFrame(&rt)) {
 				rtAvgTimePerFrame = rt;
@@ -511,7 +511,7 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 		if (CComQIPtr<IMediaSample2> pMS2in = pIn) {
 			AM_SAMPLE2_PROPERTIES propsIn;
 			if (SUCCEEDED(pMS2in->GetProperties(sizeof(propsIn), (BYTE*)&propsIn))) {
-				if (CComQIPtr<IMediaSample2> pMS2out = pOut) {
+				if (CComQIPtr<IMediaSample2> pMS2out = pOut.p) {
 					AM_SAMPLE2_PROPERTIES propsOut;
 					if (SUCCEEDED(pMS2out->GetProperties(sizeof(propsOut), (BYTE*)&propsOut))) {
 						propsOut.dwTypeSpecificFlags = propsIn.dwTypeSpecificFlags;
@@ -974,7 +974,7 @@ HRESULT CDirectVobSubFilter::DoCheckTransform(const CMediaType* mtIn, const CMed
 
 REFERENCE_TIME CDirectVobSubFilter::CalcCurrentTime()
 {
-	REFERENCE_TIME rt = m_pSubClock ? m_pSubClock->GetTime() : m_tPrev;
+	REFERENCE_TIME rt = m_pSubClock ? m_pSubClock->GetTime() : m_tPrev.GetUnits();
 	return (rt - 10000i64*m_SubtitleDelay) * m_SubtitleSpeedMul / m_SubtitleSpeedDiv; // no, it won't overflow if we use normal parameters (__int64 is enough for about 2000 hours if we multiply it by the max: 65536 as m_SubtitleSpeedMul)
 }
 
@@ -1944,7 +1944,7 @@ bool CDirectVobSubFilter2::ShouldWeAutoload(IFilterGraph* pGraph)
 	// find file name
 
 	BeginEnumFilters(pGraph, pEF, pBF) {
-		if (CComQIPtr<IFileSourceFilter> pFSF = pBF) {
+		if (CComQIPtr<IFileSourceFilter> pFSF = pBF.p) {
 			LPOLESTR fnw = nullptr;
 			if (!pFSF || FAILED(pFSF->GetCurFile(&fnw, nullptr)) || !fnw) {
 				continue;

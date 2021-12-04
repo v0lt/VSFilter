@@ -231,7 +231,7 @@ LRESULT CSystrayWindow::OnNotifyIcon(WPARAM wParam, LPARAM lParam)
 					continue;
 				}
 
-				if (CComQIPtr<IAMStreamSelect> pSS = pBF) {
+				if (CComQIPtr<IAMStreamSelect> pSS = pBF.p) {
 					pStreams.Add(pSS);
 					names.Add(name);
 				}
@@ -346,7 +346,7 @@ static WCHAR* CallPPage(IFilterGraph* pGraph, int idx, HWND hWnd)
 	caGUID.pElems = nullptr;
 
 	BeginEnumFilters(pGraph, pEF, pBF) {
-		CComQIPtr<ISpecifyPropertyPages> pSPS = pBF;
+		CComQIPtr<ISpecifyPropertyPages> pSPS(pBF);
 
 		if (!pSPS) {
 			continue;

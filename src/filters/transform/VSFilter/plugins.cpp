@@ -136,7 +136,7 @@ namespace Plugin
 						if (fs.m_mtime < fs2.m_mtime) {
 							fs.m_mtime = fs2.m_mtime;
 
-							if (CComQIPtr<ISubStream> pSubStream = m_pSubPicProvider) {
+							if (CComQIPtr<ISubStream> pSubStream = m_pSubPicProvider.p) {
 								CAutoLock cAutoLock(&m_csSubLock);
 								pSubStream->Reload();
 							}
@@ -422,7 +422,7 @@ namespace Plugin
 		}
 
 		ScriptFunctionDef vobsub_func_defs[]= {
-			{ (ScriptFunctionPtr)vobsubScriptConfig, "Config", "0s" },
+			{ (ScriptFunctionPtr)vobsubScriptConfig, (char*)"Config", (char*)"0s" },
 			{ nullptr },
 		};
 
@@ -450,7 +450,7 @@ namespace Plugin
 		};
 
 		ScriptFunctionDef textsub_func_defs[]= {
-			{ (ScriptFunctionPtr)textsubScriptConfig, "Config", "0si" },
+			{ (ScriptFunctionPtr)textsubScriptConfig, (char*)"Config", (char*)"0si" },
 			{ nullptr },
 		};
 
@@ -566,7 +566,11 @@ namespace Plugin
 			}
 
 			void StringProc(const VDXFilterActivation* fa, const VDXFilterFunctions* ff, char* str) {
-				sprintf_s(str, STRING_PROC_BUFFER_SIZE, " (%s)", !GetFileName().IsEmpty() ? CStringA(GetFileName()) : " (empty)");
+				CStringA fn = CStringA(GetFileName());
+				if (fn.IsEmpty()) {
+					fn = " (empty)";
+				}
+				sprintf_s(str, STRING_PROC_BUFFER_SIZE, " (%s)", fn);
 			}
 
 			bool FssProc(VDXFilterActivation* fa, const VDXFilterFunctions* ff, char* buf, int buflen) {
@@ -698,7 +702,7 @@ namespace Plugin
 		}
 
 		VDXScriptFunctionDef vobsub_func_defs[]= {
-			{ (VDXScriptFunctionPtr)vobsubScriptConfig, "Config", "0s" },
+			{ (VDXScriptFunctionPtr)vobsubScriptConfig, (char*)"Config", (char*)"0s" },
 			{ nullptr },
 		};
 
@@ -726,7 +730,7 @@ namespace Plugin
 		};
 
 		VDXScriptFunctionDef textsub_func_defs[]= {
-			{ (VDXScriptFunctionPtr)textsubScriptConfig, "Config", "0si" },
+			{ (VDXScriptFunctionPtr)textsubScriptConfig, (char*)"Config", (char*)"0si" },
 			{ nullptr },
 		};
 
