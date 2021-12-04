@@ -1,5 +1,5 @@
 /*
- * (C) 2011-2020 see Authors.txt
+ * (C) 2011-2021 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -19,6 +19,7 @@
  */
 
 #include "stdafx.h"
+#include "Log.h"
 #include "FileHandle.h"
 
 //
@@ -178,51 +179,74 @@ CStringW GetProgramDir()
 	return path;
 }
 
-int CopyDir(LPCWSTR source_folder, LPCWSTR target_folder)
+//
+// Get application path from "App Paths" subkey
+//
+CStringW GetRegAppPath(LPCWSTR appFileName, const bool bCurrentUser)
 {
-	CStringW new_sf(source_folder);
-	new_sf.Append(L"\\*");
+	CStringW keyName(L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\");
+	keyName.Append(appFileName);
 
-	WCHAR sf[MAX_PATH+1];
-	WCHAR tf[MAX_PATH+1];
+	const HKEY hKeyParent = bCurrentUser ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE;
+	CStringW appPath;
+	CRegKey key;
 
-	wcscpy_s(sf, MAX_PATH, new_sf);
-	wcscpy_s(tf, MAX_PATH, target_folder);
+	if (ERROR_SUCCESS == key.Open(hKeyParent, keyName, KEY_READ)) {
+		ULONG nChars = 0;
+		if (ERROR_SUCCESS == key.QueryStringValue(nullptr, nullptr, &nChars)) {
+			if (ERROR_SUCCESS == key.QueryStringValue(nullptr, appPath.GetBuffer(nChars), &nChars)) {
+				appPath.ReleaseBuffer(nChars);
+			}
+		}
+		key.Close();
+	}
 
-	// set double null-terminated string
-	sf[wcslen(sf)+1] = 0;
-	tf[wcslen(tf)+1] = 0;
-
-	SHFILEOPSTRUCTW s = { 0 };
-	s.wFunc = FO_COPY;
-	s.pTo = tf;
-	s.pFrom = sf;
-	s.fFlags = FOF_NO_UI;
-
-	return SHFileOperationW(&s);
+	return appPath;
 }
 
-int MoveDir(LPCWSTR source_folder, LPCWSTR target_folder)
+// wFunc can be FO_MOVE or FO_COPY.
+// To move a folder, add "\" to the end of the source path.
+// To copy a folder, add "\*" to the end of the source path.
+int FileOperation(const CStringW& source, const CStringW& target, const UINT wFunc)
 {
-	CStringW new_sf(source_folder);
-	new_sf.Append(L"\\");
+	auto from_str = std::make_unique<WCHAR[]>(source.GetLength() + 2);
+	wcscpy_s(from_str.get(), source.GetLength()+1, source);
 
-	WCHAR sf[MAX_PATH+1];
-	WCHAR tf[MAX_PATH+1];
-
-	wcscpy_s(sf, MAX_PATH, new_sf);
-	wcscpy_s(tf, MAX_PATH, target_folder);
+	auto to_str = std::make_unique<WCHAR[]>(target.GetLength() + 2);
+	wcscpy_s(to_str.get(), target.GetLength()+1, target);
 
 	// set double null-terminated string
-	sf[wcslen(sf)+1] = 0;
-	tf[wcslen(tf)+1] = 0;
+	from_str[wcslen(from_str.get())+1] = 0;
+	to_str[wcslen(to_str.get())+1] = 0;
 
-	SHFILEOPSTRUCTW s = { 0 };
-	s.wFunc = FO_MOVE;
-	s.pTo = tf;
-	s.pFrom = sf;
-	s.fFlags = FOF_NO_UI;
+	SHFILEOPSTRUCTW FileOp = { 0 };
+	FileOp.wFunc  = wFunc;
+	FileOp.pFrom  = from_str.get();
+	FileOp.pTo    = to_str.get();
+	FileOp.fFlags = FOF_NO_UI;
 
-	return SHFileOperationW(&s);
+	return SHFileOperationW(&FileOp);
 }
 
+void CleanPath(CStringW& path)
+{
+	// remove double quotes enclosing path
+	path.Trim();
+	if (path.GetLength() >= 2 && path[0] == '\"' && path[path.GetLength() - 1] == '\"') {
+		path = path.Mid(1, path.GetLength() - 2);
+	}
+};
+
+bool CFileGetStatus(LPCWSTR lpszFileName, CFileStatus& status)
+{
+	try {
+		return !!CFile::GetStatus(lpszFileName, status);
+	}
+	catch (CException* e) {
+		// MFCBUG: E_INVALIDARG / "Parameter is incorrect" is thrown for certain cds (vs2003)
+		// http://groups.google.co.uk/groups?hl=en&lr=&ie=UTF-8&threadm=OZuXYRzWDHA.536%40TK2MSFTNGP10.phx.gbl&rnum=1&prev=/groups%3Fhl%3Den%26lr%3D%26ie%3DISO-8859-1
+		DLog(L"CFile::GetStatus() has thrown an exception");
+		e->Delete();
+		return false;
+	}
+}

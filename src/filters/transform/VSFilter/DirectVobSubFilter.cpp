@@ -30,7 +30,6 @@
 #include "Systray.h"
 #include "DSUtil/FileHandle.h"
 #include "DSUtil/FileVersion.h"
-#include "DSUtil/WinAPIUtils.h"
 #include "DSUtil/std_helper.h"
 #include "vd.h"
 #include "SubPic/MemSubPic.h"

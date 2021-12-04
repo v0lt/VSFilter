@@ -65,7 +65,6 @@
     <ClCompile Include="UrlParser.cpp" />
     <ClCompile Include="Utils.cpp" />
     <ClCompile Include="vd_math.cpp" />
-    <ClCompile Include="WinAPIUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CPUInfo.h" />
@@ -92,7 +91,6 @@
     <ClInclude Include="UrlParser.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="vd_math.h" />
-    <ClInclude Include="WinAPIUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -27,7 +27,7 @@
 #include "Subtitles/RTS.h"
 #include "SubPic/MemSubPic.h"
 #include "SubPic/SubPicQueueImpl.h"
-#include "DSUtil/WinAPIUtils.h"
+#include "DSUtil/FileHandle.h"
 #include "vfr.h"
 
 #pragma warning(disable: 4706)

@@ -1,5 +1,5 @@
 /*
- * (C) 2016-2020 see Authors.txt
+ * (C) 2016-2021 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -40,6 +40,49 @@ uint32_t BitNum(uint32_t v, uint32_t b)
 	ASSERT(v & b);
 
 	return CountBits(v & (b - 1));
+}
+
+uint64_t RescaleU64x32(uint64_t a, uint32_t b, uint32_t c)
+{
+	// used code from \VirtualDub\system\source\math.cpp (VDFractionScale64)
+	uint32_t a0 = (uint32_t)a;
+	uint32_t a1 = (uint32_t)(a >> 32);
+
+	uint64_t m0 = (uint64_t)a0 * b;
+	uint64_t m1 = (uint64_t)a1 * b;
+
+	// collect all multiplier terms
+	uint32_t s0  = (uint32_t)m0;
+	uint32_t s1a = (uint32_t)(m0 >> 32);
+	uint32_t s1b = (uint32_t)m1;
+	uint32_t s2  = (uint32_t)(m1 >> 32);
+
+	// form 96-bit intermediate product
+	uint32_t acc0 = s0;
+	uint32_t acc1 = s1a + s1b;
+	uint32_t acc2 = s2 + (acc1 < s1b);
+
+	// check for overflow (or divide by zero)
+	if (acc2 >= c)
+		return 0xFFFFFFFFFFFFFFFFULL;
+
+	// do divide
+	uint64_t div1 = ((uint64_t)acc2 << 32) + acc1;
+	uint64_t q1 = div1 / c;
+	uint64_t div0 = ((div1 % c) << 32) + acc0;
+	uint32_t q0 = (uint32_t)(div0 / c);
+
+	return (q1 << 32) + q0;
+}
+
+int64_t RescaleI64x32(int64_t a, uint32_t b, uint32_t c)
+{
+	return a < 0 ? -(int64_t)RescaleU64x32(-a, b, c) : RescaleU64x32(a, b, c);
+}
+
+int64_t RescaleI64(int64_t a, int64_t b, int64_t c)
+{
+	return llMulDiv(a, b, c, 0);
 }
 
 // code from ffmpeg
@@ -220,6 +263,28 @@ bool StrToUInt64(const wchar_t* str, uint64_t& value)
 {
 	wchar_t* end;
 	uint64_t v = wcstoull(str, &end, 10);
+	if (end > str) {
+		value = v;
+		return true;
+	}
+	return false;
+}
+
+bool StrHexToUInt32(const wchar_t* str, uint32_t& value)
+{
+	wchar_t* end;
+	uint32_t v = wcstoul(str, &end, 16);
+	if (end > str) {
+		value = v;
+		return true;
+	}
+	return false;
+}
+
+bool StrHexToUInt64(const wchar_t* str, uint64_t& value)
+{
+	wchar_t* end;
+	uint64_t v = wcstoull(str, &end, 16);
 	if (end > str) {
 		value = v;
 		return true;

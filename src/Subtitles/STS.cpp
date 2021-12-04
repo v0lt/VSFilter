@@ -26,7 +26,6 @@
 #include <regex>
 #include "RealTextParser.h"
 #include "USFSubtitles.h"
-#include "DSUtil/WinAPIUtils.h"
 #include "DSUtil/std_helper.h"
 
 using std::wstring;
@@ -1669,7 +1668,7 @@ static bool LoadFont(const CString& font)
 		CString fn;
 		fn.Format(L"%sfont%08lx.ttf", path, chksum);
 
-		if (!::PathFileExists(fn)) {
+		if (!::PathFileExistsW(fn)) {
 			CFile f;
 			if (f.Open(fn, CFile::modeCreate|CFile::modeWrite|CFile::typeBinary|CFile::shareDenyNone)) {
 				f.Write(pData, datalen);
@@ -1677,7 +1676,7 @@ static bool LoadFont(const CString& font)
 			}
 		}
 
-		return !!AddFontResource(fn);
+		return !!AddFontResourceW(fn);
 	}
 
 	return true;
