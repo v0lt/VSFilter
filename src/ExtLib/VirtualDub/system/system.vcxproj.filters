@@ -156,6 +156,9 @@
     <ClCompile Include="source\linearalloc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="source\vdalloc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\h\vd2\system\atomic.h">

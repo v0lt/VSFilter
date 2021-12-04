@@ -152,7 +152,7 @@ inline vdsafedelete_t& operator<<=(vdsafedelete_t& x, T *& p) {
 template<class T>
 inline vdsafedelete_t& operator,(vdsafedelete_t& x, T *& p) {
 	if (p) {
-		delete p
+		delete p;
 		p = 0;
 	}
 
