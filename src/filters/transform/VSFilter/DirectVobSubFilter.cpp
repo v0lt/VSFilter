@@ -402,13 +402,13 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 	CSize sub(m_wout, m_hout);
 	CSize in(bihIn.biWidth, bihIn.biHeight);
 
-	if (FAILED(Copy((BYTE*)m_pTempPicBuff, pDataIn, sub, in, bpp, mt.subtype, black))) {
+	if (FAILED(Copy(m_pTempPicBuff.get(), pDataIn, sub, in, bpp, mt.subtype, black))) {
 		SetEvent(m_hEvtTransform);
 		return E_FAIL;
 	}
 
 	if (fYV12) {
-		BYTE* pSubV = (BYTE*)m_pTempPicBuff + (sub.cx*bpp>>3)*sub.cy;
+		BYTE* pSubV = m_pTempPicBuff.get() + (sub.cx*bpp>>3)*sub.cy;
 		BYTE* pInV = pDataIn + (in.cx*bpp>>3)*in.cy;
 		sub.cx >>= 1;
 		sub.cy >>= 1;
@@ -427,7 +427,7 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 	}
 
 	if (mt.subtype == MEDIASUBTYPE_P010 || mt.subtype == MEDIASUBTYPE_P016 || mt.subtype == MEDIASUBTYPE_NV12) {
-		BYTE* pSubUV = (BYTE*)m_pTempPicBuff + (sub.cx * bpp >> 3) * sub.cy;
+		BYTE* pSubUV = m_pTempPicBuff.get() + (sub.cx * bpp >> 3) * sub.cy;
 		BYTE* pInUV = pDataIn + (in.cx * bpp >> 3) * in.cy;
 		sub.cy >>= 1;
 		in.cy >>= 1;
@@ -1019,15 +1019,17 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	m_spd.bpp = (m_spd.type == MSP_P010 || m_spd.type == MSP_P016) ? 16 : m_spd.bpp;
 	m_spd.pitch = m_spd.w * m_spd.bpp >> 3;
 
-	m_pTempPicBuff.Free();
+	size_t picbufsize;
 	if (m_spd.type == MSP_YV12 || m_spd.type == MSP_IYUV || m_spd.type == MSP_NV12) {
-		m_pTempPicBuff.Allocate(4 * m_spd.pitch * m_spd.h);
+		picbufsize = 4 * m_spd.pitch * m_spd.h;
 	} else if (m_spd.type == MSP_P010 || m_spd.type == MSP_P016) {
-		m_pTempPicBuff.Allocate(m_spd.pitch * m_spd.h + m_spd.pitch * m_spd.h / 2);
+		picbufsize = m_spd.pitch * m_spd.h + m_spd.pitch * m_spd.h / 2;
 	} else {
-		m_pTempPicBuff.Allocate(m_spd.pitch * m_spd.h);
+		picbufsize = m_spd.pitch * m_spd.h;
 	}
-	m_spd.bits = m_pTempPicBuff;
+
+	m_pTempPicBuff.reset(new(std::nothrow) BYTE[picbufsize]);
+	m_spd.bits = m_pTempPicBuff.get();
 
 	CComPtr<ISubPicAllocator> pSubPicAllocator = DNew CMemSubPicAllocator(m_spd.type, CSize(m_wout, m_hout));
 

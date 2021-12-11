@@ -163,7 +163,7 @@ protected:
 	void PrintMessages(BYTE* pOut);
 
 	/* ResX2 */
-	CAutoVectorPtr<BYTE> m_pTempPicBuff;
+	std::unique_ptr<BYTE> m_pTempPicBuff;
 	HRESULT Copy(BYTE* pSub, BYTE* pIn, CSize sub, CSize in, int bpp, const GUID& subtype, DWORD black);
 
 	// segment start time, absolute time
