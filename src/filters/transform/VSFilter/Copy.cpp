@@ -138,7 +138,7 @@ HRESULT CDirectVobSubFilter::Copy(BYTE* pSub, BYTE* pIn, CSize sub, CSize in, in
 		j += (hSub - hIn) >> 1;
 
 		for (; i < j; i++, pSub += pitchSub) {
-			memsetd(pSub, black, dpLeft+dpMid+dpRight);
+			memset_u32(pSub, black, dpLeft+dpMid+dpRight);
 		}
 
 		j += hIn;
@@ -153,21 +153,21 @@ HRESULT CDirectVobSubFilter::Copy(BYTE* pSub, BYTE* pIn, CSize sub, CSize in, in
 					in.cx, (std::min(j, hSub) - i) >> 1);
 
 			for (int k = std::min(j, hSub); i < k; i++, pIn += pitchIn, pSub += pitchSub) {
-				memsetd(pSub, black, dpLeft);
-				memsetd(pSub + dpLeft+dpMid, black, dpRight);
+				memset_u32(pSub, black, dpLeft);
+				memset_u32(pSub + dpLeft+dpMid, black, dpRight);
 			}
 		} else {
 			for (int k = std::min(j, hSub); i < k; i++, pIn += pitchIn, pSub += pitchSub) {
-				memsetd(pSub, black, dpLeft);
+				memset_u32(pSub, black, dpLeft);
 				memcpy(pSub + dpLeft, pIn, dpMid);
-				memsetd(pSub + dpLeft+dpMid, black, dpRight);
+				memset_u32(pSub + dpLeft+dpMid, black, dpRight);
 			}
 		}
 
 		j = hSub;
 
 		for (; i < j; i++, pSub += pitchSub) {
-			memsetd(pSub, black, dpLeft+dpMid+dpRight);
+			memset_u32(pSub, black, dpLeft+dpMid+dpRight);
 		}
 	}
 
@@ -277,7 +277,7 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 
 	for (int w = std::min((int)r.right, m_win), h = r.Height(); h--; pIn += pitchIn, pOut += pitchOut) {
 		BltLineRGB32((DWORD*)pOut, pIn, w, subtype);
-		memsetd(pIn, 0xff000000, r.right*4);
+		memset_u32(pIn, 0xff000000, r.right*4);
 	}
 
 	SelectObject(m_hdc, hOldBitmap);

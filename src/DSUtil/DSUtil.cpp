@@ -960,54 +960,6 @@ REFERENCE_TIME HMSF2RT(DVD_HMSF_TIMECODE hmsf, double fps)
 	return (REFERENCE_TIME)((((REFERENCE_TIME)hmsf.bHours*60+hmsf.bMinutes)*60+hmsf.bSeconds)*1000+1.0*hmsf.bFrames*1000/fps)*10000;
 }
 
-void memsetd(void* dst, unsigned int c, size_t nbytes)
-{
-#ifndef _WIN64
-	__asm {
-		mov eax, c
-		mov ecx, nbytes
-		shr ecx, 2
-		mov edi, dst
-		cld
-		rep stosd
-	}
-	return;
-#endif
-	size_t n = nbytes / 4;
-	size_t o = n - (n % 4);
-
-	__m128i val = _mm_set1_epi32 ( (int)c );
-	if (((uintptr_t)dst & 0x0F) == 0) { // 16-byte aligned
-		for (size_t i = 0; i < o; i+=4) {
-			_mm_store_si128( (__m128i*)&(((DWORD*)dst)[i]), val );
-		}
-	} else {
-		for (size_t i = 0; i < o; i+=4) {
-			_mm_storeu_si128( (__m128i*)&(((DWORD*)dst)[i]), val );
-		}
-	}
-
-	switch (n - o) {
-		case 3:
-				((DWORD*)dst)[o + 2] = c;
-		case 2:
-				((DWORD*)dst)[o + 1] = c;
-		case 1:
-				((DWORD*)dst)[o + 0] = c;
-	}
-}
-
-void memsetw(void* dst, unsigned short c, size_t nbytes)
-{
-	memsetd(dst, c << 16 | c, nbytes);
-
-	size_t n = nbytes / 2;
-	size_t o = (n / 2) * 2;
-	if ((n - o) == 1) {
-		((WORD*)dst)[o] = c;
-	}
-}
-
 bool ExtractBIH(const AM_MEDIA_TYPE* pmt, BITMAPINFOHEADER* bih)
 {
 	if (pmt && bih) {
@@ -2541,30 +2493,6 @@ const wchar_t *StreamTypeToName(PES_STREAM_TYPE _Type)
 				return L"VC-1";
 	}
 	return nullptr;
-}
-
-//
-// Usage: SetThreadName (-1, "MainThread");
-//
-struct THREADNAME_INFO {
-	DWORD  dwType; // must be 0x1000
-	LPCSTR szName; // pointer to name (in user addr space)
-	DWORD  dwThreadID; // thread ID (-1 caller thread)
-	DWORD  dwFlags; // reserved for future use, must be zero
-};
-
-void SetThreadName(DWORD dwThreadID, LPCSTR szThreadName)
-{
-	THREADNAME_INFO info;
-	info.dwType     = 0x1000;
-	info.szName     = szThreadName;
-	info.dwThreadID = dwThreadID;
-	info.dwFlags    = 0;
-
-	__try {
-		RaiseException(0x406D1388, 0, sizeof(info) / sizeof(DWORD), (ULONG_PTR*)&info);
-	} __except (EXCEPTION_CONTINUE_EXECUTION) {
-	}
 }
 
 unsigned int lav_xiphlacing(unsigned char *s, unsigned int v)

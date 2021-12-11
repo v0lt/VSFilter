@@ -59,6 +59,9 @@ inline void expand_range(T const& val, T& lo, T& hi)
 uint32_t CountBits(uint32_t v);
 uint32_t BitNum(uint32_t v, uint32_t b);
 
+void memset_u32(void* dst, uint32_t c, size_t nbytes);
+void memset_u16(void* dst, uint16_t c, size_t nbytes);
+
 // a * b / c
 uint64_t RescaleU64x32(uint64_t a, uint32_t b, uint32_t c);
 // a * b / c
@@ -105,3 +108,6 @@ bool StrHexToUInt64(const wchar_t* str, uint64_t& value);
 bool StrToDouble(const wchar_t* str, double& value);
 
 CStringW HR2Str(const HRESULT hr);
+
+// Usage: SetThreadName((DWORD)-1, "MainThread") or SetThreadName(DWORD_MAX, "MainThread")
+void SetThreadName(DWORD dwThreadID, LPCSTR szThreadName);

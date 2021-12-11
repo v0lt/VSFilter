@@ -259,7 +259,7 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 		} else if (bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS) {
 			if (!BitBltFromI420ToRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pIn, pInU, pInV, pitchIn)) {
 				for (int y = 0; y < h; y++, pOut += pitchOut) {
-					memsetd(pOut, 0, pitchOut);
+					memset_u32(pOut, 0, pitchOut);
 				}
 			}
 		}
@@ -284,7 +284,7 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 		} else if (bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS) {
 			if (!BitBltFromYUY2ToRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pInYUV[0], pitchIn)) {
 				for (int y = 0; y < h; y++, pOut += pitchOut) {
-					memsetd(pOut, 0, pitchOut);
+					memset_u32(pOut, 0, pitchOut);
 				}
 			}
 		}
@@ -300,7 +300,7 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 		} else if (bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS) {
 			if (!BitBltFromRGBToRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pInYUV[0], pitchIn, sbpp)) {
 				for (int y = 0; y < h; y++, pOut += pitchOut) {
-					memsetd(pOut, 0, pitchOut);
+					memset_u32(pOut, 0, pitchOut);
 				}
 			}
 		}
@@ -1072,7 +1072,7 @@ void CDirectVobSubFilter::InitSubPicQueue()
 
 	BITMAP bm;
 	GetObject(m_hbm, sizeof(bm), &bm);
-	memsetd(bm.bmBits, 0xFF000000, bm.bmHeight * bm.bmWidthBytes);
+	memset_u32(bm.bmBits, 0xFF000000, bm.bmHeight * bm.bmWidthBytes);
 
 	SetEvent(m_hEvtTransform);
 }

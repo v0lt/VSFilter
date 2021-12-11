@@ -27,19 +27,8 @@
 #include "Log.h"
 #include <basestruct.h>
 #include <mpc_defines.h>
+#include "ds_defines.h"
 #include "Utils.h"
-
-#define LCID_NOSUBTITLES    -1
-
-#define SAFE_RELEASE(p)      { if (p) { (p)->Release(); (p) = nullptr; } }
-#define SAFE_CLOSE_HANDLE(p) { if (p) { if ((p) != INVALID_HANDLE_VALUE) VERIFY(CloseHandle(p)); (p) = nullptr; } }
-
-#define EXIT_ON_ERROR(hres)  { if (FAILED(hres)) return hres; }
-
-#define IsWaveFormatExtensible(wfe) (wfe->wFormatTag == WAVE_FORMAT_EXTENSIBLE && wfe->cbSize == 22)
-
-#define QI(i)  (riid == __uuidof(i)) ? GetInterface((i*)this, ppv) :
-#define QI2(i) (riid == IID_##i) ? GetInterface((i*)this, ppv) :
 
 extern int				CountPins(IBaseFilter* pBF, int& nIn, int& nOut, int& nInC, int& nOutC);
 extern bool				IsSplitter(IBaseFilter* pBF, bool fCountConnectedOnly = false);
@@ -115,9 +104,6 @@ extern CString				DVDtimeToString(const DVD_HMSF_TIMECODE& rtVal, bool bAlwaysSh
 extern REFERENCE_TIME		StringToReftime(LPCWSTR strVal);
 extern REFERENCE_TIME		StringToReftime2(LPCWSTR strVal);
 
-extern void				memsetd(void* dst, unsigned int c, size_t nbytes);
-extern void				memsetw(void* dst, unsigned short c, size_t nbytes);
-
 extern CString			GetFriendlyName(CString DisplayName);
 extern HRESULT			LoadExternalObject(LPCWSTR path, REFCLSID clsid, REFIID iid, void** ppv);
 extern HRESULT			LoadExternalFilter(LPCWSTR path, REFCLSID clsid, IBaseFilter** ppBF);
@@ -154,8 +140,6 @@ extern void				UnRegisterSourceFilter(const GUID& subtype);
 extern void				TraceFilterInfo(IBaseFilter* pBF);
 extern void				TracePinInfo(IPin* pPin);
 
-extern void				SetThreadName(DWORD dwThreadID, LPCSTR szThreadName);
-
 extern void				getExtraData(const BYTE *format, const GUID *formattype, const ULONG formatlen, BYTE *extra, unsigned int *extralen);
 
 extern int				MakeAACInitData(BYTE* pData, int profile, int freq, int channels);
@@ -181,61 +165,6 @@ public:
 	CFilterInfo() { pGraph = nullptr; }
 	~CFilterInfo() { if (pGraph) { pGraph->Release(); } }
 };
-
-#define BeginEnumFilters(pFilterGraph, pEnumFilters, pBaseFilter) \
-	{CComPtr<IEnumFilters> pEnumFilters; \
-	if (pFilterGraph && SUCCEEDED(pFilterGraph->EnumFilters(&pEnumFilters))) \
-	{ \
-		for (CComPtr<IBaseFilter> pBaseFilter; S_OK == pEnumFilters->Next(1, &pBaseFilter, 0); pBaseFilter = nullptr) \
-		{ \
-
-#define EndEnumFilters }}}
-
-#define BeginEnumCachedFilters(pGraphConfig, pEnumFilters, pBaseFilter) \
-	{CComPtr<IEnumFilters> pEnumFilters; \
-	if (pGraphConfig && SUCCEEDED(pGraphConfig->EnumCacheFilter(&pEnumFilters))) \
-	{ \
-		for (CComPtr<IBaseFilter> pBaseFilter; S_OK == pEnumFilters->Next(1, &pBaseFilter, 0); pBaseFilter = nullptr) \
-		{ \
-
-#define EndEnumCachedFilters }}}
-
-#define BeginEnumPins(pBaseFilter, pEnumPins, pPin) \
-	{CComPtr<IEnumPins> pEnumPins; \
-	if (pBaseFilter && SUCCEEDED(pBaseFilter->EnumPins(&pEnumPins))) \
-	{ \
-		for (CComPtr<IPin> pPin; S_OK == pEnumPins->Next(1, &pPin, 0); pPin = nullptr) \
-		{ \
-
-#define EndEnumPins }}}
-
-#define BeginEnumMediaTypes(pPin, pEnumMediaTypes, pMediaType) \
-	{CComPtr<IEnumMediaTypes> pEnumMediaTypes; \
-	if (pPin && SUCCEEDED(pPin->EnumMediaTypes(&pEnumMediaTypes))) \
-	{ \
-		AM_MEDIA_TYPE* pMediaType = nullptr; \
-		for (; S_OK == pEnumMediaTypes->Next(1, &pMediaType, nullptr); DeleteMediaType(pMediaType), pMediaType = nullptr) \
-		{ \
-
-#define EndEnumMediaTypes(pMediaType) } if (pMediaType) DeleteMediaType(pMediaType); }}
-
-#define BeginEnumSysDev(clsid, pMoniker) \
-	{CComPtr<ICreateDevEnum> pDevEnum4$##clsid; \
-	pDevEnum4$##clsid.CoCreateInstance(CLSID_SystemDeviceEnum); \
-	CComPtr<IEnumMoniker> pClassEnum4$##clsid; \
-	if (SUCCEEDED(pDevEnum4$##clsid->CreateClassEnumerator(clsid, &pClassEnum4$##clsid, 0)) \
-	&& pClassEnum4$##clsid) \
-	{ \
-		for (CComPtr<IMoniker> pMoniker; pClassEnum4$##clsid->Next(1, &pMoniker, 0) == S_OK; pMoniker = nullptr) \
-		{ \
-
-#define EndEnumSysDev }}}
-
-template <typename T> __inline void INITDDSTRUCT(T& dd)
-{
-	ZeroMemory(&dd, sizeof(dd));
-	dd.dwSize = sizeof(dd);
-}
 
 template <class T>
 static CUnknown* WINAPI CreateInstance(LPUNKNOWN lpunk, HRESULT* phr)

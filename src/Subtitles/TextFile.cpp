@@ -37,8 +37,8 @@ CTextFile::CTextFile(enc encoding/* = ASCII*/, enc defaultencoding/* = ASCII*/)
 	, m_posInBuffer(0)
 	, m_nInBuffer(0)
 {
-	m_buffer.Allocate(TEXTFILE_BUFFER_SIZE);
-	m_wbuffer.Allocate(TEXTFILE_BUFFER_SIZE);
+	m_buffer.reset(new(std::nothrow) char[TEXTFILE_BUFFER_SIZE]);
+	m_wbuffer.reset(new(std::nothrow) WCHAR[TEXTFILE_BUFFER_SIZE]);
 }
 
 bool CTextFile::Open(LPCWSTR lpszFileName)
@@ -101,7 +101,7 @@ bool CTextFile::Open(LPCWSTR lpszFileName)
 
 bool CTextFile::ReopenAsText()
 {
-	CString strFileName = m_strFileName;
+	CStringW strFileName = m_strFileName;
 
 	__super::Close();
 
@@ -147,7 +147,7 @@ bool CTextFile::IsUnicode()
 
 // CFile
 
-CString CTextFile::GetFilePath() const
+CStringW CTextFile::GetFilePath() const
 {
 	// to avoid a CException coming from CTime
 	return m_strFileName; // __super::GetFilePath();
@@ -228,7 +228,7 @@ void CTextFile::WriteString(LPCSTR lpsz/*CStringA str*/)
 
 void CTextFile::WriteString(LPCWSTR lpsz/*CStringW str*/)
 {
-	CString str(lpsz);
+	CStringW str(lpsz);
 
 	if (m_encoding == ASCII) {
 		__super::WriteString(str);
@@ -273,7 +273,7 @@ bool CTextFile::FillBuffer()
 {
 	if (m_posInBuffer < m_nInBuffer) {
 		m_nInBuffer -= m_posInBuffer;
-		memcpy(m_buffer, &m_buffer[m_posInBuffer], (size_t)m_nInBuffer * sizeof(char));
+		memcpy(m_buffer.get(), &m_buffer[m_posInBuffer], (size_t)m_nInBuffer * sizeof(char));
 	} else {
 		m_nInBuffer = 0;
 	}
@@ -300,7 +300,7 @@ BOOL CTextFile::ReadString(CStringA& str)
 	str.Truncate(0);
 
 	if (m_encoding == ASCII) {
-		CString s;
+		CStringW s;
 		fEOF = !__super::ReadString(s);
 		str = TToA(s);
 		// For consistency with other encodings, we continue reading
@@ -352,7 +352,7 @@ BOOL CTextFile::ReadString(CStringA& str)
 
 		do {
 			int nCharsRead;
-			char* abuffer = (char*)(WCHAR*)m_wbuffer;
+			char* abuffer = (char*)m_wbuffer.get();
 
 			for (nCharsRead = 0; m_posInBuffer < m_nInBuffer; m_posInBuffer++, nCharsRead++) {
 				if (Utf8::isSingleByte(m_buffer[m_posInBuffer])) { // 0xxxxxxx
@@ -438,7 +438,7 @@ BOOL CTextFile::ReadString(CStringA& str)
 		do {
 			int nCharsRead;
 			WCHAR* wbuffer = (WCHAR*)&m_buffer[m_posInBuffer];
-			char* abuffer = (char*)(WCHAR*)m_wbuffer;
+			char* abuffer = (char*)m_wbuffer.get();
 
 			for (nCharsRead = 0; m_posInBuffer + 1 < m_nInBuffer; nCharsRead++, m_posInBuffer += sizeof(WCHAR)) {
 				if (wbuffer[nCharsRead] == L'\n') {
@@ -477,7 +477,7 @@ BOOL CTextFile::ReadString(CStringA& str)
 
 		do {
 			int nCharsRead;
-			char* abuffer = (char*)(WCHAR*)m_wbuffer;
+			char* abuffer = (char*)m_wbuffer.get();
 
 			for (nCharsRead = 0; m_posInBuffer + 1 < m_nInBuffer; nCharsRead++, m_posInBuffer += sizeof(WCHAR)) {
 				if (!m_buffer[m_posInBuffer]) {
@@ -516,7 +516,7 @@ BOOL CTextFile::ReadString(CStringW& str)
 	str.Truncate(0);
 
 	if (m_encoding == ASCII) {
-		CString s;
+		CStringW s;
 		fEOF = !__super::ReadString(s);
 		str = s;
 		// For consistency with other encodings, we continue reading
@@ -633,7 +633,7 @@ BOOL CTextFile::ReadString(CStringW& str)
 			}
 
 			if (bValid || m_offset) {
-				str.Append(m_wbuffer, nCharsRead);
+				str.Append(m_wbuffer.get(), nCharsRead);
 
 				if (!bLineEndFound) {
 					bLineEndFound = FillBuffer();
@@ -710,7 +710,7 @@ BOOL CTextFile::ReadString(CStringW& str)
 				}
 			}
 
-			str.Append(m_wbuffer, nCharsRead);
+			str.Append(m_wbuffer.get(), nCharsRead);
 
 			if (!bLineEndFound) {
 				bLineEndFound = FillBuffer();
@@ -741,7 +741,7 @@ CWebTextFile::~CWebTextFile()
 
 bool CWebTextFile::Open(LPCWSTR lpszFileName)
 {
-	CString fn(lpszFileName);
+	CStringW fn(lpszFileName);
 
 	if (fn.Find(L"http://") != 0 && fn.Find(L"https://") != 0) {
 		return __super::Open(lpszFileName);
@@ -800,16 +800,16 @@ void CWebTextFile::Close()
 
 ///////////////////////////////////////////////////////////////
 
-CString AToT(CStringA str)
+CStringW AToT(CStringA str)
 {
-	CString ret;
+	CStringW ret;
 	for (int i = 0, j = str.GetLength(); i < j; i++) {
 		ret += (WCHAR)(BYTE)str[i];
 	}
 	return ret;
 }
 
-CStringA TToA(CString str)
+CStringA TToA(CStringW str)
 {
 	CStringA ret;
 	for (int i = 0, j = str.GetLength(); i < j; i++) {
