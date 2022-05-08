@@ -1,5 +1,5 @@
 /*
- * (C) 2016-2020 see Authors.txt
+ * (C) 2016-2022 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -47,28 +47,10 @@ void CALLBACK CHTTPAsync::Callback(_In_ HINTERNET hInternet,
 							SetEvent(pContext->m_hRequestOpenedEvent);
 						}
 						break;
-					case INTERNET_STATUS_REQUEST_SENT:
-						{
-							DWORD* lpBytesSent = (DWORD*)lpvStatusInformation;
-							UNREFERENCED_PARAMETER(lpBytesSent);
-						}
-						break;
 					case INTERNET_STATUS_REQUEST_COMPLETE:
 						{
 							pContext->m_bRequestComplete = TRUE;
 							SetEvent(pContext->m_hRequestCompleteEvent);
-						}
-						break;
-					case INTERNET_STATUS_REDIRECT:
-						{
-							CString strNewAddr = (LPCWSTR)lpvStatusInformation;
-							UNREFERENCED_PARAMETER(strNewAddr);
-						}
-						break;
-					case INTERNET_STATUS_RESPONSE_RECEIVED:
-						{
-							DWORD* dwBytesReceived = (DWORD*)lpvStatusInformation;
-							UNREFERENCED_PARAMETER(dwBytesReceived);
 						}
 						break;
 					}
@@ -82,10 +64,10 @@ CString CHTTPAsync::QueryInfoStr(DWORD dwInfoLevel) const
 
 	CString queryInfo;
 	DWORD   dwLen = 0;
-	if (!HttpQueryInfoW(m_hRequest, dwInfoLevel, nullptr, &dwLen, 0) && dwLen) {
+	if (!HttpQueryInfoW(m_hRequest, dwInfoLevel, nullptr, &dwLen, nullptr) && dwLen) {
 		const DWORD dwError = GetLastError();
 		if (dwError == ERROR_INSUFFICIENT_BUFFER
-				&& HttpQueryInfoW(m_hRequest, dwInfoLevel, (LPVOID)queryInfo.GetBuffer(dwLen), &dwLen, 0)) {
+				&& HttpQueryInfoW(m_hRequest, dwInfoLevel, (LPVOID)queryInfo.GetBuffer(dwLen), &dwLen, nullptr)) {
 			queryInfo.ReleaseBuffer(dwLen);
 		}
 	}
@@ -216,9 +198,7 @@ HRESULT CHTTPAsync::Connect(LPCWSTR lpszURL, DWORD dwTimeOut/* = INFINITE*/, LPC
 	m_nPort   = urlParser.GetPortNumber();
 	m_nScheme = urlParser.GetScheme();
 
-	CString lpszAgent;
-	lpszAgent.Format(L"MPCBE.%S", L"1.5.7");
-	m_hInstance = InternetOpenW(lpszAgent,
+	m_hInstance = InternetOpenW(L"MPCBE",
 							    INTERNET_OPEN_TYPE_PRECONFIG,
 							    nullptr,
 							    nullptr,
@@ -309,7 +289,7 @@ HRESULT CHTTPAsync::SendRequest(LPCWSTR lpszCustomHeader/* = L""*/, DWORD dwTime
 
 	DWORD dwFlags = INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_KEEP_CONNECTION;
 	if (m_nScheme == INTERNET_SCHEME_HTTPS) {
-		dwFlags |= (INTERNET_FLAG_SECURE | INTERNET_FLAG_IGNORE_CERT_CN_INVALID | INTERNET_FLAG_IGNORE_CERT_DATE_INVALID);
+		dwFlags |= (INTERNET_FLAG_SECURE | SECURITY_IGNORE_ERROR_MASK);
 	}
 
 	m_hRequest = HttpOpenRequestW(m_hConnect,

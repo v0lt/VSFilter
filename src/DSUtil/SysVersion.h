@@ -1,5 +1,5 @@
 /*
- * (C) 2013-2018 see Authors.txt
+ * (C) 2013-2022 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -87,6 +87,11 @@ namespace SysVersion
 	inline const bool IsWin10RS4orLater() {
 		const static bool bIsWin10RS4orLater = IsWindowsVersionOrGreaterBuild(HIBYTE(_WIN32_WINNT_WINTHRESHOLD), LOBYTE(_WIN32_WINNT_WINTHRESHOLD), 17134);
 		return bIsWin10RS4orLater;
+	}
+	inline const bool IsWin11orLater()
+	{
+		const static bool bIsWin11orLater = IsWindowsVersionOrGreaterBuild(HIBYTE(_WIN32_WINNT_WINTHRESHOLD), LOBYTE(_WIN32_WINNT_WINTHRESHOLD), 22000);
+		return bIsWin11orLater;
 	}
 	inline const bool IsW64() {
 		const static bool bIsW64 = IsWindows64();
