@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2019 see Authors.txt
+ * (C) 2006-2022 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -117,11 +117,7 @@ HRESULT CSubPicQueueImpl::RenderTo(ISubPic* pSubPic, REFERENCE_TIME rtStart, REF
 		return hr;
 	}
 
-	if (pSubPic->GetInverseAlpha()) {
-		hr = pSubPic->ClearDirtyRect(0x00000000);
-	} else {
-	    hr = pSubPic->ClearDirtyRect(0xFF000000);
-	}
+	hr = pSubPic->ClearDirtyRect();
 
 	SubPicDesc spd;
 	if (SUCCEEDED(hr)) {

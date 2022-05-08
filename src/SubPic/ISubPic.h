@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2020 see Authors.txt
+ * (C) 2006-2022 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -66,7 +66,7 @@ public IUnknown {
 	STDMETHOD (GetDesc) (SubPicDesc& spd /*[out]*/) PURE;
 	STDMETHOD (CopyTo) (ISubPic* pSubPic /*[in]*/) PURE;
 
-	STDMETHOD (ClearDirtyRect) (DWORD color /*[in]*/) PURE;
+	STDMETHOD (ClearDirtyRect) () PURE;
 	STDMETHOD (GetDirtyRect) (RECT* pDirtyRect /*[out]*/) PURE;
 	STDMETHOD (SetDirtyRect) (RECT* pDirtyRect /*[in]*/) PURE;
 
@@ -89,7 +89,6 @@ public IUnknown {
 	STDMETHOD (SetType) (SUBTITLE_TYPE subtitleType /*[in]*/) PURE;
 	STDMETHOD (GetType) (SUBTITLE_TYPE* pSubtitleType /*[out]*/) PURE;
 
-	STDMETHOD_(bool, GetInverseAlpha)() const PURE;
 	STDMETHOD_(void, SetInverseAlpha)(bool bInverted) PURE;
 };
 
@@ -112,6 +111,8 @@ public IUnknown {
 	STDMETHOD (SetMaxTextureSize) (SIZE MaxTextureSize) PURE;
 
 	STDMETHOD (Reset) () PURE;
+
+	STDMETHOD_(void, SetInverseAlpha)(bool bInverted) PURE;
 };
 
 //
