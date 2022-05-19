@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2021 see Authors.txt
+ * (C) 2006-2022 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -25,7 +25,7 @@
 #include "resource.h"
 #include "Subtitles/VobSubFile.h"
 #include "Subtitles/RTS.h"
-#include "SubPic/MemSubPic.h"
+#include "SubPic/MemSubPicEx.h"
 #include "SubPic/SubPicQueueImpl.h"
 #include "DSUtil/FileHandle.h"
 #include "vfr.h"
@@ -79,7 +79,7 @@ namespace Plugin
 			CSize size(dst.w, dst.h);
 
 			if (!m_pSubPicQueue) {
-				CComPtr<ISubPicAllocator> pAllocator = DNew CMemSubPicAllocator(dst.type, size);
+				CComPtr<ISubPicAllocator> pAllocator = DNew CMemSubPicExAllocator(dst.type, size);
 
 				HRESULT hr;
 				if (!(m_pSubPicQueue = DNew CSubPicQueueNoThread(false, pAllocator, &hr)) || FAILED(hr)) {

@@ -48,6 +48,7 @@
   <ItemGroup>
     <ClCompile Include="CoordGeom.cpp" />
     <ClCompile Include="MemSubPic.cpp" />
+    <ClCompile Include="MemSubPicEx.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
@@ -60,6 +61,7 @@
     <ClInclude Include="ISubPic.h" />
     <ClInclude Include="ISubRender.h" />
     <ClInclude Include="MemSubPic.h" />
+    <ClInclude Include="MemSubPicEx.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="SubPicImpl.h" />
     <ClInclude Include="SubPicProviderImpl.h" />

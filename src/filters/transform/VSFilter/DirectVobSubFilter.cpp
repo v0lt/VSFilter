@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2021 see Authors.txt
+ * (C) 2006-2022 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -32,7 +32,7 @@
 #include "DSUtil/FileVersion.h"
 #include "DSUtil/std_helper.h"
 #include "vd.h"
-#include "SubPic/MemSubPic.h"
+#include "SubPic/MemSubPicEx.h"
 #include "SubPic/SubPicQueueImpl.h"
 #include "Subtitles/VobSubFile.h"
 #include "Subtitles/RTS.h"
@@ -1031,7 +1031,7 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	m_pTempPicBuff.reset(new(std::nothrow) BYTE[picbufsize]);
 	m_spd.bits = m_pTempPicBuff.get();
 
-	CComPtr<ISubPicAllocator> pSubPicAllocator = DNew CMemSubPicAllocator(m_spd.type, CSize(m_wout, m_hout));
+	CComPtr<ISubPicAllocator> pSubPicAllocator = DNew CMemSubPicExAllocator(m_spd.type, CSize(m_wout, m_hout));
 
 	CSize video(bihIn.biWidth, bihIn.biHeight), window = video;
 	if (AdjustFrameSize(window)) {

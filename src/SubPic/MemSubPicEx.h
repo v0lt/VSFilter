@@ -1,6 +1,5 @@
 /*
- * (C) 2003-2006 Gabest
- * (C) 2006-2022 see Authors.txt
+ * (C) 2022 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -21,42 +20,30 @@
 
 #pragma once
 
-#include "SubPicImpl.h"
+#include "MemSubPic.h"
 
-// CMemSubPic
+enum {MSP_P010,MSP_P016,MSP_RGB32,MSP_RGB24,MSP_RGB16,MSP_RGB15,MSP_YUY2,MSP_NV12,MSP_YV12,MSP_IYUV,MSP_AYUV,MSP_RGBA};
 
-class CMemSubPic : public CSubPicImpl
+// CMemSubPicEx
+
+class CMemSubPicEx : public CMemSubPic
 {
-protected:
-	SubPicDesc m_spd;
-
 public:
-	CMemSubPic(SubPicDesc& spd);
-	virtual ~CMemSubPic();
+	CMemSubPicEx(SubPicDesc& spd);
 
 	// ISubPic
-protected:
-	STDMETHODIMP_(void*) GetObject() override; // returns SubPicDesc*
-public:
-	STDMETHODIMP GetDesc(SubPicDesc& spd) override;
-	STDMETHODIMP CopyTo(ISubPic* pSubPic) override;
-	STDMETHODIMP ClearDirtyRect() override;
-	STDMETHODIMP Lock(SubPicDesc& spd) override;
 	STDMETHODIMP Unlock(RECT* pDirtyRect) override;
 	STDMETHODIMP AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget) override;
 };
 
-// CMemSubPicAllocator
+// CMemSubPicExAllocator
 
-class CMemSubPicAllocator : public CSubPicAllocatorImpl
+class CMemSubPicExAllocator : public CMemSubPicAllocator
 {
-protected:
-	const int m_type;
-	CSize m_maxsize;
-
+//protected:
 	// CSubPicAllocatorImpl
 	bool Alloc(bool fStatic, ISubPic** ppSubPic) override;
 
 public:
-	CMemSubPicAllocator(int type, SIZE maxsize);
+	CMemSubPicExAllocator(int type, SIZE maxsize);
 };
