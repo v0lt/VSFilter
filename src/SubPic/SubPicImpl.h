@@ -94,10 +94,14 @@ public:
 	STDMETHODIMP Lock(SubPicDesc& spd) PURE;
 	STDMETHODIMP Unlock(RECT* pDirtyRect) PURE;
 
-	STDMETHODIMP AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget = NULL) PURE;
+	STDMETHODIMP AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget = nullptr) PURE;
 
 	STDMETHODIMP SetVirtualTextureSize(const SIZE pSize, const POINT pTopLeft);
-	STDMETHODIMP GetSourceAndDest(RECT rcWindow, RECT rcVideo, BOOL bPositionRelative, CPoint ShiftPos, RECT* pRcSource, RECT* pRcDest, int xOffsetInPixels, const BOOL bUseSpecialCase) const;
+	STDMETHODIMP GetSourceAndDest(
+		RECT rcWindow, RECT rcVideo,
+		RECT* pRcSource, RECT* pRcDest,
+		BOOL bPositionRelative, CPoint ShiftPos,
+		int xOffsetInPixels, const BOOL bUseSpecialCase) const;
 
 	STDMETHODIMP_(REFERENCE_TIME) GetSegmentStart();
 	STDMETHODIMP_(REFERENCE_TIME) GetSegmentStop();
