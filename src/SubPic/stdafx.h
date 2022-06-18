@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2021 see Authors.txt
+ * (C) 2006-2022 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -29,6 +29,7 @@
 #include <../external/BaseClasses/streams.h>
 #include <dvdmedia.h>
 
+#include <cmath>
 #include <algorithm>
 #include <vector>
 #include <list>

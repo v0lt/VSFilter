@@ -29,7 +29,6 @@
 #include <moreuuids.h>
 #include <basestruct.h>
 #include <emmintrin.h>
-#include <math.h>
 #include <d3d9.h>
 #include <dxva2api.h>
 #include <mvrInterfaces.h>

@@ -21,7 +21,6 @@
 
 #include "stdafx.h"
 #include <atlpath.h>
-#include <math.h>
 #include <time.h>
 #include "DirectVobSubFilter.h"
 #include "TextInputPin.h"
