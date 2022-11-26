@@ -35,7 +35,6 @@ const double CSubPicQueueImpl::DEFAULT_FPS = 24/1.001;
 CSubPicQueueImpl::CSubPicQueueImpl(ISubPicAllocator* pAllocator, HRESULT* phr)
 	: CUnknown(L"CSubPicQueueImpl", nullptr)
 	, m_pAllocator(pAllocator)
-	, m_rtNow(0)
 	, m_fps(DEFAULT_FPS)
 	, m_rtTimePerFrame(std::llround(10000000.0 / DEFAULT_FPS))
 {
@@ -150,12 +149,8 @@ HRESULT CSubPicQueueImpl::RenderTo(ISubPic* pSubPic, REFERENCE_TIME rtStart, REF
 CSubPicQueue::CSubPicQueue(int nMaxSubPic, bool bDisableAnim, bool bAllowDropSubPic, ISubPicAllocator* pAllocator, HRESULT* phr)
 	: CSubPicQueueImpl(pAllocator, phr)
 	, m_nMaxSubPic(nMaxSubPic)
-	, m_bExitThread(false)
 	, m_bDisableAnim(bDisableAnim)
 	, m_bAllowDropSubPic(bAllowDropSubPic)
-	, m_rtNowLast(LONGLONG_ERROR)
-	, m_bInvalidate(false)
-	, m_rtInvalidate(0)
 {
 	if (phr && FAILED(*phr)) {
 		return;

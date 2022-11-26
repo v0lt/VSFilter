@@ -22,6 +22,16 @@
 #include "stdafx.h"
 #include "CoordGeom.h"
 
+static inline bool IsZero(float d)
+{
+	return std::abs(d) < std::numeric_limits<float>::epsilon();
+}
+
+static inline float Sgn(float d)
+{
+	return IsZero(d) ? 0 : (d) > 0 ? 1 : -1;
+}
+
 //
 // Vector
 //

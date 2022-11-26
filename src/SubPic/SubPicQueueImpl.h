@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2020 see Authors.txt
+ * (C) 2006-2022 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -89,7 +89,7 @@ private:
 protected:
 	double m_fps;
 	REFERENCE_TIME m_rtTimePerFrame;
-	REFERENCE_TIME m_rtNow;
+	REFERENCE_TIME m_rtNow = 0;
 
 	CComPtr<ISubPicAllocator> m_pAllocator;
 
@@ -132,7 +132,7 @@ protected:
 	bool m_bDisableAnim;
 	bool m_bAllowDropSubPic;
 
-	bool m_bExitThread;
+	bool m_bExitThread = false;
 
 	CComPtr<ISubPic> m_pSubPic;
 	CInterfaceList<ISubPic> m_queue;
@@ -144,10 +144,10 @@ protected:
 
 	CAMEvent m_runQueueEvent;
 
-	REFERENCE_TIME m_rtNowLast;
+	REFERENCE_TIME m_rtNowLast = LONGLONG_ERROR;
 
-	bool m_bInvalidate;
-	REFERENCE_TIME m_rtInvalidate;
+	bool m_bInvalidate = false;
+	REFERENCE_TIME m_rtInvalidate = 0;
 
 	bool EnqueueSubPic(CComPtr<ISubPic>& pSubPic, bool bBlocking);
 	REFERENCE_TIME GetCurrentRenderingTime();
