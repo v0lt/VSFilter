@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2021 see Authors.txt
+ * (C) 2006-2023 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -20,7 +20,6 @@
  */
 
 #include "stdafx.h"
-#include <atlbase.h>
 #include <afxinet.h>
 #include "TextFile.h"
 #include <Utf8.h>
@@ -747,33 +746,35 @@ bool CWebTextFile::Open(LPCWSTR lpszFileName)
 		return __super::Open(lpszFileName);
 	}
 
-	CHTTPAsync m_HTTPAsync;
-	if (SUCCEEDED(m_HTTPAsync.Connect(lpszFileName, 5000))) {
+	CHTTPAsync HTTPAsync;
+	if (SUCCEEDED(HTTPAsync.Connect(lpszFileName, 5000))) {
 		if (GetTemporaryFilePath(L".tmp", fn)) {
 			CFile temp;
 			if (!temp.Open(fn, modeCreate | modeWrite | typeBinary | shareDenyWrite)) {
-				m_HTTPAsync.Close();
+				HTTPAsync.Close();
 				return false;
 			}
 
-			BYTE buffer[1024] = {};
-			DWORD dwSizeRead  = 0;
-			DWORD totalSize   = 0;
-			do {
-				if (m_HTTPAsync.Read(buffer, 1024, &dwSizeRead) != S_OK) {
-					break;
-				}
-				temp.Write(buffer, dwSizeRead);
-				totalSize += dwSizeRead;
-			} while (dwSizeRead && totalSize < m_llMaxSize);
-			temp.Close();
+			{
+				BYTE buffer[1024] = {};
+				DWORD dwSizeRead = 0;
+				DWORD totalSize = 0;
+				do {
+					if (HTTPAsync.Read(buffer, 1024, &dwSizeRead) != S_OK) {
+						break;
+					}
+					temp.Write(buffer, dwSizeRead);
+					totalSize += dwSizeRead;
+				} while (dwSizeRead && totalSize < m_llMaxSize);
+				temp.Close();
 
-			if (totalSize) {
-				m_tempfn = fn;
+				if (totalSize) {
+					m_tempfn = fn;
+				}
 			}
 		}
 
-		m_HTTPAsync.Close();
+		HTTPAsync.Close();
 	}
 
 	return __super::Open(m_tempfn);
@@ -796,6 +797,11 @@ void CWebTextFile::Close()
 		_wremove(m_tempfn);
 		m_tempfn.Empty();
 	}
+}
+
+const CString& CWebTextFile::GetRedirectURL() const
+{
+	return m_url_redirect_str;
 }
 
 ///////////////////////////////////////////////////////////////
