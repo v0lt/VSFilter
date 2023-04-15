@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2022 see Authors.txt
+ * (C) 2006-2023 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -25,6 +25,8 @@
 #include <winddk/ntddcdrm.h>
 #include "DSUtil.h"
 #include "Mpeg2Def.h"
+#include "std_helper.h"
+#include <atlpath.h>
 #include <clsids.h>
 #include <moreuuids.h>
 #include <basestruct.h>
@@ -415,7 +417,7 @@ IPin* AppendFilter(IPin* pPin, CString DisplayName, IGraphBuilder* pGB)
 {
 	IPin* pRet = pPin;
 
-	CInterfaceList<IBaseFilter> pFilters;
+	std::list<CComPtr<IBaseFilter>> pFilters;
 
 	do {
 		if (!pPin || DisplayName.IsEmpty() || !pGB) {
@@ -452,9 +454,9 @@ IPin* AppendFilter(IPin* pPin, CString DisplayName, IGraphBuilder* pGB)
 			break;
 		}
 
-		pFilters.AddTail(pBF);
+		pFilters.emplace_back(pBF);
 		BeginEnumFilters(pGB, pEnum, pBF2)
-		pFilters.AddTail(pBF2);
+		pFilters.emplace_back(pBF2);
 		EndEnumFilters
 
 		if (FAILED(pGB->AddFilter(pBF, CStringW(var.bstrVal)))) {
@@ -462,7 +464,7 @@ IPin* AppendFilter(IPin* pPin, CString DisplayName, IGraphBuilder* pGB)
 		}
 
 		BeginEnumFilters(pGB, pEnum, pBF2)
-		if (!pFilters.Find(pBF2) && SUCCEEDED(pGB->RemoveFilter(pBF2))) {
+		if (!Contains(pFilters, pBF2) && SUCCEEDED(pGB->RemoveFilter(pBF2))) {
 			pEnum->Reset();
 		}
 		EndEnumFilters
@@ -481,7 +483,7 @@ IPin* AppendFilter(IPin* pPin, CString DisplayName, IGraphBuilder* pGB)
 		}
 
 		BeginEnumFilters(pGB, pEnum, pBF2)
-		if (!pFilters.Find(pBF2) && SUCCEEDED(pGB->RemoveFilter(pBF2))) {
+		if (!Contains(pFilters, pBF2) && SUCCEEDED(pGB->RemoveFilter(pBF2))) {
 			pEnum->Reset();
 		}
 		EndEnumFilters
@@ -836,93 +838,6 @@ static void FindFiles(CString fn, std::list<CString>& files)
 
 		FindClose(h);
 	}
-}
-
-cdrom_t GetCDROMType(WCHAR drive, std::list<CString>& files)
-{
-	files.clear();
-
-	CString path;
-	path.Format(L"%c:", drive);
-
-	if (GetDriveTypeW(path + L"\\") == DRIVE_CDROM) {
-		// CDROM_DVDVideo
-		FindFiles(path + L"\\VIDEO_TS\\VIDEO_TS.IFO", files);
-		if (files.size() > 0) {
-			return CDROM_DVDVideo;
-		}
-
-		// CDROM_DVDAudio
-		FindFiles(path + L"\\AUDIO_TS\\ATS_0?_0.IFO", files);
-		if (files.size() > 0) {
-			return CDROM_DVDAudio;
-		}
-
-		// CDROM_BD
-		FindFiles(path + L"\\BDMV\\index.bdmv", files);
-		if (!files.empty()) {
-			return CDROM_BDVideo;
-		}
-
-		// CDROM_VideoCD
-		FindFiles(path + L"\\mpegav\\avseq??.dat", files);
-		FindFiles(path + L"\\mpegav\\avseq??.mpg", files);
-		FindFiles(path + L"\\mpegav\\music??.dat", files);
-		FindFiles(path + L"\\mpegav\\music??.mpg", files);
-		FindFiles(path + L"\\mpeg2\\avseq??.dat",  files);
-		FindFiles(path + L"\\mpeg2\\avseq??.mpg",  files);
-		FindFiles(path + L"\\mpeg2\\music??.dat",  files);
-		FindFiles(path + L"\\mpeg2\\music??.mpg",  files);
-		if (files.size() > 0) {
-			return CDROM_VideoCD;
-		}
-
-		// CDROM_Audio
-		HANDLE hDrive = CreateFileW(CString(L"\\\\.\\") + path, GENERIC_READ, FILE_SHARE_READ, nullptr,
-								   OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, (HANDLE)nullptr);
-		if (hDrive != INVALID_HANDLE_VALUE) {
-			DWORD BytesReturned;
-			CDROM_TOC TOC;
-			if (DeviceIoControl(hDrive, IOCTL_CDROM_READ_TOC, nullptr, 0, &TOC, sizeof(TOC), &BytesReturned, 0)) {
-				for (int i = TOC.FirstTrack; i <= TOC.LastTrack; i++) {
-					// MMC-3 Draft Revision 10g: Table 222 - Q Sub-channel control field
-					TOC.TrackData[i-1].Control &= 5;
-					if (TOC.TrackData[i-1].Control == 0 || TOC.TrackData[i-1].Control == 1) {
-						CString fn;
-						fn.Format(L"%s\\track%02d.cda", path, i);
-						files.push_back(fn);
-					}
-				}
-			}
-
-			CloseHandle(hDrive);
-		}
-		if (files.size() > 0) {
-			return CDROM_Audio;
-		}
-
-		// it is a cdrom but nothing special
-		return CDROM_Unknown;
-	}
-
-	return CDROM_NotFound;
-}
-
-CString GetDriveLabel(WCHAR drive)
-{
-	CString label;
-
-	CString path;
-	path.Format(L"%c:\\", drive);
-	WCHAR VolumeNameBuffer[MAX_PATH], FileSystemNameBuffer[MAX_PATH];
-	DWORD VolumeSerialNumber, MaximumComponentLength, FileSystemFlags;
-	if (GetVolumeInformationW(path,
-							 VolumeNameBuffer, MAX_PATH, &VolumeSerialNumber, &MaximumComponentLength,
-							 &FileSystemFlags, FileSystemNameBuffer, MAX_PATH)) {
-		label = VolumeNameBuffer;
-	}
-
-	return label;
 }
 
 DVD_HMSF_TIMECODE RT2HMSF(REFERENCE_TIME rt, double fps) // use to remember the current position
@@ -2339,14 +2254,14 @@ void UnRegisterSourceFilter(const GUID& subtype)
 }
 
 // hour, minute, second, millisec
-CString ReftimeToString(const REFERENCE_TIME& rtVal)
+CString ReftimeToString(REFERENCE_TIME rt)
 {
-	if (rtVal == INVALID_TIME) {
+	if (rt == INVALID_TIME) {
 		return L"INVALID TIME";
 	}
 
 	CString		strTemp;
-	LONGLONG	llTotalMs = ConvertToMilliseconds(rtVal);
+	LONGLONG	llTotalMs = ConvertToMilliseconds(rt);
 	int			lHour     = (int)(llTotalMs  / (1000 * 60 * 60));
 	int			lMinute   = (llTotalMs / (1000 * 60)) % 60;
 	int			lSecond   = (llTotalMs /  1000) % 60;
@@ -2357,14 +2272,14 @@ CString ReftimeToString(const REFERENCE_TIME& rtVal)
 }
 
 // hour, minute, second (round)
-CString ReftimeToString2(const REFERENCE_TIME& rtVal)
+CString ReftimeToString2(REFERENCE_TIME rt)
 {
-	if (rtVal == INVALID_TIME) {
+	if (rt == INVALID_TIME) {
 		return L"INVALID TIME";
 	}
 
 	CString		strTemp;
-	LONGLONG	seconds = (rtVal + 5000000) / 10000000;
+	LONGLONG	seconds = (rt + 5000000) / 10000000;
 	int			lHour   = (int)(seconds / 3600);
 	int			lMinute = (int)(seconds / 60 % 60);
 	int			lSecond = (int)(seconds % 60);

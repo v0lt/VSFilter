@@ -1,5 +1,5 @@
 /*
- * (C) 2020-2021 see Authors.txt
+ * (C) 2020-2022 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -21,8 +21,10 @@
 #include "stdafx.h"
 #include "DSUtil.h"
 #include "UrlParser.h"
+#include <shlwapi.h>
 
 #pragma comment(lib, "WinInet.Lib")
+#pragma comment(lib, "Shlwapi.lib")
 
 CUrlParser::CUrlParser(LPCWSTR lpszUrl)
 {
@@ -43,7 +45,7 @@ BOOL CUrlParser::Parse(LPCWSTR lpszUrl)
 	components.dwExtraInfoLength = (DWORD)-1;
 
 	const auto ret = InternetCrackUrlW(lpszUrl, wcslen(lpszUrl), 0, &components);
-	if (ret) {
+	if (ret && components.dwHostNameLength) {
 		m_szUrl = lpszUrl;
 
 		m_szSchemeName.SetString(components.lpszScheme, components.dwSchemeLength);
@@ -65,7 +67,7 @@ BOOL CUrlParser::Parse(LPCWSTR lpszUrl)
 		Clear();
 	}
 
-	return ret;
+	return IsValid();
 }
 
 void CUrlParser::Clear()
@@ -81,4 +83,19 @@ void CUrlParser::Clear()
 
 	m_nPortNumber = 0;
 	m_nScheme = INTERNET_SCHEME_UNKNOWN;
+}
+
+CString CUrlParser::CombineUrl(CString strBase, const CString& strRelative)
+{
+	if (strBase.GetAt(strBase.GetLength() - 1) != L'/') {
+		strBase += L'/';
+	}
+	auto dwLength = static_cast<DWORD>(strBase.GetLength() + strRelative.GetLength() + 1);
+	CString combined;
+	auto hr = UrlCombineW(strBase.GetString(),
+						  strRelative.GetString(),
+						  combined.GetBuffer(dwLength),
+						  &dwLength, 0);
+	combined.ReleaseBuffer(-1);
+	return combined;
 }

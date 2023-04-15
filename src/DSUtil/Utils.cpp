@@ -214,6 +214,12 @@ SIZE ReduceDim(double value)
 	return{ a.num, a.den };
 }
 
+unsigned RoundUp(const unsigned value, const unsigned base)
+{
+	auto rem = value % base;
+	return rem ? value - rem + base : value;
+}
+
 int IncreaseByGrid(int value, const int step)
 {
 	auto r = value % step;
@@ -379,10 +385,16 @@ CStringW HR2Str(const HRESULT hr)
 		UNPACK_VALUE(REGDB_E_CLASSNOTREG);
 		// some COM Error Codes (UI, Audio, DirectX, Codec) https://docs.microsoft.com/en-us/windows/win32/com/com-error-codes-10
 		UNPACK_VALUE(WINCODEC_ERR_UNSUPPORTEDPIXELFORMAT);
+		UNPACK_VALUE(WINCODEC_ERR_PROPERTYUNEXPECTEDTYPE);
 		// some System Error Codes https://docs.microsoft.com/en-us/windows/win32/debug/system-error-codes
+		UNPACK_HR_WIN32(ERROR_FILE_NOT_FOUND)
 		UNPACK_HR_WIN32(ERROR_MOD_NOT_FOUND);
 		UNPACK_HR_WIN32(ERROR_INVALID_WINDOW_HANDLE);
 		UNPACK_HR_WIN32(ERROR_CLASS_ALREADY_EXISTS);
+#endif
+#ifdef __ERRORS__
+		// some DirectShow Error and Success Codes https://learn.microsoft.com/en-us/windows/win32/directshow/error-and-success-codes
+		UNPACK_VALUE(VFW_E_ENUM_OUT_OF_SYNC);
 #endif
 #ifdef _D3D9_H_
 		// some D3DERR values https://docs.microsoft.com/en-us/windows/desktop/direct3d9/d3derr

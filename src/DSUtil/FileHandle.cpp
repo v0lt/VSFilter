@@ -1,5 +1,5 @@
 /*
- * (C) 2011-2021 see Authors.txt
+ * (C) 2011-2022 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -19,6 +19,7 @@
  */
 
 #include "stdafx.h"
+#include <filesystem>
 #include "Log.h"
 #include "FileHandle.h"
 
@@ -74,8 +75,15 @@ CStringW RemoveSlash(LPCWSTR Path)
 //
 CStringW GetFileExt(LPCWSTR Path)
 {
-	CStringW cs = ::PathFindExtensionW(Path);
-	return cs;
+	if (::PathIsURLW(Path)) {
+		auto q = wcschr(Path, '?');
+		if (q) {
+			CStringW ext = ::PathFindExtensionW(CStringW(Path, q - Path));
+			return ext;
+		}
+	}
+	CStringW ext = ::PathFindExtensionW(Path);
+	return ext;
 }
 
 //
@@ -95,6 +103,13 @@ CStringW RemoveFileExt(LPCWSTR Path)
 {
 	CStringW cs = Path;
 	::PathRemoveExtensionW(cs.GetBuffer(MAX_PATH));
+	return cs;
+}
+
+CStringW AddExtension(LPCWSTR Path, LPCWSTR Ext)
+{
+	CStringW cs = Path;
+	::PathAddExtensionW(cs.GetBuffer(MAX_PATH), Ext);
 	return cs;
 }
 
@@ -173,10 +188,14 @@ CStringW GetProgramPath()
 //
 CStringW GetProgramDir()
 {
-	CStringW path = GetModulePath(nullptr);
-	path.Truncate(path.ReverseFind('\\') + 1); // do not use this method for random paths
+	auto get_prog_dir = []() {
+		CStringW path = GetModulePath(nullptr);
+		path.Truncate(path.ReverseFind('\\') + 1); // do not use this method for random paths
+		return path;
+	};
+	static const CStringW progDir = get_prog_dir();
 
-	return path;
+	return progDir;
 }
 
 //
@@ -204,30 +223,6 @@ CStringW GetRegAppPath(LPCWSTR appFileName, const bool bCurrentUser)
 	return appPath;
 }
 
-// wFunc can be FO_MOVE or FO_COPY.
-// To move a folder, add "\" to the end of the source path.
-// To copy a folder, add "\*" to the end of the source path.
-int FileOperation(const CStringW& source, const CStringW& target, const UINT wFunc)
-{
-	auto from_str = std::make_unique<WCHAR[]>(source.GetLength() + 2);
-	wcscpy_s(from_str.get(), source.GetLength()+1, source);
-
-	auto to_str = std::make_unique<WCHAR[]>(target.GetLength() + 2);
-	wcscpy_s(to_str.get(), target.GetLength()+1, target);
-
-	// set double null-terminated string
-	from_str[wcslen(from_str.get())+1] = 0;
-	to_str[wcslen(to_str.get())+1] = 0;
-
-	SHFILEOPSTRUCTW FileOp = { 0 };
-	FileOp.wFunc  = wFunc;
-	FileOp.pFrom  = from_str.get();
-	FileOp.pTo    = to_str.get();
-	FileOp.fFlags = FOF_NO_UI;
-
-	return SHFileOperationW(&FileOp);
-}
-
 void CleanPath(CStringW& path)
 {
 	// remove double quotes enclosing path
@@ -249,4 +244,89 @@ bool CFileGetStatus(LPCWSTR lpszFileName, CFileStatus& status)
 		e->Delete();
 		return false;
 	}
+}
+
+/////
+
+HRESULT FileOperationDelete(const CStringW& path)
+{
+	CComPtr<IFileOperation> pFileOperation;
+	CComPtr<IShellItem> psiItem;
+
+	HRESULT hr = CoCreateInstance(CLSID_FileOperation,
+		nullptr,
+		CLSCTX_INPROC_SERVER,
+		IID_PPV_ARGS(&pFileOperation));
+
+	if (SUCCEEDED(hr)) {
+		hr = SHCreateItemFromParsingName(path, nullptr, IID_PPV_ARGS(&psiItem));
+	}
+	if (SUCCEEDED(hr)) {
+		hr = pFileOperation->SetOperationFlags(FOF_NOCONFIRMATION | FOF_SILENT | FOF_ALLOWUNDO);
+	}
+	if (SUCCEEDED(hr)) {
+		hr = pFileOperation->DeleteItem(psiItem, nullptr);
+	}
+	if (SUCCEEDED(hr)) {
+		hr = pFileOperation->PerformOperations();
+	}
+	if (SUCCEEDED(hr)) {
+		BOOL opAborted = FALSE;
+		pFileOperation->GetAnyOperationsAborted(&opAborted);
+		if (opAborted) {
+			hr = E_ABORT;
+		}
+	}
+
+	return hr;
+}
+
+HRESULT FileOperation(LPCWSTR source, LPCWSTR target, const UINT func, const DWORD flags)
+{
+	LPCWSTR pszNewName = PathFindFileNameW(target);
+	const CStringW destinationFolder = GetFolderOnly(target);
+
+	return FileOperation(source, destinationFolder, pszNewName, func, flags);
+}
+
+HRESULT FileOperation(LPCWSTR source, LPCWSTR destFolder, LPCWSTR newName, const UINT func, const DWORD flags)
+{
+	CComPtr<IFileOperation> pFileOperation;
+	CComPtr<IShellItem> psiItem;
+	CComPtr<IShellItem> psiDestinationFolder;
+
+	HRESULT hr = CoCreateInstance(CLSID_FileOperation,
+		nullptr,
+		CLSCTX_INPROC_SERVER,
+		IID_PPV_ARGS(&pFileOperation));
+
+	if (SUCCEEDED(hr)) {
+		hr = SHCreateItemFromParsingName(source, nullptr, IID_PPV_ARGS(&psiItem));
+	}
+	if (SUCCEEDED(hr)) {
+		hr = SHCreateItemFromParsingName(destFolder, nullptr, IID_PPV_ARGS(&psiDestinationFolder));
+	}
+	if (SUCCEEDED(hr)) {
+		hr = pFileOperation->SetOperationFlags(flags);
+	}
+	if (SUCCEEDED(hr)) {
+		if (func == FO_MOVE) {
+			hr = pFileOperation->MoveItem(psiItem, psiDestinationFolder, newName, nullptr);
+		}
+		else if (func == FO_COPY) {
+			hr = pFileOperation->CopyItem(psiItem, psiDestinationFolder, newName, nullptr);
+		}
+	}
+	if (SUCCEEDED(hr)) {
+		hr = pFileOperation->PerformOperations();
+	}
+	if (SUCCEEDED(hr)) {
+		BOOL opAborted = FALSE;
+		pFileOperation->GetAnyOperationsAborted(&opAborted);
+		if (opAborted) {
+			hr = E_ABORT;
+		}
+	}
+
+	return hr;
 }

@@ -1,5 +1,5 @@
 /*
- * (C) 2011-2021 see Authors.txt
+ * (C) 2011-2022 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -27,6 +27,7 @@ CStringW RemoveSlash(LPCWSTR Path);
 CStringW GetFileExt(LPCWSTR Path);
 CStringW RenameFileExt(LPCWSTR Path, LPCWSTR Ext);
 CStringW RemoveFileExt(LPCWSTR Path);
+CStringW AddExtension(LPCWSTR Path, LPCWSTR Ext);
 BOOL     GetTemporaryFilePath(CStringW strExtension, CStringW& strFileName);
 CStringW CompactPath(LPCWSTR Path, UINT cchMax);
 
@@ -42,11 +43,19 @@ CStringW GetProgramDir();
 // Get application path from "App Paths" subkey
 CStringW GetRegAppPath(LPCWSTR appFileName, const bool bUser);
 
-// wFunc can be FO_MOVE or FO_COPY.
-// To move a folder, add "\" to the end of the source path.
-// To copy a folder, add "\*" to the end of the source path.
-int FileOperation(const CStringW& source, const CStringW& target, const UINT wFunc);
-
 void CleanPath(CStringW& path);
 
 bool CFileGetStatus(LPCWSTR lpszFileName, CFileStatus& status);
+
+/////
+
+HRESULT FileOperationDelete(const CStringW& path);
+
+// Copy or move file.
+// 'func' can be FO_MOVE or FO_COPY
+HRESULT FileOperation(LPCWSTR source, LPCWSTR target, const UINT func, const DWORD flags);
+
+// Copy or move file or folder.
+// If 'newName' is nullptr then the original name does not change
+// func can be FO_MOVE or FO_COPY
+HRESULT FileOperation(LPCWSTR source, LPCWSTR destFolder, LPCWSTR newName, const UINT func, const DWORD flags);

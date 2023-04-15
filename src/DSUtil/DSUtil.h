@@ -83,23 +83,11 @@ extern HRESULT			CheckFilterCLSID(const CLSID& clsid);
 extern void				CStringToBin(CString str, std::vector<BYTE>& data);
 extern CString			BinToCString(const BYTE* ptr, size_t len);
 
-enum cdrom_t {
-	CDROM_NotFound,
-	CDROM_Audio,
-	CDROM_VideoCD,
-	CDROM_DVDVideo,
-	CDROM_BDVideo,
-	CDROM_DVDAudio,
-	CDROM_Unknown
-};
-extern cdrom_t			GetCDROMType(WCHAR drive, std::list<CString>& files);
-extern CString			GetDriveLabel(WCHAR drive);
-
 extern DVD_HMSF_TIMECODE	RT2HMSF(REFERENCE_TIME rt, double fps = 0); // use to remember the current position
 extern DVD_HMSF_TIMECODE	RT2HMS_r(REFERENCE_TIME rt);                // use only for information (for display on the screen)
 extern REFERENCE_TIME		HMSF2RT(DVD_HMSF_TIMECODE hmsf, double fps = 0);
-extern CString				ReftimeToString(const REFERENCE_TIME& rtVal);  // hour, minute, second, millisec
-extern CString				ReftimeToString2(const REFERENCE_TIME& rtVal); // hour, minute, second (round)
+extern CString				ReftimeToString(REFERENCE_TIME rt);  // hour, minute, second, millisec
+extern CString				ReftimeToString2(REFERENCE_TIME rt); // hour, minute, second (round)
 extern CString				DVDtimeToString(const DVD_HMSF_TIMECODE& rtVal, bool bAlwaysShowHours=false);
 extern REFERENCE_TIME		StringToReftime(LPCWSTR strVal);
 extern REFERENCE_TIME		StringToReftime2(LPCWSTR strVal);

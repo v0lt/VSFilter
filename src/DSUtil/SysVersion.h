@@ -1,5 +1,5 @@
 /*
- * (C) 2013-2022 see Authors.txt
+ * (C) 2013-2023 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -54,8 +54,7 @@ static bool IsWindows64()
 {
 #ifdef _WIN64
 	return true;
-#endif
-
+#else
 	typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS)(HANDLE, PBOOL);
 	LPFN_ISWOW64PROCESS fnIsWow64Process = (LPFN_ISWOW64PROCESS)GetProcAddress(GetModuleHandleW(L"kernel32"), "IsWow64Process");
 	BOOL bIsWow64 = FALSE;
@@ -64,6 +63,7 @@ static bool IsWindows64()
 	}
 
 	return !!bIsWow64;
+#endif
 }
 
 namespace SysVersion
@@ -84,9 +84,13 @@ namespace SysVersion
 		const static bool bIsWin10orLater = IsWindows10OrGreater();
 		return bIsWin10orLater;
 	}
-	inline const bool IsWin10RS4orLater() {
-		const static bool bIsWin10RS4orLater = IsWindowsVersionOrGreaterBuild(HIBYTE(_WIN32_WINNT_WINTHRESHOLD), LOBYTE(_WIN32_WINNT_WINTHRESHOLD), 17134);
-		return bIsWin10RS4orLater;
+	inline const bool IsWin10v1803orLater() {
+		const static bool bIsWin10v1803orLater = IsWindowsVersionOrGreaterBuild(HIBYTE(_WIN32_WINNT_WINTHRESHOLD), LOBYTE(_WIN32_WINNT_WINTHRESHOLD), 17134);
+		return bIsWin10v1803orLater;
+	}
+	inline const bool IsWin10v1809orLater() { // LTSC 2019
+		const static bool bIsWin10v1809orLater = IsWindowsVersionOrGreaterBuild(HIBYTE(_WIN32_WINNT_WINTHRESHOLD), LOBYTE(_WIN32_WINNT_WINTHRESHOLD), 17763);
+		return bIsWin10v1809orLater;
 	}
 	inline const bool IsWin11orLater()
 	{
