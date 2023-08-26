@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2022 see Authors.txt
+ * (C) 2006-2023 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -72,6 +72,22 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 	, m_fps(25)
 	, m_hEvtTransform(nullptr)
 {
+	m_pInput = DNew CBaseVideoInputPin(L"CBaseVideoInputPin", this, phr, L"Video");
+	if (!m_pInput) {
+		*phr = E_OUTOFMEMORY;
+	}
+	if (FAILED(*phr)) {
+		return;
+	}
+
+	m_pOutput = DNew CBaseVideoOutputPin(L"CBaseVideoOutputPin", this, phr, L"Output");
+	if (!m_pOutput) {
+		*phr = E_OUTOFMEMORY;
+	}
+	if (FAILED(*phr)) {
+		return;
+	}
+
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
 	m_hdc = 0;

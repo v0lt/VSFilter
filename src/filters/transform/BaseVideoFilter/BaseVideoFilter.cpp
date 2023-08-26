@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2021 see Authors.txt
+ * (C) 2006-2023 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -38,30 +38,6 @@ CBaseVideoFilter::CBaseVideoFilter(LPCWSTR pName, LPUNKNOWN lpunk, HRESULT* phr,
 	if (phr) {
 		*phr = S_OK;
 	}
-
-	m_pInput = DNew CBaseVideoInputPin(L"CBaseVideoInputPin", this, phr, L"Video");
-	if (!m_pInput) {
-		*phr = E_OUTOFMEMORY;
-	}
-	if (FAILED(*phr)) {
-		return;
-	}
-
-	m_pOutput = DNew CBaseVideoOutputPin(L"CBaseVideoOutputPin", this, phr, L"Output");
-	if (!m_pOutput) {
-		*phr = E_OUTOFMEMORY;
-	}
-	if (FAILED(*phr))  {
-		delete m_pInput, m_pInput = nullptr;
-		return;
-	}
-
-	m_wout = m_win = 0;
-	m_hout = m_hin = 0;
-	m_arxout = m_arxin = m_arx = 0;
-	m_aryout = m_aryin = m_ary = 0;
-
-	m_dxvaExtFormat.value = 0;
 }
 
 CBaseVideoFilter::~CBaseVideoFilter()
@@ -279,6 +255,7 @@ HRESULT CBaseVideoFilter::ReconnectOutput(int width, int height, bool bForce/* =
 					m_bSendMediaType = true;
 				} else {
 					DLog(L"    ReceiveConnection() failed (hr: %x); QueryAccept: %x", hr, hrQA);
+					return E_FAIL;
 				}
 
 				break;
@@ -291,7 +268,7 @@ HRESULT CBaseVideoFilter::ReconnectOutput(int width, int height, bool bForce/* =
 		m_aryout = m_ary;
 
 		// some renderers don't send this
-		if (m_nDecoderMode != MODE_DXVA2) {
+		if (m_nDecoderMode == MODE_SOFTWARE) {
 			NotifyEvent(EC_VIDEO_SIZE_CHANGED, MAKELPARAM(width, height), 0);
 		}
 
