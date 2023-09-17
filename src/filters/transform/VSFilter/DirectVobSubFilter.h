@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2021 see Authors.txt
+ * (C) 2006-2023 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -22,6 +22,7 @@
 #pragma once
 
 #include <atlsync.h>
+#include <wmcodecdsp.h>
 #include <moreuuids.h>
 #include "DirectVobSub.h"
 #include "../BaseVideoFilter/BaseVideoFilter.h"

@@ -1,5 +1,5 @@
 /*
- * (C) 2016-2019 see Authors.txt
+ * (C) 2016-2023 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -20,6 +20,8 @@
 
 #pragma once
 
+#define MPC_WND_CLASS_NAMEW L"MPC-BE"
+
 #define KILOBYTE          1024
 #define MEGABYTE       1048576
 #define GIGABYTE    1073741824
@@ -37,6 +39,12 @@
                   (((DWORD)(ch4) & 0xFF000000) >> 24))
 #endif
 
+#ifndef DEFINE_MEDIATYPE_GUID
+#define DEFINE_MEDIATYPE_GUID(name, format) \
+    DEFINE_GUID(name,                       \
+    format, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
+#endif
+
 #define SCALE64(a, b, c) (__int64)((double)(a) * (b) / (c)) // very fast, but it can give a small rounding error
 
 #define ALIGN(x, a)           __ALIGN_MASK(x,(decltype(x))(a)-1)
@@ -45,31 +53,16 @@
 #define SAFE_DELETE(p)       { if (p) { delete (p);     (p) = nullptr; } }
 #define SAFE_DELETE_ARRAY(p) { if (p) { delete [] (p);  (p) = nullptr; } }
 
-#define PCIV_ATI         0x1002
-#define PCIV_nVidia      0x10DE
-#define PCIV_Intel       0x8086
-#define PCIV_S3_Graphics 0x5333
+#define PCIV_ATI             0x1002
+#define PCIV_nVidia          0x10DE
+#define PCIV_Intel           0x8086
+#define PCIV_S3_Graphics     0x5333
+#define PCIV_Qualcomm    0x4D4F4351
 
-// values from MFVideoTransferMatrix (Win10SDK)
-#define VIDEOTRANSFERMATRIX_BT2020_10 4
-#define VIDEOTRANSFERMATRIX_BT2020_12 5
-// non-standard values
-#define VIDEOTRANSFERMATRIX_FCC       6
-#define VIDEOTRANSFERMATRIX_YCgCo     7
+// non-standard values for Transfer Matrix
+#define VIDEOTRANSFERMATRIX_FCC   6
+#define VIDEOTRANSFERMATRIX_YCgCo 7
 
-// values from MFVideoPrimaries (Win10SDK)
-#define VIDEOPRIMARIES_BT2020  9
-#define VIDEOPRIMARIES_XYZ    10
-#define VIDEOPRIMARIES_DCI_P3 11
-#define VIDEOPRIMARIES_ACES   12
-
-// values from MFVideoTransferFunction (Win10SDK)
-#define VIDEOTRANSFUNC_Log_100     9
-#define VIDEOTRANSFUNC_Log_316    10
-#define VIDEOTRANSFUNC_709_sym    11
-#define VIDEOTRANSFUNC_2020_const 12
-#define VIDEOTRANSFUNC_2020       13
-#define VIDEOTRANSFUNC_26         14
-#define VIDEOTRANSFUNC_2084       15
-#define VIDEOTRANSFUNC_HLG        16
-#define VIDEOTRANSFUNC_10_rel     17
+// some FOURCCs
+#define FOURCC_YUV444P16 MAKEFOURCC('Y','3',0,16)
+#define FOURCC_RGB48     MAKEFOURCC('R','G','B',48)
