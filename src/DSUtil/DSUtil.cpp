@@ -1370,11 +1370,14 @@ HRESULT GUIDFromCString(CString str, GUID& guid)
 
 CStringW CStringFromGUID(const GUID& guid)
 {
-	WCHAR buff[40] = {};
-	if (StringFromGUID2(guid, buff, 39) <= 0) {
-		StringFromGUID2(GUID_NULL, buff, 39);
+	CStringW str;
+	int ret = StringFromGUID2(guid, str.GetBuffer(39), 39);
+	if (ret) {
+		str.ReleaseBufferSetLength(ret - 1);
+	} else {
+		str.Empty();
 	}
-	return CStringW(buff);
+	return str;
 }
 
 static struct {
@@ -1446,7 +1449,7 @@ static struct {
 	{"Bini",                        "bin", ""},
 	{"Bislama",                     "bis", "bi"},
 	{"Blin",                        "byn", ""},
-	{"Norwegian Bokmål",            "nob", "nb"},
+	{"Norwegian Bokmal",            "nob", "nb"},
 	{"Bosnian",                     "bos", "bs"},
 	{"Braj",                        "bra", ""},
 	// unofficial codes for Brazilian Portuguese language
@@ -1740,7 +1743,7 @@ static struct {
 	{"Northern Sami",               "sme", "se"},
 	{"North Ndebele",               "nde", "nd"},
 	{"Norwegian",                   "nor", "no", MAKELCID( MAKELANGID(LANG_NORWEGIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
-	{"Norwegian Bokmål; Bokmål, Norwegian", "nob", "nb", MAKELCID( MAKELANGID(LANG_NORWEGIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
+	{"Norwegian Bokmal; Bokmal, Norwegian", "nob", "nb", MAKELCID( MAKELANGID(LANG_NORWEGIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Norwegian Nynorsk; Nynorsk, Norwegian", "nno", "nn", MAKELCID( MAKELANGID(LANG_NORWEGIAN, SUBLANG_DEFAULT), SORT_DEFAULT)},
 	{"Nubian languages",            "nub", ""},
 	{"Nyamwezi",                    "nym", ""},
