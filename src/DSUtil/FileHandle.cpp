@@ -1,5 +1,5 @@
 /*
- * (C) 2011-2022 see Authors.txt
+ * (C) 2011-2023 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -22,6 +22,7 @@
 #include <filesystem>
 #include "Log.h"
 #include "FileHandle.h"
+#include "text.h"
 
 //
 // Returns the file portion from a path
@@ -93,6 +94,7 @@ CStringW RenameFileExt(LPCWSTR Path, LPCWSTR Ext)
 {
 	CStringW cs = Path;
 	::PathRenameExtensionW(cs.GetBuffer(MAX_PATH), Ext);
+	cs.ReleaseBuffer(-1);
 	return cs;
 }
 
@@ -103,6 +105,7 @@ CStringW RemoveFileExt(LPCWSTR Path)
 {
 	CStringW cs = Path;
 	::PathRemoveExtensionW(cs.GetBuffer(MAX_PATH));
+	cs.ReleaseBuffer(-1);
 	return cs;
 }
 
@@ -110,6 +113,7 @@ CStringW AddExtension(LPCWSTR Path, LPCWSTR Ext)
 {
 	CStringW cs = Path;
 	::PathAddExtensionW(cs.GetBuffer(MAX_PATH), Ext);
+	cs.ReleaseBuffer(-1);
 	return cs;
 }
 
@@ -221,6 +225,48 @@ CStringW GetRegAppPath(LPCWSTR appFileName, const bool bCurrentUser)
 	}
 
 	return appPath;
+}
+
+CStringW GetFullExePath(const CStringW exePath, const bool bLookAppPaths)
+{
+	if (exePath.IsEmpty()) {
+		return L"";
+	}
+
+	if (StartsWith(exePath, L":\\", 1) || StartsWith(exePath, L"\\\\")) {
+		// looks like full path
+
+		if (::PathFileExistsW(exePath)) {
+			return exePath;
+		} else {
+			return L""; // complete the checks anyway
+		}
+	}
+
+	CStringW apppath;
+	// look for in the application folder and in the folders described in the PATH environment variable
+	int length = SearchPathW(nullptr, exePath.GetString(), nullptr, MAX_PATH, apppath.GetBuffer(MAX_PATH), nullptr);
+	if (length > 0 && length <= MAX_PATH) {
+		apppath.ReleaseBufferSetLength(length);
+		return apppath;
+	}
+
+	if (bLookAppPaths && exePath.Find('\\') < 0) {
+		// CreateProcessW and other functions (unlike ShellExecuteExW) does not look for
+		// an executable file in the "App Paths", so we will do it manually.
+		// see "App Paths" in HKEY_CURRENT_USER
+		apppath = GetRegAppPath(exePath, true);
+		if (apppath.GetLength() && ::PathFileExistsW(apppath)) {
+			return apppath;
+		}
+		// see "App Paths" in HKEY_LOCAL_MACHINE
+		apppath = GetRegAppPath(exePath, false);
+		if (apppath.GetLength() && ::PathFileExistsW(apppath)) {
+			return apppath;
+		}
+	}
+
+	return L"";
 }
 
 void CleanPath(CStringW& path)

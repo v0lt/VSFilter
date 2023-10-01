@@ -755,12 +755,20 @@ bool CWebTextFile::Open(LPCWSTR lpszFileName)
 				return false;
 			}
 
-			{
+			if (HTTPAsync.IsCompressed()) {
+				if (HTTPAsync.GetLenght() <= 10 * MEGABYTE) {
+					std::vector<BYTE> body;
+					if (HTTPAsync.GetUncompressed(body)) {
+						temp.Write(body.data(), static_cast<UINT>(body.size()));
+						m_tempfn = fn;
+					}
+				}
+			} else {
 				BYTE buffer[1024] = {};
 				DWORD dwSizeRead = 0;
 				DWORD totalSize = 0;
 				do {
-					if (HTTPAsync.Read(buffer, 1024, &dwSizeRead) != S_OK) {
+					if (HTTPAsync.Read(buffer, 1024, dwSizeRead) != S_OK) {
 						break;
 					}
 					temp.Write(buffer, dwSizeRead);
@@ -774,6 +782,7 @@ bool CWebTextFile::Open(LPCWSTR lpszFileName)
 			}
 		}
 
+		m_url_redirect_str = HTTPAsync.GetRedirectURL();
 		HTTPAsync.Close();
 	}
 

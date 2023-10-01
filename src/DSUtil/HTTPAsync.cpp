@@ -1,5 +1,5 @@
 /*
- * (C) 2016-2022 see Authors.txt
+ * (C) 2016-2023 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -21,6 +21,8 @@
 #include "stdafx.h"
 #include "HTTPAsync.h"
 #include "Log.h"
+#include "text.h"
+#include <ExtLib/zlib/zlib.h>
 
 void CALLBACK CHTTPAsync::Callback(_In_ HINTERNET hInternet,
 								   __in_opt DWORD_PTR dwContext,
@@ -28,30 +30,34 @@ void CALLBACK CHTTPAsync::Callback(_In_ HINTERNET hInternet,
 								   __in_opt LPVOID lpvStatusInformation,
 								   __in DWORD dwStatusInformationLength)
 {
-	auto* pContext = (CHTTPAsync*)dwContext;
-	auto* pRes     = (INTERNET_ASYNC_RESULT*)lpvStatusInformation;
-	switch (pContext->m_context) {
+	if (!lpvStatusInformation) {
+		return;
+	}
+
+	auto pHTTPAsync   = reinterpret_cast<CHTTPAsync*>(dwContext);
+	auto pAsyncResult = reinterpret_cast<INTERNET_ASYNC_RESULT*>(lpvStatusInformation);
+
+	switch (pHTTPAsync->m_context) {
 		case Context::CONTEXT_CONNECT:
 			if (dwInternetStatus == INTERNET_STATUS_HANDLE_CREATED) {
-				pContext->m_hConnect = (HINTERNET)pRes->dwResult;
-				SetEvent(pContext->m_hConnectedEvent);
+				pHTTPAsync->m_hConnect = reinterpret_cast<HINTERNET>(pAsyncResult->dwResult);
+				SetEvent(pHTTPAsync->m_hConnectedEvent);
 			}
 			break;
 		case Context::CONTEXT_REQUEST:
 			{
 				switch (dwInternetStatus) {
 					case INTERNET_STATUS_HANDLE_CREATED:
-						{
-							pContext->m_hRequest = (HINTERNET)pRes->dwResult;
-							pContext->m_bRequestComplete = TRUE;
-							SetEvent(pContext->m_hRequestOpenedEvent);
-						}
+						pHTTPAsync->m_hRequest = reinterpret_cast<HINTERNET>(pAsyncResult->dwResult);
+						pHTTPAsync->m_bRequestComplete = TRUE;
+						SetEvent(pHTTPAsync->m_hRequestOpenedEvent);
 						break;
 					case INTERNET_STATUS_REQUEST_COMPLETE:
-						{
-							pContext->m_bRequestComplete = TRUE;
-							SetEvent(pContext->m_hRequestCompleteEvent);
-						}
+						pHTTPAsync->m_bRequestComplete = TRUE;
+						SetEvent(pHTTPAsync->m_hRequestCompleteEvent);
+						break;
+					case INTERNET_STATUS_REDIRECT:
+						pHTTPAsync->m_url_redirect_str.SetString(reinterpret_cast<LPCWSTR>(lpvStatusInformation), dwStatusInformationLength);
 						break;
 					}
 			}
@@ -182,72 +188,86 @@ void CHTTPAsync::Close()
 
 HRESULT CHTTPAsync::Connect(LPCWSTR lpszURL, DWORD dwTimeOut/* = INFINITE*/, LPCWSTR lpszCustomHeader/* = L""*/)
 {
-	Close();
+	m_url_redirect_str.Empty();
 
-	CUrlParser urlParser;
-	if (!urlParser.Parse(lpszURL)) {
-		return E_INVALIDARG;
-	}
-	if (urlParser.GetScheme() != INTERNET_SCHEME_HTTP && urlParser.GetScheme() != INTERNET_SCHEME_HTTPS) {
-		return E_FAIL;
-	}
+	for (;;) {
+		Close();
 
-	m_url_str = lpszURL;
-	m_host    = urlParser.GetHostName();
-	m_path    = CString(urlParser.GetUrlPath()) + CString(urlParser.GetExtraInfo());
-	m_nPort   = urlParser.GetPortNumber();
-	m_nScheme = urlParser.GetScheme();
+		auto url = !m_url_redirect_str.IsEmpty() ? m_url_redirect_str.GetString() : lpszURL;
 
-	m_hInstance = InternetOpenW(L"MPCBE",
-							    INTERNET_OPEN_TYPE_PRECONFIG,
-							    nullptr,
-							    nullptr,
-							    INTERNET_FLAG_ASYNC);
-	CheckPointer(m_hInstance, E_FAIL);
-
-	if (InternetSetStatusCallbackW(m_hInstance, (INTERNET_STATUS_CALLBACK)&Callback) == INTERNET_INVALID_STATUS_CALLBACK) {
-		return E_FAIL;
-	}
-
-	static bool bSetMaxConnections = false;
-	if (!bSetMaxConnections) {
-		bSetMaxConnections = true;
-
-		DWORD value = 0;
-		DWORD size = sizeof(DWORD);
-		if (InternetQueryOptionW(nullptr, INTERNET_OPTION_MAX_CONNS_PER_SERVER, &value, &size) && value < 10) {
-			value = 10;
-			InternetSetOptionW(nullptr, INTERNET_OPTION_MAX_CONNS_PER_SERVER, &value, size);
+		CUrlParser urlParser;
+		if (!urlParser.Parse(url)) {
+			return E_INVALIDARG;
 		}
-
-		if (InternetQueryOptionW(nullptr, INTERNET_OPTION_MAX_CONNS_PER_1_0_SERVER, &value, &size) && value < 10) {
-			value = 10;
-			InternetSetOptionW(nullptr, INTERNET_OPTION_MAX_CONNS_PER_1_0_SERVER, &value, size);
-		}
-	}
-
-	m_context = Context::CONTEXT_CONNECT;
-
-	m_hConnect = InternetConnectW(m_hInstance,
-								  m_host,
-								  m_nPort,
-								  urlParser.GetUserName(),
-								  urlParser.GetPassword(),
-								  INTERNET_SERVICE_HTTP,
-								  INTERNET_FLAG_KEEP_CONNECTION | INTERNET_FLAG_NO_CACHE_WRITE,
-								  (DWORD_PTR)this);
-	if (m_hConnect == nullptr) {
-		CheckLastError(L"InternetConnectW()", E_FAIL);
-
-		if (WaitForSingleObject(m_hConnectedEvent, dwTimeOut) == WAIT_TIMEOUT) {
+		if (urlParser.GetScheme() != INTERNET_SCHEME_HTTP && urlParser.GetScheme() != INTERNET_SCHEME_HTTPS) {
 			return E_FAIL;
 		}
-	}
 
-	CheckPointer(m_hConnect, E_FAIL);
+		m_url_str = url;
+		m_host = urlParser.GetHostName();
+		m_path = CString(urlParser.GetUrlPath()) + CString(urlParser.GetExtraInfo());
+		m_nPort = urlParser.GetPortNumber();
+		m_nScheme = urlParser.GetScheme();
+		m_schemeName = urlParser.GetSchemeName();
 
-	if (SendRequest(lpszCustomHeader, dwTimeOut) != S_OK) {
-		return E_FAIL;
+		m_hInstance = InternetOpenW(http::userAgent.GetString(),
+									INTERNET_OPEN_TYPE_PRECONFIG,
+									nullptr,
+									nullptr,
+									INTERNET_FLAG_ASYNC);
+		CheckPointer(m_hInstance, E_FAIL);
+
+		if (InternetSetStatusCallbackW(m_hInstance, (INTERNET_STATUS_CALLBACK)&Callback) == INTERNET_INVALID_STATUS_CALLBACK) {
+			return E_FAIL;
+		}
+
+		static bool bSetMaxConnections = false;
+		if (!bSetMaxConnections) {
+			bSetMaxConnections = true;
+
+			DWORD value = 0;
+			DWORD size = sizeof(DWORD);
+			if (InternetQueryOptionW(nullptr, INTERNET_OPTION_MAX_CONNS_PER_SERVER, &value, &size) && value < 10) {
+				value = 10;
+				InternetSetOptionW(nullptr, INTERNET_OPTION_MAX_CONNS_PER_SERVER, &value, size);
+			}
+
+			if (InternetQueryOptionW(nullptr, INTERNET_OPTION_MAX_CONNS_PER_1_0_SERVER, &value, &size) && value < 10) {
+				value = 10;
+				InternetSetOptionW(nullptr, INTERNET_OPTION_MAX_CONNS_PER_1_0_SERVER, &value, size);
+			}
+		}
+
+		m_context = Context::CONTEXT_CONNECT;
+
+		m_hConnect = InternetConnectW(m_hInstance,
+									  m_host,
+									  m_nPort,
+									  urlParser.GetUserName(),
+									  urlParser.GetPassword(),
+									  INTERNET_SERVICE_HTTP,
+									  INTERNET_FLAG_KEEP_CONNECTION | INTERNET_FLAG_NO_CACHE_WRITE,
+									  (DWORD_PTR)this);
+		if (m_hConnect == nullptr) {
+			CheckLastError(L"InternetConnectW()", E_FAIL);
+
+			if (WaitForSingleObject(m_hConnectedEvent, dwTimeOut) == WAIT_TIMEOUT) {
+				return E_FAIL;
+			}
+		}
+
+		CheckPointer(m_hConnect, E_FAIL);
+
+		auto hr = SendRequest(lpszCustomHeader, dwTimeOut, true);
+		if (hr != S_OK) {
+			if (hr == E_CHANGED_STATE && !m_url_redirect_str.IsEmpty()) {
+				continue;
+			}
+
+			return E_FAIL;
+		}
+
+		break;
 	}
 
 	m_header = QueryInfoStr(HTTP_QUERY_RAW_HEADERS_CRLF);
@@ -256,7 +276,11 @@ HRESULT CHTTPAsync::Connect(LPCWSTR lpszURL, DWORD dwTimeOut/* = INFINITE*/, LPC
 	DLog(L"CHTTPAsync::Connect() : return header:\n%s", m_header);
 #endif
 
-	m_contentType = QueryInfoStr(HTTP_QUERY_CONTENT_TYPE);
+	m_contentType = QueryInfoStr(HTTP_QUERY_CONTENT_TYPE).MakeLower();
+	m_contentEncoding = QueryInfoStr(HTTP_QUERY_CONTENT_ENCODING).MakeLower();
+	m_bSupportsRanges = QueryInfoStr(HTTP_QUERY_ACCEPT_RANGES).MakeLower() == L"bytes";
+
+	m_bIsCompressed = !m_contentEncoding.IsEmpty() && (StartsWith(m_contentEncoding, L"gzip") || StartsWith(m_contentEncoding, L"deflate"));
 
 	const CString queryInfo = QueryInfoStr(HTTP_QUERY_CONTENT_LENGTH);
 	if (!queryInfo.IsEmpty()) {
@@ -266,10 +290,20 @@ HRESULT CHTTPAsync::Connect(LPCWSTR lpszURL, DWORD dwTimeOut/* = INFINITE*/, LPC
 		}
 	}
 
+	m_bIsGoogleMedia = EndsWith(m_host, L"googlevideo.com") && StartsWith(m_path, L"/videoplayback?") &&
+					   (StartsWith(m_contentType, L"video") || StartsWith(m_contentType, L"audio"));
+
+	if (m_lenght && m_bSupportsRanges && m_bIsGoogleMedia) {
+		m_http_chunk.end = m_http_chunk.size = std::min(m_lenght, googlemedia_maximum_chunk_size);
+		if (RangeInternal(m_http_chunk.start, m_http_chunk.end - 1) == S_OK) {
+			m_http_chunk.use = true;
+		}
+	}
+
 	return S_OK;
 }
 
-HRESULT CHTTPAsync::SendRequest(LPCWSTR lpszCustomHeader/* = L""*/, DWORD dwTimeOut/* = INFINITE*/)
+HRESULT CHTTPAsync::SendRequest(LPCWSTR lpszCustomHeader/* = L""*/, DWORD dwTimeOut/* = INFINITE*/, bool bNoAutoRedirect/* = false*/)
 {
 	CheckPointer(m_hConnect, E_FAIL);
 
@@ -280,70 +314,99 @@ HRESULT CHTTPAsync::SendRequest(LPCWSTR lpszCustomHeader/* = L""*/, DWORD dwTime
 		return S_FALSE;
 	}
 
-	ResetEvent(m_hRequestOpenedEvent);
-	ResetEvent(m_hRequestCompleteEvent);
-
-	SAFE_INTERNET_CLOSE_HANDLE(m_hRequest);
-
-	m_context = Context::CONTEXT_REQUEST;
-
-	DWORD dwFlags = INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_KEEP_CONNECTION;
-	if (m_nScheme == INTERNET_SCHEME_HTTPS) {
-		dwFlags |= (INTERNET_FLAG_SECURE | SECURITY_IGNORE_ERROR_MASK);
-	}
-
-	m_hRequest = HttpOpenRequestW(m_hConnect,
-								  L"GET",
-								  m_path,
-								  nullptr,
-								  nullptr,
-								  nullptr,
-								  dwFlags,
-								  (DWORD_PTR)this);
-	if (m_hRequest == nullptr) {
-		CheckLastError(L"HttpOpenRequestW()", E_FAIL);
-
-		if (WaitForSingleObject(m_hRequestOpenedEvent, dwTimeOut) == WAIT_TIMEOUT) {
-			DLog(L"CHTTPAsync::SendRequest() : HttpOpenRequestW() - %u ms time out reached, exit", dwTimeOut);
-			m_bRequestComplete = FALSE;
-			return E_FAIL;
-		}
-	}
-
-	CheckPointer(m_hRequest, E_FAIL);
-
-	CString lpszHeaders = L"Accept: */*\r\n";
-	lpszHeaders += lpszCustomHeader;
 	for (;;) {
-		if (!HttpSendRequestW(m_hRequest,
-							  lpszHeaders,
-							  lpszHeaders.GetLength(),
-							  nullptr,
-							  0)) {
-			CheckLastError(L"HttpSendRequestW()", E_FAIL);
+		ResetEvent(m_hRequestOpenedEvent);
+		ResetEvent(m_hRequestCompleteEvent);
 
-			if (WaitForSingleObject(m_hRequestCompleteEvent, dwTimeOut) == WAIT_TIMEOUT) {
-				DLog(L"CHTTPAsync::SendRequest() : HttpSendRequestW() - %u ms time out reached, exit", dwTimeOut);
+		SAFE_INTERNET_CLOSE_HANDLE(m_hRequest);
+
+		m_context = Context::CONTEXT_REQUEST;
+
+		DWORD dwFlags = INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_KEEP_CONNECTION;
+		if (bNoAutoRedirect) {
+			dwFlags |= INTERNET_FLAG_NO_AUTO_REDIRECT;
+		}
+		if (m_nScheme == INTERNET_SCHEME_HTTPS) {
+			dwFlags |= (INTERNET_FLAG_SECURE | SECURITY_IGNORE_ERROR_MASK);
+		}
+
+		m_hRequest = HttpOpenRequestW(m_hConnect,
+									  L"GET",
+									  m_path,
+									  nullptr,
+									  nullptr,
+									  nullptr,
+									  dwFlags,
+									  (DWORD_PTR)this);
+		if (m_hRequest == nullptr) {
+			CheckLastError(L"HttpOpenRequestW()", E_FAIL);
+
+			if (WaitForSingleObject(m_hRequestOpenedEvent, dwTimeOut) == WAIT_TIMEOUT) {
+				DLog(L"CHTTPAsync::SendRequest() : HttpOpenRequestW() - %u ms time out reached, exit", dwTimeOut);
 				m_bRequestComplete = FALSE;
-				return S_FALSE;
+				return E_FAIL;
 			}
 		}
 
-		const DWORD dwStatusCode = QueryInfoDword(HTTP_QUERY_STATUS_CODE);
-		if (dwStatusCode == HTTP_STATUS_PROXY_AUTH_REQ) {
-			dwFlags = FLAGS_ERROR_UI_FILTER_FOR_ERRORS | FLAGS_ERROR_UI_FLAGS_CHANGE_OPTIONS | FLAGS_ERROR_UI_FLAGS_GENERATE_DATA;
-			const DWORD ret = InternetErrorDlg(GetDesktopWindow(),
-											   m_hRequest,
-											   ERROR_INTERNET_INCORRECT_PASSWORD,
-											   dwFlags,
-											   nullptr);
-			if (ret == ERROR_INTERNET_FORCE_RETRY) {
-				continue;
+		CheckPointer(m_hRequest, E_FAIL);
+
+		bool bNewRequestPath = false;
+
+		CString lpszHeaders = L"Accept: */*\r\n";
+		lpszHeaders += lpszCustomHeader;
+		for (;;) {
+			if (!HttpSendRequestW(m_hRequest,
+								  lpszHeaders,
+								  lpszHeaders.GetLength(),
+								  nullptr,
+								  0)) {
+				CheckLastError(L"HttpSendRequestW()", E_FAIL);
+
+				if (WaitForSingleObject(m_hRequestCompleteEvent, dwTimeOut) == WAIT_TIMEOUT) {
+					DLog(L"CHTTPAsync::SendRequest() : HttpSendRequestW() - %u ms time out reached, exit", dwTimeOut);
+					m_bRequestComplete = FALSE;
+					return S_FALSE;
+				}
 			}
 
-			return E_FAIL;
-		} else if (dwStatusCode != HTTP_STATUS_OK && dwStatusCode != HTTP_STATUS_PARTIAL_CONTENT) {
-			return E_FAIL;
+			const DWORD dwStatusCode = QueryInfoDword(HTTP_QUERY_STATUS_CODE);
+			if (dwStatusCode == HTTP_STATUS_PROXY_AUTH_REQ || dwStatusCode == HTTP_STATUS_DENIED) {
+				dwFlags = FLAGS_ERROR_UI_FILTER_FOR_ERRORS | FLAGS_ERROR_UI_FLAGS_CHANGE_OPTIONS | FLAGS_ERROR_UI_FLAGS_GENERATE_DATA;
+				const DWORD ret = InternetErrorDlg(GetDesktopWindow(),
+												   m_hRequest,
+												   ERROR_INTERNET_INCORRECT_PASSWORD,
+												   dwFlags,
+												   nullptr);
+				if (ret == ERROR_INTERNET_FORCE_RETRY) {
+					continue;
+				}
+
+				return E_FAIL;
+			} else if (dwStatusCode != HTTP_STATUS_OK && dwStatusCode != HTTP_STATUS_PARTIAL_CONTENT) {
+				if (dwStatusCode == HTTP_STATUS_MOVED || dwStatusCode == HTTP_STATUS_REDIRECT || dwStatusCode == HTTP_STATUS_REDIRECT_METHOD) {
+					m_url_redirect_str = QueryInfoStr(HTTP_QUERY_LOCATION);
+					if (!m_url_redirect_str.IsEmpty()) {
+						CUrlParser urlParser(m_url_redirect_str.GetString());
+						if (!urlParser.IsValid()) {
+							m_path = m_url_redirect_str;
+							m_url_redirect_str = CUrlParser::CombineUrl(m_schemeName + L"://" + m_host, m_url_redirect_str);
+
+							bNewRequestPath = true;
+							break;
+						}
+
+						return E_CHANGED_STATE;
+					}
+				}
+
+				return E_FAIL;
+			}
+
+			break;
+		}
+
+		if (bNewRequestPath) {
+			continue;
 		}
 
 		break;
@@ -352,14 +415,14 @@ HRESULT CHTTPAsync::SendRequest(LPCWSTR lpszCustomHeader/* = L""*/, DWORD dwTime
 	return S_OK;
 }
 
-HRESULT CHTTPAsync::Read(PBYTE pBuffer, DWORD dwSizeToRead, LPDWORD dwSizeRead, DWORD dwTimeOut/* = INFINITE*/)
+HRESULT CHTTPAsync::ReadInternal(PBYTE pBuffer, DWORD dwSizeToRead, DWORD& dwSizeRead, DWORD dwTimeOut)
 {
 	CheckPointer(m_hRequest, E_FAIL);
 
 	std::unique_lock<std::mutex> lock(m_mutexRequest);
 
 	if (!m_bRequestComplete) {
-		DLog(L"CHTTPAsync::Read() : previous request has not completed, exit");
+		DLog(L"CHTTPAsync::ReadInternal() : previous request has not completed, exit");
 		return S_FALSE;
 	}
 
@@ -380,7 +443,7 @@ HRESULT CHTTPAsync::Read(PBYTE pBuffer, DWORD dwSizeToRead, LPDWORD dwSizeRead, 
 			CheckLastError(L"InternetReadFileExW()", E_FAIL);
 
 			if (WaitForSingleObject(m_hRequestCompleteEvent, dwTimeOut) == WAIT_TIMEOUT) {
-				DLog(L"CHTTPAsync::Read() : InternetReadFileExW() - %u ms time out reached, exit", dwTimeOut);
+				DLog(L"CHTTPAsync::ReadInternal() : InternetReadFileExW() - %u ms time out reached, exit", dwTimeOut);
 				m_bRequestComplete = FALSE;
 				return S_FALSE;
 			}
@@ -394,24 +457,171 @@ HRESULT CHTTPAsync::Read(PBYTE pBuffer, DWORD dwSizeToRead, LPDWORD dwSizeRead, 
 		_dwSizeToRead -= InetBuff.dwBufferLength;
 	};
 
-	if (dwSizeRead) {
-		*dwSizeRead = _dwSizeRead;
-	}
+	dwSizeRead = _dwSizeRead;
 
 	return _dwSizeRead ? S_OK : S_FALSE;
 }
 
-CString CHTTPAsync::GetHeader() const
+HRESULT CHTTPAsync::Read(PBYTE pBuffer, DWORD dwSizeToRead, DWORD& dwSizeRead, DWORD dwTimeOut/* = INFINITE*/)
+{
+	if (m_http_chunk.use) {
+		HRESULT hr = S_OK;
+		auto begin = pBuffer;
+		DWORD sizeRead = 0;
+		for (;;) {
+			auto size = std::min<DWORD>(dwSizeToRead - dwSizeRead, m_http_chunk.end - m_http_chunk.read);
+			hr = ReadInternal(begin, size, sizeRead, dwTimeOut);
+			if (hr != S_OK) {
+				break;
+			}
+
+			dwSizeRead += sizeRead;
+			m_http_chunk.read += sizeRead;
+
+			if (m_http_chunk.read == m_http_chunk.end && m_lenght > m_http_chunk.end) {
+				hr = Seek(m_http_chunk.end);
+				if (hr != S_OK) {
+					break;
+				}
+
+				if (dwSizeRead < dwSizeToRead) {
+					begin += sizeRead;
+					continue;
+				}
+			}
+
+			break;
+		}
+
+		return hr;
+	} else {
+		return ReadInternal(pBuffer, dwSizeToRead, dwSizeRead, dwTimeOut);
+	}
+}
+
+HRESULT CHTTPAsync::SeekInternal(UINT64 position)
+{
+	if (!m_lenght || position > m_lenght) {
+		return E_FAIL;
+	}
+
+	CString customHeader; customHeader.Format(L"Range: bytes=%I64u-\r\n", position);
+	return SendRequest(customHeader);
+}
+
+HRESULT CHTTPAsync::RangeInternal(UINT64 start, UINT64 end)
+{
+	if (start >= end) {
+		return E_FAIL;
+	}
+
+	if (!m_lenght || end > m_lenght) {
+		return E_FAIL;
+	}
+
+	CString customHeader; customHeader.Format(L"Range: bytes=%I64u-%I64u\r\n", start, end);
+	return SendRequest(customHeader);
+}
+
+HRESULT CHTTPAsync::Seek(UINT64 position)
+{
+	if (m_http_chunk.use) {
+		m_http_chunk.size = std::min(m_lenght - position, googlemedia_maximum_chunk_size);
+		m_http_chunk.start = m_http_chunk.read = position;
+		m_http_chunk.end = m_http_chunk.start + m_http_chunk.size;
+
+		return RangeInternal(m_http_chunk.start, m_http_chunk.end - 1);
+	} else {
+		return SeekInternal(position);
+	}
+}
+
+constexpr size_t decompressBlockSize = 1024;
+bool CHTTPAsync::GetUncompressed(std::vector<BYTE>& buffer)
+{
+	if (!m_bIsCompressed) {
+		return false;
+	}
+
+	if (!m_lenght) {
+		return false;
+	}
+
+	buffer.clear();
+
+	int ret = {};
+	z_stream stream = {};
+	if ((ret = inflateInit2(&stream, 32 + 15)) != Z_OK) {
+		return false;
+	}
+
+	std::vector<BYTE> compressedData(m_lenght);
+	DWORD dwSizeRead = 0;
+	if (Read(compressedData.data(), m_lenght, dwSizeRead) != S_OK) {
+		inflateEnd(&stream);
+		return false;
+	}
+
+	stream.next_in = compressedData.data();
+	stream.avail_in = static_cast<uInt>(compressedData.size());
+
+	size_t n = 0;
+	do {
+		buffer.resize(++n * decompressBlockSize);
+		auto dst = buffer.data();
+		stream.next_out = &dst[(n - 1) * decompressBlockSize];
+		stream.avail_out = decompressBlockSize;
+		if ((ret = inflate(&stream, Z_NO_FLUSH)) != Z_OK && ret != Z_STREAM_END) {
+			buffer.clear();
+			break;
+		}
+	} while (stream.avail_out == 0 && stream.avail_in != 0 && ret != Z_STREAM_END);
+
+	inflateEnd(&stream);
+
+	if (!buffer.empty()) {
+		buffer.resize(static_cast<size_t>(stream.total_out));
+	}
+
+	return !buffer.empty();
+}
+
+const CString& CHTTPAsync::GetHeader() const
 {
 	return m_header;
 }
 
-CString CHTTPAsync::GetContentType() const
+const CString& CHTTPAsync::GetContentType() const
 {
 	return m_contentType;
+}
+
+const CString& CHTTPAsync::GetContentEncoding() const
+{
+	return m_contentEncoding;
+}
+
+const bool CHTTPAsync::IsSupportsRanges() const
+{
+	return m_bSupportsRanges;
+}
+
+const bool CHTTPAsync::IsGoogleMedia() const
+{
+	return m_bIsGoogleMedia;
+}
+
+const bool CHTTPAsync::IsCompressed() const
+{
+	return m_bIsCompressed;
 }
 
 UINT64 CHTTPAsync::GetLenght() const
 {
 	return m_lenght;
+}
+
+const CString& CHTTPAsync::GetRedirectURL() const
+{
+	return m_url_redirect_str;
 }

@@ -1,5 +1,5 @@
 /*
- * (C) 2016-2020 see Authors.txt
+ * (C) 2016-2023 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -23,6 +23,11 @@
 #include <wininet.h>
 #include <mutex>
 #include "UrlParser.h"
+#include "mpc_defines.h"
+
+namespace http {
+	inline CStringW userAgent = L"Mozilla/5.0";
+}
 
 class CHTTPAsync
 {
@@ -48,13 +53,31 @@ protected:
 	CString m_url_str;
 	CString m_host;
 	CString m_path;
+	CString m_schemeName;
+
+	CString m_url_redirect_str;
 
 	INTERNET_PORT m_nPort     = 0;
 	INTERNET_SCHEME m_nScheme = INTERNET_SCHEME_HTTP;
 
 	CString m_header;
 	CString m_contentType;
+	CString m_contentEncoding;
 	UINT64 m_lenght = 0;
+
+	bool m_bIsCompressed = false;
+
+	bool m_bSupportsRanges = false;
+	bool m_bIsGoogleMedia = false;
+
+	struct http_chunk_t {
+		bool use;
+		UINT64 size;
+		UINT64 start;
+		UINT64 end;
+		UINT64 read;
+	} m_http_chunk = {};
+	constexpr static uint64_t googlemedia_maximum_chunk_size = 10ull * MEGABYTE - 1;
 
 	static void CALLBACK Callback(__in HINTERNET hInternet,
 								  __in_opt DWORD_PTR dwContext,
@@ -65,6 +88,11 @@ protected:
 	CString QueryInfoStr(DWORD dwInfoLevel) const;
 	DWORD QueryInfoDword(DWORD dwInfoLevel) const;
 
+	HRESULT SeekInternal(UINT64 position);
+	HRESULT RangeInternal(UINT64 start, UINT64 end);
+
+	HRESULT ReadInternal(PBYTE pBuffer, DWORD dwSizeToRead, DWORD& dwSizeRead, DWORD dwTimeOut);
+
 public:
 	CHTTPAsync();
 	virtual ~CHTTPAsync();
@@ -72,11 +100,26 @@ public:
 	void Close();
 
 	HRESULT Connect(LPCWSTR lpszURL, DWORD dwTimeOut = INFINITE, LPCWSTR lpszCustomHeader = L"");
-	HRESULT SendRequest(LPCWSTR lpszCustomHeader = L"", DWORD dwTimeOut = INFINITE);
-	HRESULT Read(PBYTE pBuffer, DWORD dwSizeToRead, LPDWORD dwSizeRead, DWORD dwTimeOut = INFINITE);
+	HRESULT SendRequest(LPCWSTR lpszCustomHeader = L"", DWORD dwTimeOut = INFINITE, bool bNoAutoRedirect = false);
+	HRESULT Read(PBYTE pBuffer, DWORD dwSizeToRead, DWORD& dwSizeRead, DWORD dwTimeOut = INFINITE);
 
-	CString GetHeader() const;
-	CString GetContentType() const;
+	HRESULT Seek(UINT64 position);
+
+	const CString& GetHeader() const;
+
+	// get content type in lowercase
+	const CString& GetContentType() const;
+	// get content encoding in lowercase
+	const CString& GetContentEncoding() const;
+
+	const bool IsSupportsRanges() const;
+	const bool IsGoogleMedia() const;
+
+	const bool IsCompressed() const;
+	bool GetUncompressed(std::vector<BYTE>& buffer);
+
 	UINT64 GetLenght() const;
+
+	const CString& GetRedirectURL() const;
 };
 
