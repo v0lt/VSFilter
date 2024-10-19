@@ -34,5 +34,5 @@
 #include <vector>
 #include <deque>
 
-#include <d3d9.h>
 #include "DSUtil/ds_defines.h"
+#include "DSUtil/Log.h"
