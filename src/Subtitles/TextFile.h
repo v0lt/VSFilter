@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2022 see Authors.txt
+ * (C) 2006-2024 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -22,8 +22,10 @@
 #pragma once
 
 #include <afx.h>
+#include <stdio.h>
+#include <memory>
 
-class CTextFile : protected CStdioFile
+class CTextFile
 {
 public:
 	enum enc {
@@ -42,18 +44,23 @@ private:
 	std::unique_ptr<WCHAR[]> m_wbuffer;
 	LONGLONG m_posInBuffer, m_nInBuffer;
 
+	std::unique_ptr<FILE, std::integral_constant<decltype(&fclose), &fclose>> m_pFile;
+	std::unique_ptr<CStdioFile> m_pStdioFile;
+	CStringW m_strFileName;
+
+	bool OpenFile(LPCWSTR lpszFileName, LPCWSTR mode);
+
 public:
 	CTextFile(enc encoding = ASCII, enc defaultencoding = ASCII);
+	virtual ~CTextFile();
 
-	virtual bool Open(LPCWSTR lpszFileName);
-	virtual bool Save(LPCWSTR lpszFileName, enc e /*= ASCII*/);
-	virtual void Close() { return __super::Close(); };
+	bool Open(LPCWSTR lpszFileName);
+	bool Save(LPCWSTR lpszFileName, enc e /*= ASCII*/);
+	void Close();
 
 	void SetEncoding(enc e);
-	enc GetEncoding();
-	bool IsUnicode();
-
-	// CFile
+	enc GetEncoding() const;
+	bool IsUnicode() const;
 
 	CStringW GetFilePath() const;
 
@@ -65,16 +72,16 @@ public:
 
 	void WriteString(LPCSTR lpsz/*CStringA str*/);
 	void WriteString(LPCWSTR lpsz/*CStringW str*/);
-	BOOL ReadString(CStringA& str);
-	BOOL ReadString(CStringW& str);
+	bool ReadString(CStringA& str);
+	bool ReadString(CStringW& str);
 
 protected:
-	virtual bool ReopenAsText();
+	bool ReopenAsText();
 	bool FillBuffer();
 	ULONGLONG GetPositionFastBuffered() const;
 };
 
-class CWebTextFile : public CTextFile
+class CWebTextFile final : public CTextFile
 {
 	LONGLONG m_llMaxSize;
 	CStringW m_tempfn;
@@ -86,7 +93,6 @@ public:
 	~CWebTextFile();
 
 	bool Open(LPCWSTR lpszFileName);
-	bool Save(LPCWSTR lpszFileName, enc e /*= ASCII*/);
 	void Close();
 
 	const CString& GetRedirectURL() const;

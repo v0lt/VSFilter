@@ -1,5 +1,5 @@
 /*
- * (C) 2013-2023 see Authors.txt
+ * (C) 2023 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -20,4 +20,13 @@
 
 #pragma once
 
-CStringA GetGUIDName(const GUID& guid);
+extern CString			ISO6391ToLanguage(LPCSTR code);
+extern CString			ISO6392ToLanguage(LPCSTR code);
+
+extern bool				IsISO639Language(LPCSTR code);
+extern CString			ISO639XToLanguage(LPCSTR code, bool bCheckForFullLangName = false);
+extern LCID				ISO6391ToLcid(LPCSTR code);
+extern LCID				ISO6392ToLcid(LPCSTR code);
+extern LPCSTR			ISO6391To6392(LPCSTR code);
+extern LPCSTR			ISO6392To6391(LPCSTR code);
+extern CString			LanguageToISO6392(LPCWSTR lang);

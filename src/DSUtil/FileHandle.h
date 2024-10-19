@@ -1,5 +1,5 @@
 /*
- * (C) 2011-2023 see Authors.txt
+ * (C) 2011-2024 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -20,14 +20,41 @@
 
 #pragma once
 
-CStringW GetFileOnly(LPCWSTR Path);
-CStringW GetFolderOnly(LPCWSTR Path);
-CStringW AddSlash(LPCWSTR Path);
-CStringW RemoveSlash(LPCWSTR Path);
+CStringW GetFileName(LPCWSTR Path);
+
+void AddSlash(CStringW& path);
+CStringW GetAddSlash(LPCWSTR path);
+
+void RemoveSlash(CStringW& path);
+CStringW GetRemoveSlash(LPCWSTR path);
+
+void RemoveFileSpec(CStringW& path);
+CStringW GetFolderPath(LPCWSTR path);
+
+ // gets the file extension with a dot. can also work for URLs
 CStringW GetFileExt(LPCWSTR Path);
-CStringW RenameFileExt(LPCWSTR Path, LPCWSTR Ext);
-CStringW RemoveFileExt(LPCWSTR Path);
-CStringW AddExtension(LPCWSTR Path, LPCWSTR Ext);
+
+// removes file extension from path
+void     RemoveFileExt(CStringW& Path);
+// creates a new path without file extension
+CStringW GetRemoveFileExt(LPCWSTR Path);
+
+// replaces the extension of a file path
+void     RenameFileExt(CStringW& Path, LPCWSTR newExt);
+// creates a new path with a new file extension
+CStringW GetRenameFileExt(LPCWSTR Path, LPCWSTR newExt);
+
+void CombineFilePath(CStringW& path, LPCWSTR file);
+CStringW GetCombineFilePath(LPCWSTR dir, LPCWSTR file);
+
+// creates a full and canonical path
+CStringW GetFullCannonFilePath(LPCWSTR path);
+
+void StripToRoot(CStringW& path);
+CStringW GetStripToRoot(LPCWSTR path);
+
+CStringW GetCurrentDir();
+
 BOOL     GetTemporaryFilePath(CStringW strExtension, CStringW& strFileName);
 CStringW CompactPath(LPCWSTR Path, UINT cchMax);
 

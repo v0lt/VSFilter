@@ -1,5 +1,5 @@
 /*
- * (C) 2011-2023 see Authors.txt
+ * (C) 2011-2024 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -19,61 +19,76 @@
  */
 
 #include "stdafx.h"
-#include <filesystem>
 #include "Log.h"
 #include "FileHandle.h"
 #include "text.h"
 
+// TODO:
+// Functions for working with file paths longer than MAX_PATH are implemented here.
+// Notes:
+// ATL CPath does not support long paths.
+// Not all Path* functions from "shlwapi.h" support long paths.
 //
-// Returns the file portion from a path
-//
-CStringW GetFileOnly(LPCWSTR Path)
+// Path* functions that work correctly with long paths:
+// PathFileExistsW
+// PathFindExtensionW
+// PathIsDirectoryW
+// PathIsRelativeW
+// PathIsRootW
+// PathRemoveBackslashW
+// PathRemoveFileSpecW
+// PathStripPathW
+// PathStripToRootW
+
+
+CStringW GetFileName(LPCWSTR Path)
 {
-	CStringW cs = Path;
-	::PathStripPathW(cs.GetBuffer(0));
-	cs.ReleaseBuffer(-1);
-	return cs;
+	CStringW fileName = Path;
+	::PathStripPathW(fileName.GetBuffer());
+	fileName.ReleaseBuffer();
+	return fileName;
 }
 
-//
-// Returns the folder portion from a path
-//
-CStringW GetFolderOnly(LPCWSTR Path)
+void RemoveFileSpec(CStringW& Path)
 {
-	CStringW cs = Path; // Force CStringW to make a copy
-	::PathRemoveFileSpecW(cs.GetBuffer(0));
-	cs.ReleaseBuffer(-1);
-	return cs;
+	::PathRemoveFileSpecW(Path.GetBuffer());
+	Path.ReleaseBuffer();
 }
 
-//
-// Adds a backslash to the end of a path if it is needed
-//
-CStringW AddSlash(LPCWSTR Path)
+CStringW GetFolderPath(LPCWSTR path)
 {
-	CStringW cs = Path;
-	::PathAddBackslashW(cs.GetBuffer(MAX_PATH));
-	cs.ReleaseBuffer(-1);
-	if(cs.IsEmpty()) {
-		cs = L"\\";
+	CStringW newPath(path);
+	RemoveFileSpec(newPath);
+	return newPath;
+}
+
+void AddSlash(CStringW& path)
+{
+	if (path.GetLength() == 0 || path.GetString()[path.GetLength() - 1] != L'\\') {
+		path.AppendChar(L'\\');
 	}
-	return cs;
 }
 
-//
-// Removes a backslash from the end of a path if it is there
-//
-CStringW RemoveSlash(LPCWSTR Path)
+CStringW GetAddSlash(LPCWSTR path)
 {
-	CString cs = Path;
-	::PathRemoveBackslashW(cs.GetBuffer(MAX_PATH));
-	cs.ReleaseBuffer(-1);
-	return cs;
+	CStringW newPath = path;
+	AddSlash(newPath);
+	return newPath;
 }
 
-//
-// Returns just the .ext part of the file path
-//
+void RemoveSlash(CStringW& path)
+{
+	::PathRemoveBackslashW(path.GetBuffer());
+	path.ReleaseBuffer();
+}
+
+CStringW GetRemoveSlash(LPCWSTR path)
+{
+	CString newPath = path;
+	RemoveSlash(newPath);
+	return newPath;
+}
+
 CStringW GetFileExt(LPCWSTR Path)
 {
 	if (::PathIsURLW(Path)) {
@@ -87,34 +102,99 @@ CStringW GetFileExt(LPCWSTR Path)
 	return ext;
 }
 
-//
-// Exchanges one file extension for another and returns the new fiel path
-//
-CStringW RenameFileExt(LPCWSTR Path, LPCWSTR Ext)
+void RemoveFileExt(CStringW& Path)
 {
-	CStringW cs = Path;
-	::PathRenameExtensionW(cs.GetBuffer(MAX_PATH), Ext);
-	cs.ReleaseBuffer(-1);
-	return cs;
+	LPCWSTR ext = ::PathFindExtensionW(Path.GetString());
+	const int len = (int)(ext - Path.GetString());
+	Path.Truncate(len);
 }
 
-//
-// Removes the file name extension from a path, if one is present
-//
-CStringW RemoveFileExt(LPCWSTR Path)
+CStringW GetRemoveFileExt(LPCWSTR Path)
 {
-	CStringW cs = Path;
-	::PathRemoveExtensionW(cs.GetBuffer(MAX_PATH));
-	cs.ReleaseBuffer(-1);
-	return cs;
+	LPCWSTR ext = ::PathFindExtensionW(Path);
+	const int len = (int)(ext - Path);
+	CStringW newPath(Path, len);
+	return newPath;
 }
 
-CStringW AddExtension(LPCWSTR Path, LPCWSTR Ext)
+
+void RenameFileExt(CStringW& Path, LPCWSTR newExt)
 {
-	CStringW cs = Path;
-	::PathAddExtensionW(cs.GetBuffer(MAX_PATH), Ext);
-	cs.ReleaseBuffer(-1);
-	return cs;
+	RemoveFileExt(Path);
+	Path.Append(newExt);
+}
+
+CStringW GetRenameFileExt(LPCWSTR Path, LPCWSTR newExt)
+{
+	CStringW newPath = GetRemoveFileExt(Path);
+	newPath.Append(newExt);
+	return newPath;
+}
+
+void CombineFilePath(CStringW& path, LPCWSTR file)
+{
+	if (file) {
+		if (PathIsRelativeW(file)) {
+			if (file[0] != L'\\' && path.GetLength() && path.GetString()[path.GetLength() - 1] != L'\\') {
+				path.AppendChar(L'\\');
+			}
+			path.Append(file);
+		}
+		else {
+			path.SetString(file);
+		}
+	}
+	path = GetFullCannonFilePath(path);
+}
+
+CStringW GetCombineFilePath(LPCWSTR dir, LPCWSTR file)
+{
+	CStringW path(dir);
+	CombineFilePath(path, file);
+	return path;
+}
+
+CStringW GetFullCannonFilePath(LPCWSTR path)
+{
+	CStringW newPath;
+	const DWORD buflen = ::GetFullPathNameW(path, 0, nullptr, nullptr);
+	if (buflen > 0) {
+		DWORD len = ::GetFullPathNameW(path, buflen, newPath.GetBuffer(buflen - 1), nullptr);
+		if (len >= buflen) {
+			len = 0;
+		}
+		newPath.ReleaseBufferSetLength(len);
+	}
+	return newPath;
+}
+
+void StripToRoot(CStringW& path)
+{
+	BOOL ret = ::PathStripToRootW(path.GetBuffer());
+	if (ret) {
+		path.ReleaseBuffer();
+	}
+}
+
+CStringW GetStripToRoot(LPCWSTR path)
+{
+	CStringW newPath(path);
+	StripToRoot(newPath);
+	return newPath;
+}
+
+CStringW GetCurrentDir()
+{
+	CStringW curDir;
+	const DWORD buflen = ::GetCurrentDirectoryW(0, nullptr);
+	if (buflen > 0) {
+		DWORD len = ::GetCurrentDirectoryW(buflen, curDir.GetBuffer(buflen - 1));
+		if (len >= buflen) {
+			len = 0;
+		}
+		curDir.ReleaseBufferSetLength(len);
+	}
+	return curDir;
 }
 
 //
@@ -330,7 +410,7 @@ HRESULT FileOperationDelete(const CStringW& path)
 HRESULT FileOperation(LPCWSTR source, LPCWSTR target, const UINT func, const DWORD flags)
 {
 	LPCWSTR pszNewName = PathFindFileNameW(target);
-	const CStringW destinationFolder = GetFolderOnly(target);
+	const CStringW destinationFolder = GetFolderPath(target);
 
 	return FileOperation(source, destinationFolder, pszNewName, func, flags);
 }

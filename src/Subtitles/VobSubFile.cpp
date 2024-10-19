@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2023 see Authors.txt
+ * (C) 2006-2024 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -25,6 +25,7 @@
 #include "unrar.h"
 #include "VobSubFile.h"
 #include "RTS.h"
+#include "DSUtil/FileHandle.h"
 
 //
 
@@ -350,7 +351,7 @@ bool CVobSubFile::Open(CString fn)
 				sp[j].bForced = false;
 
 				int packetsize = 0, datasize = 0;
-				BYTE* buff = GetPacket((int)j, packetsize, datasize, i);
+				BYTE* buff = GetPacket(j, packetsize, datasize, i);
 				if (!buff) {
 					sp[j].bValid = false;
 					continue;
@@ -1731,7 +1732,7 @@ bool CVobSubFile::SaveWinSubMux(CString fn)
 
 	std::vector<SubPos>& sp = m_langs[m_nLang].subpos;
 	for (size_t i = 0; i < sp.size(); i++) {
-		if (!GetFrame((int)i)) {
+		if (!GetFrame(i)) {
 			continue;
 		}
 
@@ -1858,13 +1859,10 @@ bool CVobSubFile::SaveScenarist(CString fn)
 	fn.Replace('\\', '/');
 	CString title = fn.Mid(fn.ReverseFind('/')+1);
 
-	WCHAR buff[MAX_PATH], * pFilePart = buff;
-	if (GetFullPathNameW(fn, MAX_PATH, buff, &pFilePart) == 0) {
-		return false;
-	}
-
-	CString fullpath = CString(buff).Left(int(pFilePart - buff));
+	CString fullpath = GetFullCannonFilePath(fn);
+	RemoveFileSpec(fullpath);
 	fullpath.TrimRight(L"\\/");
+
 	if (fullpath.IsEmpty()) {
 		return false;
 	}
@@ -1967,7 +1965,7 @@ bool CVobSubFile::SaveScenarist(CString fn)
 
 	std::vector<SubPos>& sp = m_langs[m_nLang].subpos;
 	for (size_t i = 0, k = 0; i < sp.size(); i++) {
-		if (!GetFrame((int)i)) {
+		if (!GetFrame(i)) {
 			continue;
 		}
 
@@ -2117,13 +2115,10 @@ bool CVobSubFile::SaveMaestro(CString fn)
 	fn.Replace('\\', '/');
 	CString title = fn.Mid(fn.ReverseFind('/')+1);
 
-	WCHAR buff[MAX_PATH], * pFilePart = buff;
-	if (GetFullPathNameW(fn, MAX_PATH, buff, &pFilePart) == 0) {
-		return false;
-	}
-
-	CString fullpath = CString(buff).Left(int(pFilePart - buff));
+	CString fullpath = GetFullCannonFilePath(fn);
+	RemoveFileSpec(fullpath);
 	fullpath.TrimRight(L"\\/");
+
 	if (fullpath.IsEmpty()) {
 		return false;
 	}
@@ -2197,7 +2192,7 @@ bool CVobSubFile::SaveMaestro(CString fn)
 
 	std::vector<SubPos>& sp = m_langs[m_nLang].subpos;
 	for (size_t i = 0, k = 0; i < sp.size(); i++) {
-		if (!GetFrame((int)i)) {
+		if (!GetFrame(i)) {
 			continue;
 		}
 

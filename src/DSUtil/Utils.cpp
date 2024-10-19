@@ -1,5 +1,5 @@
 /*
- * (C) 2016-2022 see Authors.txt
+ * (C) 2016-2024 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -367,7 +367,7 @@ CStringW HR2Str(const HRESULT hr)
 #define UNPACK_VALUE(VALUE) case VALUE: str = L#VALUE; break;
 #define UNPACK_HR_WIN32(VALUE) case (((VALUE) & 0x0000FFFF) | (FACILITY_WIN32 << 16) | 0x80000000): str = L#VALUE; break;
 	switch (hr) {
-		// Common HRESULT Values https://docs.microsoft.com/en-us/windows/desktop/seccrypto/common-hresult-values
+		// Common HRESULT Values https://learn.microsoft.com/en-us/windows/win32/seccrypto/common-hresult-values
 		UNPACK_VALUE(S_OK);
 #ifdef _WINERROR_
 		UNPACK_VALUE(S_FALSE);
@@ -381,12 +381,12 @@ CStringW HR2Str(const HRESULT hr)
 		UNPACK_VALUE(E_HANDLE);
 		UNPACK_VALUE(E_OUTOFMEMORY);
 		UNPACK_VALUE(E_INVALIDARG);
-		// some COM Error Codes (Generic) https://docs.microsoft.com/en-us/windows/win32/com/com-error-codes-1
+		// some COM Error Codes (Generic) https://learn.microsoft.com/en-us/windows/win32/com/com-error-codes-1
 		UNPACK_VALUE(REGDB_E_CLASSNOTREG);
-		// some COM Error Codes (UI, Audio, DirectX, Codec) https://docs.microsoft.com/en-us/windows/win32/com/com-error-codes-10
+		// some COM Error Codes (UI, Audio, DirectX, Codec) https://learn.microsoft.com/en-us/windows/win32/com/com-error-codes-10
 		UNPACK_VALUE(WINCODEC_ERR_UNSUPPORTEDPIXELFORMAT);
 		UNPACK_VALUE(WINCODEC_ERR_PROPERTYUNEXPECTEDTYPE);
-		// some System Error Codes https://docs.microsoft.com/en-us/windows/win32/debug/system-error-codes
+		// some System Error Codes https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes
 		UNPACK_HR_WIN32(ERROR_FILE_NOT_FOUND)
 		UNPACK_HR_WIN32(ERROR_MOD_NOT_FOUND);
 		UNPACK_HR_WIN32(ERROR_INVALID_WINDOW_HANDLE);
@@ -395,9 +395,10 @@ CStringW HR2Str(const HRESULT hr)
 #ifdef __ERRORS__
 		// some DirectShow Error and Success Codes https://learn.microsoft.com/en-us/windows/win32/directshow/error-and-success-codes
 		UNPACK_VALUE(VFW_E_ENUM_OUT_OF_SYNC);
+		UNPACK_VALUE(VFW_E_NOT_COMMITTED);
 #endif
 #ifdef _D3D9_H_
-		// some D3DERR values https://docs.microsoft.com/en-us/windows/desktop/direct3d9/d3derr
+		// some D3DERR values https://learn.microsoft.com/en-us/windows/win32/direct3d9/d3derr
 		UNPACK_VALUE(S_PRESENT_OCCLUDED);
 		UNPACK_VALUE(S_PRESENT_MODE_CHANGED);
 		UNPACK_VALUE(D3DERR_DEVICEHUNG);
@@ -413,6 +414,9 @@ CStringW HR2Str(const HRESULT hr)
 #ifdef _MFERROR_H
 		// some MF_E values
 		UNPACK_VALUE(MF_E_INVALIDSTREAMNUMBER);
+		UNPACK_VALUE(MF_E_INVALIDMEDIATYPE);
+		UNPACK_VALUE(MF_E_NOTACCEPTING);
+		UNPACK_VALUE(MF_E_INVALID_FORMAT);
 		UNPACK_VALUE(MF_E_TRANSFORM_NEED_MORE_INPUT);
 		UNPACK_VALUE(MF_E_TRANSFORM_STREAM_CHANGE);
 		UNPACK_VALUE(MF_E_TRANSFORM_TYPE_NOT_SET);
@@ -425,24 +429,32 @@ CStringW HR2Str(const HRESULT hr)
 	return str;
 }
 
-struct THREADNAME_INFO {
-	DWORD  dwType; // must be 0x1000
-	LPCSTR szName; // pointer to name (in user addr space)
-	DWORD  dwThreadID; // thread ID (-1 caller thread)
-	DWORD  dwFlags; // reserved for future use, must be zero
-};
-
-void SetThreadName(DWORD dwThreadID, LPCSTR szThreadName)
+// https://learn.microsoft.com/en-us/visualstudio/debugger/how-to-set-a-thread-name-in-native-code
+//
+// Usage: SetThreadName ((DWORD)-1, "MainThread");
+//
+const DWORD MS_VC_EXCEPTION = 0x406D1388;
+#pragma pack(push,8)
+typedef struct tagTHREADNAME_INFO
 {
+	DWORD dwType;     // Must be 0x1000.
+	LPCSTR szName;    // Pointer to name (in user addr space).
+	DWORD dwThreadID; // Thread ID (-1=caller thread).
+	DWORD dwFlags;    // Reserved for future use, must be zero.
+} THREADNAME_INFO;
+#pragma pack(pop)
+void SetThreadName(DWORD dwThreadID, const char* threadName) {
 	THREADNAME_INFO info;
 	info.dwType = 0x1000;
-	info.szName = szThreadName;
+	info.szName = threadName;
 	info.dwThreadID = dwThreadID;
 	info.dwFlags = 0;
-
+#pragma warning(push)
+#pragma warning(disable: 6320 6322)
 	__try {
-		RaiseException(0x406D1388, 0, sizeof(info) / sizeof(DWORD), (ULONG_PTR*)&info);
+		RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
 	}
-	__except (EXCEPTION_CONTINUE_EXECUTION) {
+	__except (EXCEPTION_EXECUTE_HANDLER) {
 	}
+#pragma warning(pop)
 }

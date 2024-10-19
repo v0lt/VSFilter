@@ -53,8 +53,8 @@
     <ClCompile Include="FileHandle.cpp" />
     <ClCompile Include="FileVersionInfo.cpp" />
     <ClCompile Include="GolombBuffer.cpp" />
-    <ClCompile Include="GUIDString.cpp" />
     <ClCompile Include="HTTPAsync.cpp" />
+    <ClCompile Include="ISOLang.cpp" />
     <ClCompile Include="MFCHelper.cpp" />
     <ClCompile Include="PixelUtils.cpp" />
     <ClCompile Include="PixelUtils_AviSynth.cpp" />
@@ -75,9 +75,9 @@
     <ClInclude Include="FileVersion.h" />
     <ClInclude Include="FileVersionInfo.h" />
     <ClInclude Include="GolombBuffer.h" />
-    <ClInclude Include="GUIDString.h" />
     <ClInclude Include="HTTPAsync.h" />
     <ClInclude Include="ID3Tag.h" />
+    <ClInclude Include="ISOLang.h" />
     <ClInclude Include="Log.h" />
     <ClInclude Include="MFCHelper.h" />
     <ClInclude Include="Mpeg2Def.h" />

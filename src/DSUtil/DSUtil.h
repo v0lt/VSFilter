@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2023 see Authors.txt
+ * (C) 2006-2024 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -29,6 +29,7 @@
 #include <mpc_defines.h>
 #include "ds_defines.h"
 #include "Utils.h"
+#include "ISOLang.h"
 
 extern int				CountPins(IBaseFilter* pBF, int& nIn, int& nOut, int& nInC, int& nOutC);
 extern bool				IsSplitter(IBaseFilter* pBF, bool fCountConnectedOnly = false);
@@ -62,6 +63,7 @@ extern bool				CreateFilter(CString DisplayName, IBaseFilter** ppBF, CString& Fr
 extern bool				HasMediaType(IFilterGraph *pFilterGraph, const GUID &mediaType);
 
 extern void				ExtractMediaTypes(IPin* pPin, std::vector<GUID>& types);
+extern void				ExtractMediaTypes(IPin* pPin, std::list<PinType>& types);
 extern void				ExtractMediaTypes(IPin* pPin, std::list<CMediaType>& mts);
 extern bool				ExtractBIH(const AM_MEDIA_TYPE* pmt, BITMAPINFOHEADER* bih);
 extern bool				ExtractBIH(IMediaSample* pMS, BITMAPINFOHEADER* bih);
@@ -83,10 +85,11 @@ extern HRESULT			CheckFilterCLSID(const CLSID& clsid);
 extern void				CStringToBin(CString str, std::vector<BYTE>& data);
 extern CString			BinToCString(const BYTE* ptr, size_t len);
 
+inline bool				HourOrMore(const REFERENCE_TIME rt) { return (rt > UNITS * 3600); };
 TimeCode_t				ReftimeToTimecode(const REFERENCE_TIME rt);
 TimeCode_t				ReftimeToHMS(const REFERENCE_TIME rt); // seconds rounded to the nearest value
 REFERENCE_TIME			TimecodeToReftime(const TimeCode_t tc);
-CStringW				ReftimeToString(const REFERENCE_TIME rt);  // hh:mm::ss.millisec
+CStringW				ReftimeToString(const REFERENCE_TIME rt, bool showZeroHours = true);  // hh:mm::ss.millisec
 CStringW				ReftimeToString2(const REFERENCE_TIME rt, bool showZeroHours = true); // hh:mm::ss (round)
 
 extern DVD_HMSF_TIMECODE	RT2HMSF(REFERENCE_TIME rt, double fps = 0); // use to remember the current position
@@ -102,24 +105,13 @@ extern HRESULT			LoadExternalFilter(LPCWSTR path, REFCLSID clsid, IBaseFilter** 
 extern HRESULT			LoadExternalPropertyPage(IPersist* pP, REFCLSID clsid, IPropertyPage** ppPP);
 extern void				UnloadExternalObjects();
 
-extern CString			MakeFullPath(LPCWSTR path);
+extern CStringW			MakeFullPath(LPCWSTR path);
 // simple file system path detector
-extern bool				IsLikelyFilePath(const CString &str);
+extern bool				IsLikelyFilePath(const CStringW &str);
 
 extern GUID				GUIDFromCString(CString str);
 extern HRESULT			GUIDFromCString(CString str, GUID& guid);
 extern CStringW			CStringFromGUID(const GUID& guid);
-
-extern CString			ISO6391ToLanguage(LPCSTR code);
-extern CString			ISO6392ToLanguage(LPCSTR code);
-
-extern bool				IsISO639Language(LPCSTR code);
-extern CString			ISO639XToLanguage(LPCSTR code, bool bCheckForFullLangName = false);
-extern LCID				ISO6391ToLcid(LPCSTR code);
-extern LCID				ISO6392ToLcid(LPCSTR code);
-extern CString			ISO6391To6392(LPCSTR code);
-extern CString			ISO6392To6391(LPCSTR code);
-extern CString			LanguageToISO6392(LPCWSTR lang);
 
 extern bool				DeleteRegKey(LPCWSTR pszKey, LPCWSTR pszSubkey);
 extern bool				SetRegKeyValue(LPCWSTR pszKey, LPCWSTR pszSubkey, LPCWSTR pszValueName, LPCWSTR pszValue);
@@ -143,6 +135,7 @@ extern HRESULT			CreateMPEG2VISimple(CMediaType* mt, BITMAPINFOHEADER* pbmi, REF
 extern CStringA			VobSubDefHeader(int w, int h, CStringA palette = "");
 
 extern inline const LONGLONG GetPerfCounter();
+
 
 class CPinInfo : public PIN_INFO
 {

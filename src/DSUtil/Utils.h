@@ -1,5 +1,5 @@
 /*
- * (C) 2016-2022 see Authors.txt
+ * (C) 2016-2024 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -23,15 +23,15 @@
 #include <stdint.h>
 #include <numeric>
 
-template <typename T>
 // If the specified value is out of range, set to default values.
+template <typename T>
 inline T discard(T const& val, T const& def, T const& lo, T const& hi)
 {
 	return (val > hi || val < lo) ? def : val;
 }
 
-template <typename T>
 // If the specified value is out of set, set to default values.
+template <typename T>
 inline T discard(T const& val, T const& def, const std::vector<T>& vars)
 {
 	if (val != def) {
@@ -44,8 +44,8 @@ inline T discard(T const& val, T const& def, const std::vector<T>& vars)
 	return def;
 }
 
-template <typename T>
 // If the specified value is out of range, update lo or hi values.
+template <typename T>
 inline void expand_range(T const& val, T& lo, T& hi)
 {
 	if (val > hi) {
@@ -112,5 +112,5 @@ bool StrToDouble(const wchar_t* str, double& value);
 
 CStringW HR2Str(const HRESULT hr);
 
-// Usage: SetThreadName((DWORD)-1, "MainThread") or SetThreadName(DWORD_MAX, "MainThread")
-void SetThreadName(DWORD dwThreadID, LPCSTR szThreadName);
+// Usage: SetThreadName ((DWORD)-1, "MainThread");
+void SetThreadName(DWORD dwThreadID, const char* threadName);
