@@ -40,6 +40,7 @@
 #include <deque>
 #include <list>
 #include <map>
+#include <cmath>
 
 #include "DSUtil/DSUtil.h"
 #include "DirectVobSubFilter.h"
