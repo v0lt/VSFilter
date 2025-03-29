@@ -87,7 +87,7 @@ private:
 
 protected:
 	double m_fps = DEFAULT_FPS;
-	REFERENCE_TIME m_rtTimePerFrame;
+	REFERENCE_TIME m_rtTimePerFrame = std::llround(10000000.0 / DEFAULT_FPS);
 	REFERENCE_TIME m_rtNow = 0;
 
 	CComPtr<ISubPicAllocator> m_pAllocator;
