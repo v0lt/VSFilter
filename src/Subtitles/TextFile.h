@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2024 see Authors.txt
+ * (C) 2006-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -25,24 +25,33 @@
 #include <stdio.h>
 #include <memory>
 
+// https://learn.microsoft.com/en-us/windows/win32/intl/code-page-identifiers
+// The windows SDK already declares the CP_ACP and CP_UTF-8 code pages.
+// We declare others that we use frequently.
+
+#ifndef CP_UTF16LE
+#define CP_UTF16LE 1200
+#endif
+
+#ifndef CP_UTF16BE
+#define CP_UTF16BE 1201
+#endif
+
+#ifndef CP_ASCII
+#define CP_ASCII 20127
+#endif
+
 class CTextFile
 {
-public:
-	enum enc {
-		ASCII,
-		UTF8,
-		LE16,
-		BE16,
-		ANSI
-	};
-
 private:
-	enc m_encoding, m_defaultencoding;
-	int m_offset;
-	ULONGLONG m_posInFile;
+	UINT m_encoding, m_defaultencoding;
+	bool m_bAutoDetectCodePage;
+	int m_offset = 0;
+	ULONGLONG m_posInFile = 0;
 	std::unique_ptr<char[]> m_buffer;
 	std::unique_ptr<WCHAR[]> m_wbuffer;
-	LONGLONG m_posInBuffer, m_nInBuffer;
+	LONGLONG m_posInBuffer = 0;
+	LONGLONG m_nInBuffer = 0;
 
 	std::unique_ptr<FILE, std::integral_constant<decltype(&fclose), &fclose>> m_pFile;
 	std::unique_ptr<CStdioFile> m_pStdioFile;
@@ -51,15 +60,14 @@ private:
 	bool OpenFile(LPCWSTR lpszFileName, LPCWSTR mode);
 
 public:
-	CTextFile(enc encoding = ASCII, enc defaultencoding = ASCII);
+	CTextFile(UINT encoding = CP_ASCII, UINT defaultencoding = CP_ASCII, bool bAutoDetectCodePage = false);
 	virtual ~CTextFile();
 
 	bool Open(LPCWSTR lpszFileName);
-	bool Save(LPCWSTR lpszFileName, enc e /*= ASCII*/);
+	bool Save(LPCWSTR lpszFileName, UINT e /*= ASCII*/);
 	void Close();
 
-	void SetEncoding(enc e);
-	enc GetEncoding() const;
+	UINT GetEncoding() const;
 	bool IsUnicode() const;
 
 	CStringW GetFilePath() const;
@@ -72,7 +80,6 @@ public:
 
 	void WriteString(LPCSTR lpsz/*CStringA str*/);
 	void WriteString(LPCWSTR lpsz/*CStringW str*/);
-	bool ReadString(CStringA& str);
 	bool ReadString(CStringW& str);
 
 protected:
@@ -89,7 +96,7 @@ class CWebTextFile final : public CTextFile
 	CString m_url_redirect_str;
 
 public:
-	CWebTextFile(enc encoding = ASCII, enc defaultencoding = ASCII, LONGLONG llMaxSize = 1024 * 1024);
+	CWebTextFile(UINT encoding = CP_ASCII, UINT defaultencoding = CP_ASCII, bool bAutoDetectCodePage = false, LONGLONG llMaxSize = 1024 * 1024);
 	~CWebTextFile();
 
 	bool Open(LPCWSTR lpszFileName);

@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2021 see Authors.txt
+ * (C) 2006-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -80,8 +80,6 @@ protected:
 
 public:
 	CButton m_font;
-	int m_iCharset;
-	CComboBox m_charset;
 	int m_spacing;
 	CSpinButtonCtrl m_spacingspin;
 	int m_angle;

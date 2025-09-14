@@ -201,11 +201,11 @@ namespace Plugin
 		int m_CharSet;
 
 	public:
-		CTextSubFilter(CString fn = L"", int CharSet = DEFAULT_CHARSET, float fps = -1)
-			: m_CharSet(CharSet) {
+		CTextSubFilter(CString fn = L"", UINT codePage = CP_ACP, float fps = -1)
+			: m_CharSet(CodePageToCharSet(codePage)) {
 			m_fps = fps;
 			if (!fn.IsEmpty()) {
-				Open(fn, CharSet);
+				Open(fn, codePage);
 			}
 		}
 
@@ -213,14 +213,14 @@ namespace Plugin
 			return(m_CharSet);
 		}
 
-		bool Open(CString fn, int CharSet = DEFAULT_CHARSET) {
+		bool Open(CString fn, UINT codePage = CP_ACP) {
 			SetFileName(L"");
 			m_pSubPicProvider.Release();
 
 			if (!m_pSubPicProvider) {
 				if (CRenderedTextSubtitle* rts = DNew CRenderedTextSubtitle(&m_csSubLock)) {
 					m_pSubPicProvider = (ISubPicProvider*)rts;
-					if (rts->Open(CString(fn), CharSet)) {
+					if (rts->Open(CString(fn), codePage, false, "", "")) {
 						SetFileName(fn);
 					} else {
 						m_pSubPicProvider.Release();
@@ -322,7 +322,7 @@ namespace Plugin
 				fd.m_pOFN->hInstance = AfxGetResourceHandle();
 				fd.m_pOFN->lpTemplateName = MAKEINTRESOURCEW(IDD_TEXTSUBOPENTEMPLATE);
 				fd.m_pOFN->lpfnHook = (LPOFNHOOKPROC)OpenHookProc;
-				fd.m_pOFN->lCustData = (LPARAM)DEFAULT_CHARSET;
+				fd.m_pOFN->lCustData = (LPARAM)CP_ACP;
 
 				if (fd.DoModal() != IDOK) {
 					return 1;
@@ -600,7 +600,7 @@ namespace Plugin
 				fd.m_pOFN->hInstance = AfxGetResourceHandle();
 				fd.m_pOFN->lpTemplateName = MAKEINTRESOURCEW(IDD_TEXTSUBOPENTEMPLATE);
 				fd.m_pOFN->lpfnHook = (LPOFNHOOKPROC)OpenHookProc;
-				fd.m_pOFN->lCustData = (LPARAM)DEFAULT_CHARSET;
+				fd.m_pOFN->lCustData = (LPARAM)CP_ACP;
 #else
 				const WCHAR formats[] = L"TextSub files (*.sub;*.srt;*.smi;*.ssa;*.ass;*.xss;*.psb;*.txt)|*.sub;*.srt;*.smi;*.ssa;*.ass;*.xss;*.psb;*.txt||";
 				CFileDialog fd(TRUE, nullptr, GetFileName(), OFN_ENABLESIZING|OFN_HIDEREADONLY,
@@ -1052,6 +1052,26 @@ namespace Plugin
 
 }
 
+const static uint16_t codepages[] = {
+	0,
+	1250,
+	1251,
+	1253,
+	1252,
+	1254,
+	1255,
+	1256,
+	1257,
+	1258,
+	1361,
+	874,
+	932,
+	936,
+	949,
+	950,
+	54936,
+};
+
 UINT_PTR CALLBACK OpenHookProc(HWND hDlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uiMsg) {
@@ -1059,7 +1079,7 @@ UINT_PTR CALLBACK OpenHookProc(HWND hDlg, UINT uiMsg, WPARAM wParam, LPARAM lPar
 			OPENFILENAME* ofn = ((OFNOTIFY *)lParam)->lpOFN;
 
 			if (((NMHDR *)lParam)->code == CDN_FILEOK) {
-				ofn->lCustData = (LPARAM)CharSetList[SendMessageW(GetDlgItem(hDlg, IDC_COMBO1), CB_GETCURSEL, 0, 0)];
+				ofn->lCustData = (LPARAM)codepages[SendMessageW(GetDlgItem(hDlg, IDC_COMBO1), CB_GETCURSEL, 0, 0)];
 			}
 
 			break;
@@ -1068,12 +1088,15 @@ UINT_PTR CALLBACK OpenHookProc(HWND hDlg, UINT uiMsg, WPARAM wParam, LPARAM lPar
 		case WM_INITDIALOG: {
 			SetWindowLongPtrW(hDlg, GWLP_USERDATA, lParam);
 
-			for (int i = 0; i < CharSetLen; i++) {
-				CString s;
-				s.Format(L"%s (%d)", CharSetNames[i], CharSetList[i]);
-				SendMessageW(GetDlgItem(hDlg, IDC_COMBO1), CB_ADDSTRING, 0, (LPARAM)(LPCWSTR)s);
-				if (CharSetList[i] == (int)((OPENFILENAME*)lParam)->lCustData) {
-					SendMessageW(GetDlgItem(hDlg, IDC_COMBO1), CB_SETCURSEL, i, 0);
+			CPINFOEX cpinfoex;
+			for (const auto& codepage : codepages) {
+				if (codepage == 0) {
+					CStringW str;
+					str.Format(L"System code page - %u", GetACP());
+					SendMessageW(GetDlgItem(hDlg, IDC_COMBO1), CB_ADDSTRING, 0, (LPARAM)str.GetString());
+				}
+				else if (GetCPInfoExW(codepage, 0, &cpinfoex)) {
+					SendMessageW(GetDlgItem(hDlg, IDC_COMBO1), CB_ADDSTRING, 0, (LPARAM)(LPCWSTR)cpinfoex.CodePageName);
 				}
 			}
 

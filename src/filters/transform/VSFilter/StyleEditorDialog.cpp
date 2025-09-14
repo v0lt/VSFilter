@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2022 see Authors.txt
+ * (C) 2006-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -40,7 +40,6 @@ CStyleEditorDialog::CStyleEditorDialog(CString title, STSStyle* pstss, CWnd* pPa
 	, m_title(title)
 	, m_stss(*pstss)
 	, m_pParent(pParent)
-	, m_iCharset(0)
 	, m_spacing(0)
 	, m_angle(0)
 	, m_scalex(0)
@@ -62,8 +61,6 @@ void CStyleEditorDialog::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_BUTTON1, m_font);
-	DDX_CBIndex(pDX, IDC_COMBO1, m_iCharset);
-	DDX_Control(pDX, IDC_COMBO1, m_charset);
 	DDX_Text(pDX, IDC_EDIT3, m_spacing);
 	DDX_Control(pDX, IDC_SPIN3, m_spacingspin);
 	DDX_Text(pDX, IDC_EDIT11, m_angle);
@@ -106,9 +103,6 @@ void CStyleEditorDialog::UpdateControlData(bool fSave)
 	if (fSave) {
 		UpdateData();
 
-		if (m_iCharset >= 0) {
-			m_stss.charSet = m_charset.GetItemData(m_iCharset);
-		}
 		m_stss.fontSpacing = m_spacing;
 		m_stss.fontAngleZ = m_angle;
 		m_stss.fontScaleX = m_scalex;
@@ -126,15 +120,6 @@ void CStyleEditorDialog::UpdateControlData(bool fSave)
 		}
 	} else {
 		m_font.SetWindowTextW(m_stss.fontName);
-		m_iCharset = -1;
-		for (int i = 0; i < CharSetLen; i++) {
-			CString str;
-			str.Format(L"%s (%d)", CharSetNames[i], CharSetList[i]);
-			AddStringData(m_charset, str, CharSetList[i]);
-			if (m_stss.charSet == CharSetList[i]) {
-				m_iCharset = i;
-			}
-		}
 		// TODO: allow floats in these edit boxes
 		m_spacing = m_stss.fontSpacing;
 		m_spacingspin.SetRange32(-10000, 10000);
@@ -226,8 +211,6 @@ void CStyleEditorDialog::OnBnClickedButton1()
 			str = str.Left(14) + L"...";
 		}
 		m_font.SetWindowTextW(str);
-
-		SelectByItemData(m_charset, lf.lfCharSet);
 
 		m_stss = lf;
 	}

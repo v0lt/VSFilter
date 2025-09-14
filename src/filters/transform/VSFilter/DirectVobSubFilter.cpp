@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2023 see Authors.txt
+ * (C) 2006-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -2066,7 +2066,7 @@ bool CDirectVobSubFilter::Open()
 
 			if (!pSubStream) {
 				std::unique_ptr<CRenderedTextSubtitle> pRTS(DNew CRenderedTextSubtitle(&m_csSubLock));
-				if (pRTS->Open(sub_fn, DEFAULT_CHARSET, L"", m_videoFileName) && pRTS->GetStreamCount() > 0) {
+				if (pRTS->Open(sub_fn, CP_ACP, false, L"", m_videoFileName) && pRTS->GetStreamCount() > 0) {
 					pSubStream = pRTS.release();
 					m_frd.files.push_back(sub_fn + L".style");
 				}
