@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2024 see Authors.txt
+ * (C) 2006-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -139,7 +139,9 @@ extern UINT CodePageToCharSet(const UINT codePage);
 
 extern CStringA UrlEncode(const CStringA& str_in, const bool bArg = false);
 extern CStringA UrlDecode(const CStringA& str_in);
-extern CStringW UrlDecode(LPCWSTR lpWideCharStr);
+
+//bool Unescape(CStringW& str);
+
 extern CStringW ExtractTag(CStringW tag, CMapStringToString& attribs, bool& fClosing);
 extern CStringA HtmlSpecialChars(CStringA str, bool bQuotes = false);
 

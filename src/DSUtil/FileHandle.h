@@ -1,5 +1,5 @@
 /*
- * (C) 2011-2024 see Authors.txt
+ * (C) 2011-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -50,6 +50,8 @@ CStringW GetCombineFilePath(LPCWSTR dir, LPCWSTR file);
 // creates a full and canonical path
 CStringW GetFullCannonFilePath(LPCWSTR path);
 
+//bool ConvertFileUriToPath(CStringW& uri);
+
 void StripToRoot(CStringW& path);
 CStringW GetStripToRoot(LPCWSTR path);
 
@@ -80,6 +82,8 @@ CStringW GetFullExePath(const CStringW exePath, const bool bLookAppPaths);
 void CleanPath(CStringW& path);
 
 bool CFileGetStatus(LPCWSTR lpszFileName, CFileStatus& status);
+
+CStringW GetDriveLabel(WCHAR drive);
 
 /////
 

@@ -1,5 +1,5 @@
 /*
- * (C) 2011-2024 see Authors.txt
+ * (C) 2011-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -167,6 +167,26 @@ CStringW GetFullCannonFilePath(LPCWSTR path)
 	}
 	return newPath;
 }
+
+/*
+bool ConvertFileUriToPath(CStringW& uri)
+{
+	if (StartsWith(uri, L"file://")) {
+		DWORD size = uri.GetLength();
+		CStringW path;
+		if (S_OK == UrlUnescapeW(uri.GetBuffer(), path.GetBuffer(size), &size, URL_ESCAPE_URI_COMPONENT)) {
+			path.ReleaseBuffer(size);
+			if (S_OK == PathCreateFromUrlW(path.GetString(), path.GetBuffer(), &size, 0)) {
+				path.ReleaseBuffer(size);
+				uri = path;
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+*/
 
 void StripToRoot(CStringW& path)
 {
@@ -370,6 +390,20 @@ bool CFileGetStatus(LPCWSTR lpszFileName, CFileStatus& status)
 		e->Delete();
 		return false;
 	}
+}
+
+CStringW GetDriveLabel(WCHAR drive)
+{
+	CStringW label;
+
+	WCHAR path[] = { drive , L':', L'\\', 0 };
+	WCHAR VolumeNameBuffer[MAX_PATH + 1];
+
+	if (GetVolumeInformationW(path, VolumeNameBuffer, std::size(VolumeNameBuffer), nullptr, nullptr, nullptr, nullptr, 0)) {
+		label = VolumeNameBuffer;
+	}
+
+	return label;
 }
 
 /////

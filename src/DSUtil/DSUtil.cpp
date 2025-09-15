@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2024 see Authors.txt
+ * (C) 2006-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -21,8 +21,6 @@
 
 #include "stdafx.h"
 #include <Vfw.h>
-#include <winddk/devioctl.h>
-#include <winddk/ntddcdrm.h>
 #include "DSUtil.h"
 #include "Mpeg2Def.h"
 #include "std_helper.h"
@@ -842,23 +840,6 @@ CString BinToCString(const BYTE* ptr, size_t len)
 	}
 
 	return ret;
-}
-
-static void FindFiles(CString fn, std::list<CString>& files)
-{
-	CString path = fn;
-	path.Replace('/', '\\');
-	path.Truncate(path.ReverseFind('\\')+1);
-
-	WIN32_FIND_DATA findData;
-	HANDLE h = FindFirstFileW(fn, &findData);
-	if (h != INVALID_HANDLE_VALUE) {
-		do {
-			files.push_back(path + findData.cFileName);
-		} while (FindNextFileW(h, &findData));
-
-		FindClose(h);
-	}
 }
 
 TimeCode_t ReftimeToTimecode(REFERENCE_TIME rt)

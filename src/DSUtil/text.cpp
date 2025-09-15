@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2024 see Authors.txt
+ * (C) 2006-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -105,16 +105,37 @@ CStringA UrlDecode(const CStringA& str_in)
 	return str_out;
 }
 
-CStringW UrlDecode(LPCWSTR lpWideCharStr)
+/*
+bool UnescapeWin8(CStringW& str)
 {
-	if (wcsrchr(lpWideCharStr, L'%') == nullptr) {
-		return lpWideCharStr;
+	const int len = str.GetLength();
+	HRESULT hr = UrlUnescapeW(str.GetBuffer(), nullptr, nullptr, URL_UNESCAPE_URI_COMPONENT | URL_UNESCAPE_INPLACE);
+	if (SUCCEEDED(hr)) {
+		str.ReleaseBuffer();
 	}
-
-	auto utf8 = WStrToUTF8(lpWideCharStr);
-	utf8 = UrlDecode(utf8);
-	return UTF8ToWStr(utf8);
+	return len != str.GetLength();
 }
+
+bool UnescapeWin7(CStringW& str)
+{
+	if (str.Find('%') < 0) {
+		return false;
+	}
+	const int len = str.GetLength();
+	CStringA utf8 = WStrToUTF8(str.GetString());
+	UrlUnescapeA(utf8.GetBuffer(), nullptr, nullptr, URL_UNESCAPE_INPLACE);
+	str = UTF8ToWStr(utf8);
+	return len != str.GetLength();
+}
+
+bool Unescape(CStringW& str)
+{
+	if (SysVersion::IsWin8orLater()) {
+		return UnescapeWin8(str);
+	}
+	return UnescapeWin7(str);
+}
+*/
 
 CStringW ExtractTag(CStringW tag, CMapStringToString& attribs, bool& fClosing)
 {
