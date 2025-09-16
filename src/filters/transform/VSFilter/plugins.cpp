@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2022 see Authors.txt
+ * (C) 2006-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -234,6 +234,7 @@ namespace Plugin
 
 	//
 	// VirtualDub new plugin interface sdk 1.1
+	// https://www.virtualdub.org/filtersdk.html
 	//
 	namespace VirtualDubNew
 	{
