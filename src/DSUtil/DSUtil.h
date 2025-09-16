@@ -73,9 +73,6 @@ extern bool				ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, int& arx, in
 extern CLSID			GetCLSID(IBaseFilter* pBF);
 extern CLSID			GetCLSID(IPin* pPin);
 
-extern void				ShowPPage(CString DisplayName, HWND hParentWnd);
-extern void				ShowPPage(IUnknown* pUnknown, HWND hParentWnd);
-
 extern bool				IsCLSIDRegistered(LPCWSTR clsid);
 extern bool				IsCLSIDRegistered(const CLSID& clsid);
 

@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2023 see Authors.txt
+ * (C) 2006-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -56,6 +56,9 @@ static const VIDEO_OUTPUT_FORMATS VSFilterDefaultFormats[] = {
 };
 
 LPCWSTR MediaSubtype2String(const GUID& subtype);
+
+void ShowPPage(CStringW DisplayName, HWND hParentWnd);
+void ShowPPage(IUnknown* pUnknown, HWND hParentWnd);
 
 /* This is for graphedit */
 
