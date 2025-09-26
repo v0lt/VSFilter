@@ -260,7 +260,7 @@ static CStringW WebVTTCueStrip(CStringW& str)
 		}
 	}
 	if (p > 0) {
-		if (str.Left(6) == _T("align:") || str.Left(9) == _T("position:") || str.Left(9) == _T("vertical:") || str.Left(5) == _T("line:") || str.Left(5) == _T("size:")) {
+		if (str.Left(6) == L"align:" || str.Left(9) == L"position:" || str.Left(9) == L"vertical:" || str.Left(5) == L"line:" || str.Left(5) == L"size:") {
 			if (p > 1 && str[p - 1] == L'\r') {
 				cues = str.Left(p - 1);
 			}
@@ -3122,7 +3122,7 @@ bool CSimpleTextSubtitle::Open(CTextFile* f, const CString& name)
 	return false;
 }
 
-bool CSimpleTextSubtitle::Open(BYTE* data, int len, int CharSet, CString name)
+bool CSimpleTextSubtitle::Open(BYTE* data, int len, UINT codePage, CString name)
 {
 	WCHAR path[MAX_PATH];
 	if (!GetTempPathW(MAX_PATH, path)) {
@@ -3149,7 +3149,7 @@ bool CSimpleTextSubtitle::Open(BYTE* data, int len, int CharSet, CString name)
 
 	fclose(tmp);
 
-	bool fRet = Open(fn, CharSet, false, name, {});
+	bool fRet = Open(fn, codePage, false, name, {});
 
 	_wremove(fn);
 
