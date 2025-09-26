@@ -73,16 +73,16 @@ void CALLBACK CHTTPAsync::Callback(_In_ HINTERNET hInternet,
 	}
 }
 
-CString CHTTPAsync::QueryInfoStr(DWORD dwInfoLevel) const
+CStringA CHTTPAsync::QueryInfoStr(DWORD dwInfoLevel) const
 {
-	CheckPointer(m_hRequest, L"");
+	CheckPointer(m_hRequest, "");
 
-	CString queryInfo;
+	CStringA queryInfo;
 	DWORD   dwLen = 0;
-	if (!HttpQueryInfoW(m_hRequest, dwInfoLevel, nullptr, &dwLen, nullptr) && dwLen) {
+	if (!HttpQueryInfoA(m_hRequest, dwInfoLevel, nullptr, &dwLen, nullptr) && dwLen) {
 		const DWORD dwError = GetLastError();
 		if (dwError == ERROR_INSUFFICIENT_BUFFER
-				&& HttpQueryInfoW(m_hRequest, dwInfoLevel, (LPVOID)queryInfo.GetBuffer(dwLen), &dwLen, nullptr)) {
+				&& HttpQueryInfoA(m_hRequest, dwInfoLevel, (LPVOID)queryInfo.GetBuffer(dwLen), &dwLen, nullptr)) {
 			queryInfo.ReleaseBuffer(dwLen);
 		}
 	}
@@ -123,9 +123,9 @@ CHTTPAsync::~CHTTPAsync()
 	}
 }
 
-static CString FormatErrorMessage(DWORD dwError)
+static CStringW FormatErrorMessage(DWORD dwError)
 {
-	CString errMsg;
+	CStringW errMsg;
 
 	LPVOID lpMsgBuf = nullptr;
 	if (FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS |
@@ -139,7 +139,7 @@ static CString FormatErrorMessage(DWORD dwError)
 	}
 
 	if (dwError == ERROR_INTERNET_EXTENDED_ERROR) {
-		CString internetInfo;
+		CStringW internetInfo;
 		DWORD   dwLen = 0;
 		if (!InternetGetLastResponseInfoW(&dwError, nullptr, &dwLen) && dwLen) {
 			const DWORD dwLastError = GetLastError();
@@ -217,7 +217,7 @@ HRESULT CHTTPAsync::Connect(LPCWSTR lpszURL, DWORD dwTimeOut/* = INFINITE*/, LPC
 
 		m_url_str = url;
 		m_host = urlParser.GetHostName();
-		m_path = CString(urlParser.GetUrlPath()) + CString(urlParser.GetExtraInfo());
+		m_path = CStringW(urlParser.GetUrlPath()) + CStringW(urlParser.GetExtraInfo());
 		m_nPort = urlParser.GetPortNumber();
 		m_nScheme = urlParser.GetScheme();
 		m_schemeName = urlParser.GetSchemeName();
@@ -283,27 +283,27 @@ HRESULT CHTTPAsync::Connect(LPCWSTR lpszURL, DWORD dwTimeOut/* = INFINITE*/, LPC
 	}
 
 	m_header = QueryInfoStr(HTTP_QUERY_RAW_HEADERS_CRLF);
-	m_header.Trim(L"\r\n ");
+	m_header.Trim("\r\n ");
 #if 0
-	DLog(L"CHTTPAsync::Connect() : return header:\n%s", m_header);
+	DLog(L"CHTTPAsync::Connect() : return header:\n%s", UTF8orLocalToWStr(m_header));
 #endif
 
 	m_contentType = QueryInfoStr(HTTP_QUERY_CONTENT_TYPE).MakeLower();
 	m_contentEncoding = QueryInfoStr(HTTP_QUERY_CONTENT_ENCODING).MakeLower();
 	m_bSupportsRanges = QueryInfoStr(HTTP_QUERY_ACCEPT_RANGES).MakeLower() == L"bytes";
 
-	m_bIsCompressed = !m_contentEncoding.IsEmpty() && (StartsWith(m_contentEncoding, L"gzip") || StartsWith(m_contentEncoding, L"deflate"));
+	m_bIsCompressed = !m_contentEncoding.IsEmpty() && (StartsWith(m_contentEncoding, "gzip") || StartsWith(m_contentEncoding, "deflate"));
 
-	const CString queryInfo = QueryInfoStr(HTTP_QUERY_CONTENT_LENGTH);
+	const CStringA queryInfo = QueryInfoStr(HTTP_QUERY_CONTENT_LENGTH);
 	if (!queryInfo.IsEmpty()) {
 		UINT64 val = 0;
-		if (1 == swscanf_s(queryInfo, L"%I64u", &val)) {
+		if (1 == sscanf_s(queryInfo, "%I64u", &val)) {
 			m_lenght = val;
 		}
 	}
 
 	m_bIsGoogleMedia = EndsWith(m_host, L"googlevideo.com") && StartsWith(m_path, L"/videoplayback?") &&
-					   (StartsWith(m_contentType, L"video") || StartsWith(m_contentType, L"audio"));
+					   (StartsWith(m_contentType, "video") || StartsWith(m_contentType, "audio"));
 
 	if (m_lenght && m_bSupportsRanges && m_bIsGoogleMedia) {
 		m_http_chunk.end = m_http_chunk.size = std::min(m_lenght, googlemedia_maximum_chunk_size);
@@ -364,7 +364,7 @@ HRESULT CHTTPAsync::SendRequest(LPCWSTR lpszCustomHeader/* = L""*/, DWORD dwTime
 
 		bool bNewRequestPath = false;
 
-		CString lpszHeaders = L"Accept: */*\r\n";
+		CStringW lpszHeaders = L"Accept: */*\r\n";
 		lpszHeaders += lpszCustomHeader;
 		for (;;) {
 			if (!HttpSendRequestW(m_hRequest,
@@ -519,7 +519,7 @@ HRESULT CHTTPAsync::SeekInternal(UINT64 position)
 		return E_FAIL;
 	}
 
-	CString customHeader; customHeader.Format(L"Range: bytes=%I64u-\r\n", position);
+	CStringW customHeader; customHeader.Format(L"Range: bytes=%I64u-\r\n", position);
 	return SendRequest(customHeader);
 }
 
@@ -533,7 +533,7 @@ HRESULT CHTTPAsync::RangeInternal(UINT64 start, UINT64 end)
 		return E_FAIL;
 	}
 
-	CString customHeader; customHeader.Format(L"Range: bytes=%I64u-%I64u\r\n", start, end);
+	CStringW customHeader; customHeader.Format(L"Range: bytes=%I64u-%I64u\r\n", start, end);
 	return SendRequest(customHeader);
 }
 
@@ -600,17 +600,17 @@ bool CHTTPAsync::GetUncompressed(std::vector<BYTE>& buffer)
 	return !buffer.empty();
 }
 
-const CString& CHTTPAsync::GetHeader() const
+const CStringA& CHTTPAsync::GetHeader() const
 {
 	return m_header;
 }
 
-const CString& CHTTPAsync::GetContentType() const
+const CStringA& CHTTPAsync::GetContentType() const
 {
 	return m_contentType;
 }
 
-const CString& CHTTPAsync::GetContentEncoding() const
+const CStringA& CHTTPAsync::GetContentEncoding() const
 {
 	return m_contentEncoding;
 }
@@ -635,7 +635,7 @@ UINT64 CHTTPAsync::GetLenght() const
 	return m_lenght;
 }
 
-const CString& CHTTPAsync::GetRedirectURL() const
+const CStringW& CHTTPAsync::GetRedirectURL() const
 {
 	return m_url_redirect_str;
 }
