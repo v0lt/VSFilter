@@ -1,5 +1,5 @@
 @cd /d "%~dp0"
-@regsvr32.exe VSFilter64.dll /u /s
+@regsvr32.exe "%~dp0/VSFilter64.dll" /u /s
 @if %errorlevel% NEQ 0 goto error
 :success
 @echo.
