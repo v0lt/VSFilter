@@ -4,4 +4,8 @@ The VSFilter project is separated from the MPC-BE project.
 Replace the <br> tag with a newline in SubRip subtitles.
 Added support for WebVTT.
 Fixed filter operation when changing the playback speed.
+Fixed various subtitle display issues.
+Fixed player crash on some corrupted subtitles.
+Improved support for PGS subtitles.
+Improved and optimized work with text in different encodings.
 Fixed registration of a filter from a folder with Unicode characters.
