@@ -46,9 +46,6 @@
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</GenerateManifest>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</GenerateManifest>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Platform)'=='x64'">
-    <TargetName>$(ProjectName)64</TargetName>
-  </PropertyGroup>
   <ItemDefinitionGroup>
     <PreBuildEvent>
       <Command>..\..\..\..\update_revision.cmd</Command>

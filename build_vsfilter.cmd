@@ -1,5 +1,5 @@
 @ECHO OFF
-REM (C) 2021 see Authors.txt
+REM (C) 2021-2026 see Authors.txt
 REM
 REM This file is part of MPC-BE.
 REM
@@ -88,21 +88,31 @@ IF /I "%VERRELEASE%" == "1" (
 CALL :SubDetectSevenzipPath
 IF DEFINED SEVENZIP (
     IF EXIST "_bin\%PCKG_NAME%.zip" DEL "_bin\%PCKG_NAME%.zip"
+	
+    MKDIR _bin\x86
+    MKDIR _bin\x64
+
+    COPY /Y /V "_bin\Filter_x86%SUFFIX%\VSFilter.dll" "_bin\x86\VSFilter.dll"
+    COPY /Y /V "distrib\Install_VSFilter.cmd"         "_bin\x86\Install_VSFilter.cmd"
+    COPY /Y /V "distrib\Uninstall_VSFilter.cmd"       "_bin\x86\Uninstall_VSFilter.cmd"
+
+    COPY /Y /V "_bin\Filter_x64%SUFFIX%\VSFilter.dll" "_bin\x64\VSFilter.dll"
+    COPY /Y /V "distrib\Install_VSFilter.cmd"         "_bin\x64\Install_VSFilter.cmd"
+    COPY /Y /V "distrib\Uninstall_VSFilter.cmd"       "_bin\x64\Uninstall_VSFilter.cmd"
 
     TITLE Creating archive %PCKG_NAME%.zip...
     START "7z" /B /WAIT "%SEVENZIP%" a -tzip -mx9 "_bin\%PCKG_NAME%.zip" ^
-.\_bin\Filter_x86%SUFFIX%\VSFilter.dll ^
-.\_bin\Filter_x64%SUFFIX%\VSFilter64.dll ^
-.\distrib\Install_VSFilter_32.cmd ^
-.\distrib\Install_VSFilter_64.cmd ^
-.\distrib\Uninstall_VSFilter_32.cmd ^
-.\distrib\Uninstall_VSFilter_64.cmd ^
+.\_bin\x86 ^
+.\_bin\x64 ^
 .\distrib\Reset_Settings.cmd ^
 .\Readme.md ^
 .\history.txt ^
-.\LICENSE
+.\LICENSE.txt
     IF %ERRORLEVEL% NEQ 0 CALL :SubMsg "ERROR" "Unable to create %PCKG_NAME%.zip!"
     CALL :SubMsg "INFO" "%PCKG_NAME%.zip successfully created"
+	
+IF EXIST "_bin\x86" RD /Q /S "_bin\x86"
+IF EXIST "_bin\x64" RD /Q /S "_bin\x64"
 )
 
 TITLE Compiling VSFilter [FINISHED]

@@ -15,7 +15,7 @@
 @echo.
 @echo    Installation failed.
 @echo.
-@echo    You need to right click "Install_VSFilter_32.cmd" and choose "run as admin".
+@echo    You need to right click "Install_VSFilter.cmd" and choose "run as admin".
 @echo.
 :done
 @pause >NUL
