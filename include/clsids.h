@@ -1,5 +1,5 @@
 /*
- * (C) 2020 see Authors.txt
+ * (C) 2020-2025 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -43,6 +43,10 @@ DEFINE_GUID(CLSID_LAVSource,
 // {55C39876-FF76-4AB0-AAB0-0A46D535A26B} 3DYD Youtube Source
 DEFINE_GUID(CLSID_3DYDYoutubeSource,
 			0x55C39876, 0xFF76, 0x4AB0, 0xAA, 0xB0, 0x0A, 0x46, 0xD5, 0x35, 0xA2, 0x6B);
+
+// {7D3BBD5A-880D-4A30-A2D1-7B8C2741AFEF} MPC Script Source
+DEFINE_GUID(CLSID_MPCScriptSource,
+			0x7D3BBD5A, 0x880D, 0x4A30, 0xA2, 0xD1, 0x7B, 0x8C, 0x27, 0x41, 0xAF, 0xEF);
 
 // video decoders
 
@@ -89,17 +93,26 @@ DEFINE_GUID(CLSID_MPCVR,
 
 // audio renderers
 
-// {601D2A2B-9CDE-40bd-8650-0485E3522727} - MPC Audio Renderer(WASAPI)
+// {601D2A2B-9CDE-40bd-8650-0485E3522727} MPC Audio Renderer(WASAPI)
 DEFINE_GUID(CLSID_MpcAudioRenderer,
 			0x601d2a2b, 0x9cde, 0x40bd, 0x86, 0x50, 0x04, 0x85, 0xe3, 0x52, 0x27, 0x27);
 
-// {9DC15360-914C-46B8-B9DF-BFE67FD36C6A} - ReClock
+// {9DC15360-914C-46B8-B9DF-BFE67FD36C6A} ReClock
 DEFINE_GUID(CLSID_ReClock,
 			0x9dc15360, 0x914c, 0x46b8, 0xb9, 0xdf, 0xbf, 0xe6, 0x7f, 0xd3, 0x6c, 0x6a);
 
 // {DF557071-C9FD-433A-9627-81E0D3640ED9}
 DEFINE_GUID(CLSID_SanearAudioRenderer,
 			0xdf557071, 0xc9fd, 0x433a, 0x96, 0x27, 0x81, 0xe0, 0xd3, 0x64, 0x0e, 0xd9);
+
+// {0C38BDFD-8C17-4E00-A344-F89397D3E22A} Null Audio Renderer (Any)
+DEFINE_GUID(CLSID_NullAudioRenderer,
+			0x0C38BDFD, 0x8C17, 0x4E00, 0xA3, 0x44, 0xF8, 0x93, 0x97, 0xD3, 0xE2, 0x2A);
+
+// {64A45125-7343-4772-9DA4-179FAC9D462C"} Null Audio Renderer (Uncompressed)
+DEFINE_GUID(CLSID_NullUAudioRenderer,
+			0x64A45125, 0x7343, 0x4772, 0x9D, 0xA4, 0x17, 0x9F, 0xAC, 0x9D, 0x46, 0x2C);
+
 
 // subtitle renderers
 
