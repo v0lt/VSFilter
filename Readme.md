@@ -6,7 +6,6 @@ VSFilter is a free and open-source subtitle filter for DirectShow.
 
 * An SSE2-capable CPU
 * Windows 7 or newer
-* DirectX 9 video card
 
 ## License
 
