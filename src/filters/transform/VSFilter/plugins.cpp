@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2025 see Authors.txt
+ * (C) 2006-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -34,6 +34,27 @@
 
 // Size of the char buffer according to VirtualDub Filters SDK doc
 #define STRING_PROC_BUFFER_SIZE 128
+
+const static uint16_t s_codepages[] = {
+	0,
+	1250,
+	1251,
+	1253,
+	1252,
+	1254,
+	1255,
+	1256,
+	1257,
+	1258,
+	1361,
+	874,
+	932,
+	936,
+	949,
+	950,
+	54936,
+};
+
 
 //
 // Generic interface
@@ -198,23 +219,25 @@ namespace Plugin
 
 	class CTextSubFilter : virtual public CFilter
 	{
-		int m_CharSet;
+		UINT m_DefaultCodePage;
 
 	public:
 		CTextSubFilter(CString fn = L"", UINT codePage = CP_ACP, float fps = -1)
-			: m_CharSet(CodePageToCharSet(codePage)) {
+			: m_DefaultCodePage(codePage)
+		{
 			m_fps = fps;
 			if (!fn.IsEmpty()) {
 				Open(fn, codePage);
 			}
 		}
 
-		int GetCharSet() {
-			return(m_CharSet);
+		int GetDefaultCodePage() {
+			return(m_DefaultCodePage);
 		}
 
 		bool Open(CString fn, UINT codePage = CP_ACP) {
 			SetFileName(L"");
+			m_DefaultCodePage = codePage;
 			m_pSubPicProvider.Release();
 
 			if (!m_pSubPicProvider) {
@@ -312,8 +335,8 @@ namespace Plugin
 		class CTextSubVirtualDubFilter : public CTextSubFilter, public CVirtualDubFilter
 		{
 		public:
-			CTextSubVirtualDubFilter(CString fn = L"", int CharSet = DEFAULT_CHARSET)
-				: CTextSubFilter(fn, CharSet) {}
+			CTextSubVirtualDubFilter(CString fn = L"", UINT codePage = CP_ACP)
+				: CTextSubFilter(fn, codePage) {}
 
 			int ConfigProc(VDXFilterActivation* fa, const VDXFilterFunctions* ff, VDXHWND hwnd) {
 				AFX_MANAGE_STATE(AfxGetStaticModuleState());
@@ -343,7 +366,7 @@ namespace Plugin
 
 			void StringProc(const VDXFilterActivation* fa, const VDXFilterFunctions* ff, char* str) {
 				if (!GetFileName().IsEmpty()) {
-					sprintf_s(str, STRING_PROC_BUFFER_SIZE, " (%s, %d)", CStringA(GetFileName()), GetCharSet());
+					sprintf_s(str, STRING_PROC_BUFFER_SIZE, " (%s, %d)", CStringA(GetFileName()), GetDefaultCodePage());
 				} else {
 					sprintf_s(str, STRING_PROC_BUFFER_SIZE, " (empty)");
 				}
@@ -352,7 +375,7 @@ namespace Plugin
 			bool FssProc(VDXFilterActivation* fa, const VDXFilterFunctions* ff, char* buf, int buflen) {
 				CStringA fn(GetFileName());
 				fn.Replace("\\", "\\\\");
-				_snprintf_s(buf, buflen, buflen, "Config(\"%s\", %d)", fn, GetCharSet());
+				_snprintf_s(buf, buflen, buflen, "Config(\"%s\", %d)", fn, GetDefaultCodePage());
 				return true;
 			}
 		};
@@ -566,11 +589,12 @@ namespace Plugin
 		class CTextSubAvisynthFilter : public CTextSubFilter, public CAvisynthFilter
 		{
 		public:
-			CTextSubAvisynthFilter(PClip c, IScriptEnvironment* env, const char* fn, int CharSet = DEFAULT_CHARSET, float fps = -1)
-				: CTextSubFilter(CString(fn), CharSet, fps)
+			CTextSubAvisynthFilter(PClip c, IScriptEnvironment* env, const char* fn, int CodePage = CP_ACP, float fps = -1)
+				: CTextSubFilter(CString(fn), CodePage, fps)
 				, CAvisynthFilter(c, env) {
-				if (!m_pSubPicProvider)
+				if (!m_pSubPicProvider) {
 					env->ThrowError("TextSub: Can't open \"%s\"", fn);
+				}
 			}
 		};
 
@@ -695,11 +719,12 @@ namespace Plugin
 		class CTextSubAvisynthFilter : public CTextSubFilter, public CAvisynthFilter
 		{
 		public:
-			CTextSubAvisynthFilter(PClip c, IScriptEnvironment* env, const char* fn, int CharSet = DEFAULT_CHARSET, float fps = -1, VFRTranslator *vfr = 0) //vfr patch
-				: CTextSubFilter(CString(fn), CharSet, fps)
+			CTextSubAvisynthFilter(PClip c, IScriptEnvironment* env, const char* fn, UINT codePage = CP_ACP, float fps = -1, VFRTranslator *vfr = 0) //vfr patch
+				: CTextSubFilter(CString(fn), codePage, fps)
 				, CAvisynthFilter(c, env, vfr) {
-				if (!m_pSubPicProvider)
+				if (!m_pSubPicProvider) {
 					env->ThrowError("TextSub: Can't open \"%s\"", fn);
+				}
 			}
 		};
 
@@ -716,7 +741,7 @@ namespace Plugin
 					   args[0].AsClip(),
 					   env,
 					   args[1].AsString(),
-					   args[2].AsInt(DEFAULT_CHARSET),
+					   args[2].AsInt(CP_ACP),
 					   args[3].AsFloat(-1),
 					   vfr));
 		}
@@ -762,7 +787,7 @@ namespace Plugin
 					   clip.AsClip(),
 					   env,
 					   args[0].AsString(),
-					   args[5].AsInt(DEFAULT_CHARSET),
+					   args[5].AsInt(CP_ACP),
 					   args[3].AsFloat(-1),
 					   vfr));
 		}
@@ -770,35 +795,15 @@ namespace Plugin
 		extern "C" __declspec(dllexport) const char* __stdcall AvisynthPluginInit2(IScriptEnvironment* env)
 		{
 			env->AddFunction("VobSub", "cs", VobSubCreateS, 0);
-			env->AddFunction("TextSub", "c[file]s[charset]i[fps]f[vfr]s", TextSubCreateGeneral, 0);
+			env->AddFunction("TextSub", "c[file]s[codepage]i[fps]f[vfr]s", TextSubCreateGeneral, 0);
 			env->AddFunction("TextSubSwapUV", "b", TextSubSwapUV, 0);
-			env->AddFunction("MaskSub", "[file]s[width]i[height]i[fps]f[length]i[charset]i[vfr]s", MaskSubCreate, 0);
+			env->AddFunction("MaskSub", "[file]s[width]i[height]i[fps]f[length]i[codepage]i[vfr]s", MaskSubCreate, 0);
 			env->SetVar(env->SaveString("RGBA"),false);
 			return(nullptr);
 		}
 	}
 
 }
-
-const static uint16_t codepages[] = {
-	0,
-	1250,
-	1251,
-	1253,
-	1252,
-	1254,
-	1255,
-	1256,
-	1257,
-	1258,
-	1361,
-	874,
-	932,
-	936,
-	949,
-	950,
-	54936,
-};
 
 UINT_PTR CALLBACK OpenHookProc(HWND hDlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -807,7 +812,7 @@ UINT_PTR CALLBACK OpenHookProc(HWND hDlg, UINT uiMsg, WPARAM wParam, LPARAM lPar
 			OPENFILENAME* ofn = ((OFNOTIFY *)lParam)->lpOFN;
 
 			if (((NMHDR *)lParam)->code == CDN_FILEOK) {
-				ofn->lCustData = (LPARAM)codepages[SendMessageW(GetDlgItem(hDlg, IDC_COMBO1), CB_GETCURSEL, 0, 0)];
+				ofn->lCustData = (LPARAM)s_codepages[SendMessageW(GetDlgItem(hDlg, IDC_COMBO1), CB_GETCURSEL, 0, 0)];
 			}
 
 			break;
@@ -817,7 +822,7 @@ UINT_PTR CALLBACK OpenHookProc(HWND hDlg, UINT uiMsg, WPARAM wParam, LPARAM lPar
 			SetWindowLongPtrW(hDlg, GWLP_USERDATA, lParam);
 
 			CPINFOEX cpinfoex;
-			for (const auto& codepage : codepages) {
+			for (const auto& codepage : s_codepages) {
 				if (codepage == 0) {
 					CStringW str;
 					str.Format(L"System code page - %u", GetACP());
