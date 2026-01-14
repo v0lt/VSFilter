@@ -342,7 +342,7 @@ namespace Plugin
 				AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
 				/* off encoding changing */
-#ifndef _DEBUG
+#if 0
 				const WCHAR formats[] = L"TextSub files (*.sub;*.srt;*.smi;*.ssa;*.ass;*.xss;*.psb;*.txt)|*.sub;*.srt;*.smi;*.ssa;*.ass;*.xss;*.psb;*.txt||";
 				CFileDialog fd(TRUE, nullptr, GetFileName(), OFN_EXPLORER|OFN_ENABLESIZING|OFN_HIDEREADONLY|OFN_ENABLETEMPLATE|OFN_ENABLEHOOK,
 							   formats, CWnd::FromHandle((HWND)hwnd), sizeof(OPENFILENAME));
@@ -352,16 +352,41 @@ namespace Plugin
 				fd.m_pOFN->lpTemplateName = MAKEINTRESOURCEW(IDD_TEXTSUBOPENTEMPLATE);
 				fd.m_pOFN->lpfnHook = (LPOFNHOOKPROC)OpenHookProc;
 				fd.m_pOFN->lCustData = (LPARAM)CP_ACP;
-#else
-				const WCHAR formats[] = L"TextSub files (*.sub;*.srt;*.smi;*.ssa;*.ass;*.xss;*.psb;*.txt)|*.sub;*.srt;*.smi;*.ssa;*.ass;*.xss;*.psb;*.txt||";
-				CFileDialog fd(TRUE, nullptr, GetFileName(), OFN_ENABLESIZING|OFN_HIDEREADONLY,
-							   formats, CWnd::FromHandle((HWND)hwnd), sizeof(OPENFILENAME));
-#endif
+
 				if (fd.DoModal() != IDOK) {
 					return 1;
 				}
 
 				return Open(fd.GetPathName(), fd.m_pOFN->lCustData) ? 0 : 1;
+#else
+				const WCHAR formats[] = L"TextSub files (*.sub;*.srt;*.smi;*.ssa;*.ass;*.xss;*.psb;*.txt)|*.sub;*.srt;*.smi;*.ssa;*.ass;*.xss;*.psb;*.txt||";
+				CFileDialog fd(TRUE, nullptr, GetFileName(), OFN_ENABLESIZING|OFN_HIDEREADONLY,
+							   formats, CWnd::FromHandle((HWND)hwnd), sizeof(OPENFILENAME));
+
+				fd.AddText(IDC_STATIC, L"Default code page:");
+				fd.AddComboBox(IDC_COMBO1);
+
+				CPINFOEX cpinfoex;
+				for (const auto& codepage : s_codepages) {
+					if (codepage == 0) {
+						CStringW str;
+						str.Format(L"System code page - %u", GetACP());
+						fd.AddControlItem(IDC_COMBO1, CP_ACP, str);
+					}
+					else if (GetCPInfoExW(codepage, 0, &cpinfoex)) {
+						fd.AddControlItem(IDC_COMBO1, codepage, cpinfoex.CodePageName);
+					}
+				}
+				fd.SetSelectedControlItem(IDC_COMBO1, CP_ACP);
+
+				if (fd.DoModal() != IDOK) {
+					return 1;
+				}
+				DWORD dwIDItem = 0;
+				fd.GetSelectedControlItem(IDC_COMBO1, dwIDItem);
+
+				return Open(fd.GetPathName(), dwIDItem) ? 0 : 1;
+#endif
 			}
 
 			void StringProc(const VDXFilterActivation* fa, const VDXFilterFunctions* ff, char* str) {
