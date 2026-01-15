@@ -317,17 +317,18 @@ namespace Plugin
 			}
 
 			void StringProc(const VDXFilterActivation* fa, const VDXFilterFunctions* ff, char* str) {
-				CStringA fn = CStringA(GetFileName());
-				if (fn.IsEmpty()) {
-					fn = " (empty)";
+				CStringA fn(GetFileName()); // UTF-8 for VirtualDub2 v2.5 in Windows 10, ANSI for older versions
+				if (fn.GetLength()) {
+					sprintf_s(str, STRING_PROC_BUFFER_SIZE, " (%s)", fn.GetString());
+				} else {
+					strcpy_s(str, STRING_PROC_BUFFER_SIZE, " (empty)");
 				}
-				sprintf_s(str, STRING_PROC_BUFFER_SIZE, " (%s)", fn);
 			}
 
 			bool FssProc(VDXFilterActivation* fa, const VDXFilterFunctions* ff, char* buf, int buflen) {
-				CStringA fn(GetFileName());
+				CStringA fn(GetFileName()); // UTF-8 for VirtualDub2 v2.5 in Windows 10, ANSI for older versions
 				fn.Replace("\\", "\\\\");
-				_snprintf_s(buf, buflen, buflen, "Config(\"%s\")", fn);
+				_snprintf_s(buf, buflen, buflen, "Config(\"%s\")", fn.GetString());
 				return true;
 			}
 		};
@@ -390,17 +391,18 @@ namespace Plugin
 			}
 
 			void StringProc(const VDXFilterActivation* fa, const VDXFilterFunctions* ff, char* str) {
-				if (!GetFileName().IsEmpty()) {
-					sprintf_s(str, STRING_PROC_BUFFER_SIZE, " (%s, %d)", CStringA(GetFileName()), GetDefaultCodePage());
+				CStringA fn(GetFileName()); // UTF-8 for VirtualDub2 v2.5 in Windows 10, ANSI for older versions
+				if (fn.GetLength()) {
+					sprintf_s(str, STRING_PROC_BUFFER_SIZE, " (%s, %d)", fn.GetString(), GetDefaultCodePage());
 				} else {
-					sprintf_s(str, STRING_PROC_BUFFER_SIZE, " (empty)");
+					strcpy_s(str, STRING_PROC_BUFFER_SIZE, " (empty)");
 				}
 			}
 
 			bool FssProc(VDXFilterActivation* fa, const VDXFilterFunctions* ff, char* buf, int buflen) {
-				CStringA fn(GetFileName());
+				CStringA fn(GetFileName()); // UTF-8 for VirtualDub2 v2.5 in Windows 10, ANSI for older versions
 				fn.Replace("\\", "\\\\");
-				_snprintf_s(buf, buflen, buflen, "Config(\"%s\", %d)", fn, GetDefaultCodePage());
+				_snprintf_s(buf, buflen, buflen, "Config(\"%s\", %d)", fn.GetString(), GetDefaultCodePage());
 				return true;
 			}
 		};
