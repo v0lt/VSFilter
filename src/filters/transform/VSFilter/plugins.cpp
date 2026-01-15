@@ -600,7 +600,7 @@ namespace Plugin
 		{
 		public:
 			CVobSubAvisynthFilter(PClip c, const char* fn, IScriptEnvironment* env)
-				: CVobSubFilter(CString(fn))
+				: CVobSubFilter(UTF8ToWStr(fn))
 				, CAvisynthFilter(c, env) {
 				if (!m_pSubPicProvider) {
 					env->ThrowError("VobSub: Can't open \"%s\"", fn);
@@ -730,7 +730,7 @@ namespace Plugin
 		{
 		public:
 			CVobSubAvisynthFilter(PClip c, const char* fn, IScriptEnvironment* env)
-				: CVobSubFilter(CString(fn))
+				: CVobSubFilter(UTF8ToWStr(fn))
 				, CAvisynthFilter(c, env) {
 				if (!m_pSubPicProvider) {
 					env->ThrowError("VobSub: Can't open \"%s\"", fn);
