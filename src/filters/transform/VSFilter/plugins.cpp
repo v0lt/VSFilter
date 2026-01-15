@@ -342,8 +342,7 @@ namespace Plugin
 			int ConfigProc(VDXFilterActivation* fa, const VDXFilterFunctions* ff, VDXHWND hwnd) {
 				AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
-				/* off encoding changing */
-#if 0
+#if 0 // The 'lpTemplateName' method has been disabled because it no longer works.
 				const WCHAR formats[] = L"TextSub files (*.sub;*.srt;*.smi;*.ssa;*.ass;*.xss;*.psb;*.txt)|*.sub;*.srt;*.smi;*.ssa;*.ass;*.xss;*.psb;*.txt||";
 				CFileDialog fd(TRUE, nullptr, GetFileName(), OFN_EXPLORER|OFN_ENABLESIZING|OFN_HIDEREADONLY|OFN_ENABLETEMPLATE|OFN_ENABLEHOOK,
 							   formats, CWnd::FromHandle((HWND)hwnd), sizeof(OPENFILENAME));
@@ -359,7 +358,8 @@ namespace Plugin
 				}
 
 				return Open(fd.GetPathName(), fd.m_pOFN->lCustData) ? 0 : 1;
-#else
+
+#else // This method works, but there are problems with displaying long text.
 				const WCHAR formats[] = L"TextSub files (*.sub;*.srt;*.smi;*.ssa;*.ass;*.xss;*.psb;*.txt)|*.sub;*.srt;*.smi;*.ssa;*.ass;*.xss;*.psb;*.txt||";
 				CFileDialog fd(TRUE, nullptr, GetFileName(), OFN_ENABLESIZING|OFN_HIDEREADONLY,
 							   formats, CWnd::FromHandle((HWND)hwnd), sizeof(OPENFILENAME));
