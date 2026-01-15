@@ -370,7 +370,7 @@ namespace Plugin
 				for (const auto& codepage : s_codepages) {
 					if (codepage == 0) {
 						CStringW str;
-						str.Format(L"System code page - %u", GetACP());
+						str.Format(L"System code page - %u", GetSystemCodePage());
 						fd.AddControlItem(IDC_COMBO1, CP_ACP, str);
 					}
 					else if (GetCPInfoExW(codepage, 0, &cpinfoex)) {
@@ -850,7 +850,7 @@ UINT_PTR CALLBACK OpenHookProc(HWND hDlg, UINT uiMsg, WPARAM wParam, LPARAM lPar
 			for (const auto& codepage : s_codepages) {
 				if (codepage == 0) {
 					CStringW str;
-					str.Format(L"System code page - %u", GetACP());
+					str.Format(L"System code page - %u", GetSystemCodePage());
 					SendMessageW(GetDlgItem(hDlg, IDC_COMBO1), CB_ADDSTRING, 0, (LPARAM)str.GetString());
 				}
 				else if (GetCPInfoExW(codepage, 0, &cpinfoex)) {
