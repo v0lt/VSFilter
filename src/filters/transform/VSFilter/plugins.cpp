@@ -709,9 +709,9 @@ namespace Plugin
 		extern "C" __declspec(dllexport) const char* __stdcall AvisynthPluginInit2(IScriptEnvironment* env)
 		{
 			env->AddFunction("VobSub", "cs", VobSubCreateS, 0);
-			env->AddFunction("TextSub", "c[file]s[codepage]i[fps]f[vfr]s", TextSubCreateGeneral, 0);
+			env->AddFunction("TextSub", "c[file]s[defcodepage]i[fps]f[vfr]s", TextSubCreateGeneral, 0);
 			env->AddFunction("TextSubSwapUV", "b", TextSubSwapUV, 0);
-			env->AddFunction("MaskSub", "[file]s[width]i[height]i[fps]f[length]i[codepage]i[vfr]s", MaskSubCreate, 0);
+			env->AddFunction("MaskSub", "[file]s[width]i[height]i[fps]f[length]i[defcodepage]i[vfr]s", MaskSubCreate, 0);
 			env->SetVar(env->SaveString("RGBA"),false);
 			return(nullptr);
 		}
