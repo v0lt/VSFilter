@@ -9,3 +9,7 @@ Fixed player crash on some corrupted subtitles.
 Improved support for PGS subtitles.
 Improved and optimized work with text in different encodings.
 Fixed registration of a filter from a folder with Unicode characters.
+For VirtualDub and AviSynth plugins, the DefaultCodePage parameter is now used instead of the CharSet parameter.
+Fixed support for Unicode paths for the AviSynth plugin.
+Fixed display of VirtualDub plugin settings.
+Removed support for Avisynth v1.0.
