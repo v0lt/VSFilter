@@ -326,7 +326,7 @@ namespace Plugin
 			}
 
 			bool FssProc(VDXFilterActivation* fa, const VDXFilterFunctions* ff, char* buf, int buflen) {
-				CStringA fn(GetFileName()); // UTF-8 for VirtualDub2 v2.5 in Windows 10, ANSI for older versions
+				CStringA fn = WStrToUTF8(GetFileName());
 				fn.Replace("\\", "\\\\");
 				_snprintf_s(buf, buflen, buflen, "Config(\"%s\")", fn.GetString());
 				return true;
@@ -400,7 +400,7 @@ namespace Plugin
 			}
 
 			bool FssProc(VDXFilterActivation* fa, const VDXFilterFunctions* ff, char* buf, int buflen) {
-				CStringA fn(GetFileName()); // UTF-8 for VirtualDub2 v2.5 in Windows 10, ANSI for older versions
+				CStringA fn = WStrToUTF8(GetFileName());
 				fn.Replace("\\", "\\\\");
 				_snprintf_s(buf, buflen, buflen, "Config(\"%s\", %d)", fn.GetString(), GetDefaultCodePage());
 				return true;
@@ -464,7 +464,7 @@ namespace Plugin
 			if (f) {
 				delete f;
 			}
-			f = DNew CVobSubVirtualDubFilter(CString(*argv[0].asString()));
+			f = DNew CVobSubVirtualDubFilter(UTF8ToWStr(*argv[0].asString()));
 			*(CVirtualDubFilter**)fa->filter_data = f;
 		}
 
@@ -475,7 +475,7 @@ namespace Plugin
 			if (f) {
 				delete f;
 			}
-			f = DNew CTextSubVirtualDubFilter(CString(*argv[0].asString()), argv[1].asInt());
+			f = DNew CTextSubVirtualDubFilter(UTF8ToWStr(*argv[0].asString()), argv[1].asInt());
 			*(CVirtualDubFilter**)fa->filter_data = f;
 		}
 
