@@ -317,7 +317,7 @@ namespace Plugin
 			}
 
 			void StringProc(const VDXFilterActivation* fa, const VDXFilterFunctions* ff, char* str) {
-				CStringA fn(GetFileName()); // UTF-8 for VirtualDub2 v2.5 in Windows 10, ANSI for older versions
+				CStringA fn = WStrToUTF8(GetFileName());
 				if (fn.GetLength()) {
 					_snprintf_s(str, STRING_PROC_BUFFER_SIZE, _TRUNCATE, " (%s)", fn.GetString());
 				} else {
@@ -391,7 +391,7 @@ namespace Plugin
 			}
 
 			void StringProc(const VDXFilterActivation* fa, const VDXFilterFunctions* ff, char* str) {
-				CStringA fn(GetFileName()); // UTF-8 for VirtualDub2 v2.5 in Windows 10, ANSI for older versions
+				CStringA fn = WStrToUTF8(GetFileName());
 				if (fn.GetLength()) {
 					_snprintf_s(str, STRING_PROC_BUFFER_SIZE, _TRUNCATE, " (%s, %d)", fn.GetString(), GetDefaultCodePage());
 				} else {
