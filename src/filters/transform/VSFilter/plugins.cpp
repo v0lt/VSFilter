@@ -492,7 +492,7 @@ namespace Plugin
 			nullptr, nullptr, nullptr,	// next, prev, module
 			"VobSub",					// name
 			"Adds subtitles from a vob sequence.", // desc
-			"Gabest",					// maker
+			"MPC-BE Team",				// maker
 			nullptr,					// private_data
 			sizeof(CVirtualDubFilter**), // inst_data_size
 			vobsubInitProc,				// initProc
@@ -520,7 +520,7 @@ namespace Plugin
 			nullptr, nullptr, nullptr,	// next, prev, module
 			"TextSub",					// name
 			"Adds subtitles from srt, sub, psb, smi, ssa, ass file formats.", // desc
-			"Gabest",					// maker
+			"MPC-BE Team",				// maker
 			nullptr,					// private_data
 			sizeof(CVirtualDubFilter**), // inst_data_size
 			textsubInitProc,			// initProc
