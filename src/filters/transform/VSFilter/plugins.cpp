@@ -223,11 +223,11 @@ namespace Plugin
 
 	public:
 		CTextSubFilter(CString fn = L"", UINT codePage = CP_ACP, float fps = -1)
-			: m_DefaultCodePage(codePage)
+			: m_DefaultCodePage(ExpandCodePage(codePage))
 		{
 			m_fps = fps;
 			if (!fn.IsEmpty()) {
-				Open(fn, codePage);
+				Open(fn, m_DefaultCodePage);
 			}
 		}
 
@@ -237,13 +237,13 @@ namespace Plugin
 
 		bool Open(CString fn, UINT codePage = CP_ACP) {
 			SetFileName(L"");
-			m_DefaultCodePage = codePage;
+			m_DefaultCodePage = ExpandCodePage(codePage);
 			m_pSubPicProvider.Release();
 
 			if (!m_pSubPicProvider) {
 				if (CRenderedTextSubtitle* rts = DNew CRenderedTextSubtitle(&m_csSubLock)) {
 					m_pSubPicProvider = (ISubPicProvider*)rts;
-					if (rts->Open(CString(fn), codePage, false, "", "")) {
+					if (rts->Open(CString(fn), m_DefaultCodePage, false, "", "")) {
 						SetFileName(fn);
 					} else {
 						m_pSubPicProvider.Release();
