@@ -1,6 +1,6 @@
 ﻿# VSFilter (MPC-BE project)
 
-VSFilter is a free and open-source subtitle filter for DirectShow.
+VSFilter (DirectVobSub) is a free and open-source subtitle filter for DirectShow.
 
 ## Minimum system requirements
 
@@ -13,4 +13,4 @@ VSFilter's code is licensed under [GPL v3].
 
 ## Links
 
-MPC-BE - <https://sourceforge.net/projects/mpcbe/>
+MPC-BE - <https://github.com/Aleksoid1978/MPC-BE>

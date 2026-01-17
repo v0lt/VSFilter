@@ -1,4 +1,6 @@
-1.5.7 (2.47)
+VSFilter (DirectVobSub)
+
+2.47
 ----------------------
 The VSFilter project is separated from the MPC-BE project.
 Replace the <br> tag with a newline in SubRip subtitles.

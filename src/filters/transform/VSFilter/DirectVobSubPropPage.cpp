@@ -771,7 +771,7 @@ bool CDVSAboutPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg) {
 		case WM_INITDIALOG: {
-			SetDlgItemTextW(m_Dlg, IDC_VERSION, _CRT_WIDE("VSFilter (MPC-BE) " VERSION_STR " " VERSION_ARCH " / CSRI API 2.47\nCopyright 2001-2026 MPC-BE Team"));
+			SetDlgItemTextW(m_Dlg, IDC_VERSION, _CRT_WIDE("VSFilter " VERSION_STR " " VERSION_ARCH "\nCopyright 2001-2026 MPC-BE Team"));
 		}
 		break;
 		case WM_COMMAND: {
