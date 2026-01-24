@@ -1115,8 +1115,10 @@ bool CDVSPathsPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void CDVSPathsPPage::UpdateObjectData(bool fSave)
 {
+	constexpr LPCWSTR chk = L"<:?*>";
+
 	if (fSave) {
-		CString chk(L"123456789"), path, tmp;
+		CString path, tmp;
 		int i = 0;
 		do {
 			tmp.Format(IDS_RP_PATH, i++);
@@ -1131,7 +1133,7 @@ void CDVSPathsPPage::UpdateObjectData(bool fSave)
 			theApp.WriteProfileString(IDS_R_DEFTEXTPATHES, tmp, m_paths[i]);
 		}
 	} else {
-		CString chk(L"123456789"), path, tmp;
+		CString path, tmp;
 		int i = 0;
 		do {
 			if (!path.IsEmpty()) {
