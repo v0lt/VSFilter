@@ -99,6 +99,7 @@
     <ClInclude Include="IDirectVobSub.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Scale2x.h" />
+    <ClInclude Include="SettingsDefines.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StyleEditorDialog.h" />
     <ClInclude Include="Systray.h" />
