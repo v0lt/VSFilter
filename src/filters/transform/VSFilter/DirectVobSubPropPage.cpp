@@ -27,6 +27,7 @@
 #include "DirectVobSubPropPage.h"
 #include "VSFilter.h"
 #include "StyleEditorDialog.h"
+#include "SettingsDefines.h"
 
 BOOL WINAPI MyGetDialogSize(int iResourceID, DLGPROC pDlgProc, LPARAM lParam, SIZE* pResult)
 {
@@ -144,7 +145,7 @@ INT_PTR CDVSBasePPage::OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 								&& LOWORD(wParam) != IDC_EDIT1
 								&& LOWORD(wParam) != IDC_ANIMWHENBUFFERING
 								&& LOWORD(wParam) != IDC_CHECK_ALLOW_DROPPING_SUBPIC
-								&& !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INSTANTUPDATE), 1)) {
+								&& !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_INSTANTUPDATE, 1)) {
 							OnApplyChanges();
 						}
 					}
@@ -368,7 +369,7 @@ bool CDVSMainPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 								}
 
 								if (!m_bDisableInstantUpdate
-										&& !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INSTANTUPDATE), 1)) {
+										&& !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_INSTANTUPDATE, 1)) {
 									OnApplyChanges();
 								}
 							}
@@ -604,7 +605,7 @@ bool CDVSMiscPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 					if (LOWORD(wParam) == IDC_INSTANTUPDATE) {
 						AFX_MANAGE_STATE(AfxGetStaticModuleState());
 						m_bApplyImmediatly = !!m_instupd.GetCheck();
-						theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INSTANTUPDATE), m_bApplyImmediatly);
+						theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_INSTANTUPDATE, m_bApplyImmediatly);
 						return true;
 					}
 				}
@@ -637,7 +638,7 @@ void CDVSMiscPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->put_SubtitleReloader(m_bReloaderDisabled);
 		m_pDirectVobSub->put_SaveFullPath(m_bSaveFullPath);
 
-		theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INSTANTUPDATE), m_bApplyImmediatly);
+		theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_INSTANTUPDATE, m_bApplyImmediatly);
 	} else {
 		m_pDirectVobSub->get_Flip(&m_bFlipPicture, &m_bFlipSubtitles);
 		m_pDirectVobSub->get_HideSubtitles(&m_bHideSubtitles);
@@ -648,7 +649,7 @@ void CDVSMiscPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->get_SubtitleReloader(&m_bReloaderDisabled);
 		m_pDirectVobSub->get_SaveFullPath(&m_bSaveFullPath);
 
-		m_bApplyImmediatly = !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_INSTANTUPDATE), 1);
+		m_bApplyImmediatly = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_INSTANTUPDATE, 1);
 	}
 }
 
@@ -961,14 +962,14 @@ void CDVSColorPPage::UpdateControlData(bool fSave)
 				pData[i] = (BYTE)m_preflist.GetItemData(i);
 			}
 
-			theApp.WriteProfileBinary(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLORFORMATS), pData, nCountFmts);
+			theApp.WriteProfileBinary(IDS_R_GENERAL, IDS_RG_COLORFORMATS, pData, nCountFmts);
 
 			delete [] pData;
 		} else {
 			ASSERT(0);
 		}
 
-		theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FORCERGB), !!m_forcergb.GetCheck());
+		theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_FORCERGB, !!m_forcergb.GetCheck());
 	} else {
 		m_preflist.ResetContent();
 		m_dynchglist.ResetContent();
@@ -976,7 +977,7 @@ void CDVSColorPPage::UpdateControlData(bool fSave)
 		BYTE* pData	= nullptr;
 		UINT nSize	= 0;
 
-		if (!theApp.GetProfileBinary(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_COLORFORMATS), &pData, &nSize)
+		if (!theApp.GetProfileBinary(IDS_R_GENERAL, IDS_RG_COLORFORMATS, &pData, &nSize)
 				|| !pData || nSize != nCountFmts) {
 			if (pData) {
 				delete [] pData, pData = nullptr;
@@ -1007,7 +1008,7 @@ void CDVSColorPPage::UpdateControlData(bool fSave)
 			delete [] pData;
 		}
 
-		m_forcergb.SetCheck(theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_FORCERGB), 0)?BST_CHECKED:BST_UNCHECKED);
+		m_forcergb.SetCheck(theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_FORCERGB, 0)?BST_CHECKED:BST_UNCHECKED);
 	}
 }
 
@@ -1118,15 +1119,15 @@ void CDVSPathsPPage::UpdateObjectData(bool fSave)
 		int i = 0;
 		do {
 			tmp.Format(ResStr(IDS_RP_PATH), i++);
-			path = theApp.GetProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp, chk);
+			path = theApp.GetProfileString(IDS_R_DEFTEXTPATHES, tmp, chk);
 			if (path != chk) {
-				theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp, L"");
+				theApp.WriteProfileString(IDS_R_DEFTEXTPATHES, tmp, L"");
 			}
 		} while (path != chk);
 
 		for (i = 0; i < m_paths.GetSize(); i++) {
 			tmp.Format(ResStr(IDS_RP_PATH), i);
-			theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp, m_paths[i]);
+			theApp.WriteProfileString(IDS_R_DEFTEXTPATHES, tmp, m_paths[i]);
 		}
 	} else {
 		CString chk(L"123456789"), path, tmp;
@@ -1136,7 +1137,7 @@ void CDVSPathsPPage::UpdateObjectData(bool fSave)
 				m_paths.Add(path);
 			}
 			tmp.Format(ResStr(IDS_RP_PATH), i++);
-			path = theApp.GetProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp, chk);
+			path = theApp.GetProfileString(IDS_R_DEFTEXTPATHES, tmp, chk);
 		} while (path != chk);
 	}
 }

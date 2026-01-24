@@ -420,27 +420,10 @@ BEGIN
     IDS_PROJNAME2           "&Subtitle Source"
     IDS_DIVX_WARNING        "The found DivX DirectShow decoder (divx_c32.ax) may be\nincompatible with the current operating system. Please, try\nto install version 3.11 or 4.0+.\n\n(This message will appear only once per installation)"
     IDD_DVSABOUTPAGE        "&About"
-    IDS_R_TEXT              "Text"
-    IDS_R_VOBSUB            "VobSub"
-    IDS_R_DEFTEXTPATHES     "DefTextPathes"
-    IDS_R_PREFLANGS         "PreferedLanguages"
-    IDS_RG_SAVEFULLPATH     "SaveFullPath"
-    IDS_RG_EXTPIC           "Extpic"
-    IDS_RG_MOD32FIX         "Mod32Fix"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_RG_LOADLEVEL        "LoadLevel"
-    IDS_RG_INSTANTUPDATE    "InstantUpdate"
-    IDS_RG_FLIPPICTURE      "FlipPicture"
-    IDS_RG_HIDE             "Hide"
-    IDS_RG_NOYUY2COLORS     "NoYUY2Colors"
-    IDS_RG_SHOWOSDSTATS     "ShowOSDStats"
-    IDS_RG_SEENDIVXWARNING  "SeenDivxWarning"
-    IDS_RG_RESX2            "ResX2Mode"
-    IDS_RG_RESX2MINW        "ResX2MinWidth"
-    IDS_RG_RESX2MINH        "ResX2MinHeight"
     IDS_RTM_MEDIAFPS        "MediaFPS"
     IDS_RT_SHADOW           "Shadow"
     IDS_RT_OUTLINE          "Outline"
@@ -465,13 +448,6 @@ BEGIN
     IDS_RT_PAR_UPSCALE      "Upscale"
     IDS_RT_PAR_DOWNSCALE    "Downscale"
     IDS_RT_PAR_ACCURATE_SIZE "Accurate size"
-    IDS_RG_SUBPICTTOBUFFER  "SubPictToBuffer"
-END
-
-STRINGTABLE
-BEGIN
-    IDS_RG_ANIMWHENBUFFERING "AnimWhenBuffering"
-    IDS_RG_ALLOW_DROPPING_SUBPIC "AllowDropSubPic"
 END
 
 STRINGTABLE
@@ -487,28 +463,18 @@ BEGIN
     IDS_M_ORIGINALPICTURE   "Original Picture"
     IDS_M_FLIPPEDPICTURE    "Flipped Picture"
     IDS_RV_POLYGONIZE       "Polygonize"
-    IDS_RG_EXTERNALLOAD     "ExtLoad"
-    IDS_RG_WEBLOAD          "WebLoad"
-    IDS_RG_EMBEDDEDLOAD     "EmbLoad"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_R_TIMING            "Timing"
     IDS_RTM_SUBTITLEDELAY   "Subtitle Delay"
     IDS_RTM_SUBTITLESPEEDMUL "Subtitle Speedmul"
     IDS_RT_ADVANCEDRENDERER "AdvancedRenderer"
     IDS_RV_ONLYSHOWFORCEDSUBS "OnlyShowForcedSubs"
     IDS_ORGHEIGHT           "Original height"
-    IDS_RG_VMRZOOMENABLED   "VMRZoomEnabled"
     IDS_RTM_SUBTITLESPEEDDIV "Subtitle Speeddiv"
-    IDS_RG_COLORFORMATS     "Color Formats"
     IDS_EXTTO169            "Extend to 16:9"
-    IDS_RG_FORCERGB         "ForceRGB"
-    IDS_RG_ENABLEZPICON     "EnableZPIcon"
-    IDS_RG_FLIPSUBTITLES    "FlipSubtitles"
     IDS_RTM_MEDIAFPSENABLED "MediaFPSEnabled"
-    IDS_RG_DISABLERELOADER  "DisableReloader"
     IDS_EXTTO43             "Extend to 4:3"
 END
 
@@ -522,7 +488,6 @@ END
 STRINGTABLE
 BEGIN
     IDD_DVSMISCPAGE         "M&isc"
-    IDS_R_GENERAL           "General"
     IDS_RT_STYLE            "Style2"
 END
 

@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2025 see Authors.txt
+ * (C) 2006-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -36,6 +36,8 @@
 #include "Subtitles/VobSubFile.h"
 #include "Subtitles/RTS.h"
 #include "Subtitles/RenderedHdmvSubtitle.h"
+#include "resource.h"
+#include "SettingsDefines.h"
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -187,10 +189,10 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 		m_hfont = CreateFontIndirectW(&lf);
 	}
 
-	theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), L"Hint", L"The first three are fixed, but you can add more up to ten entries.");
-	theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), L"Path0", L".");
-	theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), L"Path1", L"c:\\subtitles");
-	theApp.WriteProfileString(ResStr(IDS_R_DEFTEXTPATHES), L"Path2", L".\\subtitles");
+	theApp.WriteProfileString(IDS_R_DEFTEXTPATHES, L"Hint", L"The first three are fixed, but you can add more up to ten entries.");
+	theApp.WriteProfileString(IDS_R_DEFTEXTPATHES, L"Path0", L".");
+	theApp.WriteProfileString(IDS_R_DEFTEXTPATHES, L"Path1", L"c:\\subtitles");
+	theApp.WriteProfileString(IDS_R_DEFTEXTPATHES, L"Path2", L".\\subtitles");
 
 	m_bLoading = true;
 
@@ -199,7 +201,7 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 	m_tbid.graph = nullptr;
 	m_tbid.dvs = nullptr;
 	m_tbid.fRunOnce = false;
-	m_tbid.fShowIcon = (theApp.m_AppName.Find(L"zplayer", 0) < 0 || !!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_ENABLEZPICON), 0));
+	m_tbid.fShowIcon = (theApp.m_AppName.Find(L"zplayer", 0) < 0 || !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_ENABLEZPICON, 0));
 
 	HRESULT hr = S_OK;
 	m_pTextInputs.push_back(DNew CTextInputPin(this, m_pLock, &m_csSubLock, &hr));
@@ -649,11 +651,11 @@ HRESULT CDirectVobSubFilter::JoinFilterGraph(IFilterGraph* pGraph, LPCWSTR pName
 	if (pGraph) {
 		AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
-		if (!theApp.GetProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SEENDIVXWARNING), 0)) {
+		if (!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_SEENDIVXWARNING, 0)) {
 			FileVersion::Ver ver = FileVersion::GetVer(L"divx_c32.ax");
 			if (ver.major == 4 && ver.minor == 2) {
 				AfxMessageBox(IDS_DIVX_WARNING, MB_ICONWARNING | MB_OK, 0);
-				theApp.WriteProfileInt(ResStr(IDS_R_GENERAL), ResStr(IDS_RG_SEENDIVXWARNING), 1);
+				theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_SEENDIVXWARNING, 1);
 			}
 		}
 
@@ -1257,7 +1259,7 @@ int CDirectVobSubFilter::FindPreferedLanguage(bool fHideToo)
 		CString tmp;
 		tmp.Format(IDS_RL_LANG, i);
 
-		CString lang = theApp.GetProfileString(ResStr(IDS_R_PREFLANGS), tmp);
+		CString lang = theApp.GetProfileString(IDS_R_PREFLANGS, tmp);
 
 		if (!lang.IsEmpty()) {
 			for (int ret = 0; ret < nLangs; ret++) {
@@ -1288,7 +1290,7 @@ void CDirectVobSubFilter::UpdatePreferedLanguages(CString l)
 		CString tmp;
 		tmp.Format(IDS_RL_LANG, i);
 
-		langs[j] = theApp.GetProfileString(ResStr(IDS_R_PREFLANGS), tmp);
+		langs[j] = theApp.GetProfileString(IDS_R_PREFLANGS, tmp);
 
 		if (!langs[j].IsEmpty()) {
 			if (!langs[j].CompareNoCase(l)) {
@@ -1340,7 +1342,7 @@ void CDirectVobSubFilter::UpdatePreferedLanguages(CString l)
 		CString tmp;
 		tmp.Format(IDS_RL_LANG, i);
 
-		theApp.WriteProfileString(ResStr(IDS_R_PREFLANGS), tmp, langs[i]);
+		theApp.WriteProfileString(IDS_R_PREFLANGS, tmp, langs[i]);
 	}
 }
 
@@ -2109,7 +2111,7 @@ bool CDirectVobSubFilter::Open()
 	for (int i = 0; i < 10; i++) {
 		CString tmp;
 		tmp.Format(IDS_RP_PATH, i);
-		CString path = theApp.GetProfileString(ResStr(IDS_R_DEFTEXTPATHES), tmp);
+		CString path = theApp.GetProfileString(IDS_R_DEFTEXTPATHES, tmp);
 		if (!path.IsEmpty()) {
 			paths.push_back(path);
 		}

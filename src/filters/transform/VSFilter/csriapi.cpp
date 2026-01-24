@@ -23,7 +23,6 @@
 #include "stdafx.h"
 #include <afxdlgs.h>
 #include <atlpath.h>
-#include "resource.h"
 #include "Subtitles/VobSubFile.h"
 #include "Subtitles/RTS.h"
 #include "SubPic/MemSubPicEx.h"
