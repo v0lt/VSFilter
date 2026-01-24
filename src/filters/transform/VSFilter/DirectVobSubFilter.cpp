@@ -2106,14 +2106,15 @@ bool CDirectVobSubFilter::Open()
 	m_bExternalSubtitle = false;
 	m_ExternalSubstreams.clear();
 
-	std::vector<CString> paths;
+	CStringW curdir = GetFolderPath(m_FileName);
+	std::vector<CStringW> paths;
 
 	for (int i = 0; i < 10; i++) {
 		CString tmp;
 		tmp.Format(IDS_RP_PATH, i);
 		CString path = theApp.GetProfileString(IDS_R_DEFTEXTPATHES, tmp);
-		if (!path.IsEmpty()) {
-			paths.push_back(path);
+		if (path.GetLength()) {
+			AddExistDirPaths(curdir, path, paths);
 		}
 	}
 
