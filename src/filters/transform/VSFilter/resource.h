@@ -16,8 +16,6 @@
 #define IDS_RT_XPERC                    129
 #define IDS_RT_YPERC                    130
 #define IDS_RV_BUFFER                   131
-#define IDS_RP_PATH                     132
-#define IDS_RL_LANG                     133
 #define IDS_M_SHOWSUBTITLES             134
 #define IDS_M_HIDESUBTITLES             135
 #define IDS_M_ORIGINALPICTURE           136

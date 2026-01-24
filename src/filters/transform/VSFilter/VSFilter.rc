@@ -456,8 +456,6 @@ BEGIN
     IDS_RT_XPERC            "XPerc"
     IDS_RT_YPERC            "YPerc"
     IDS_RV_BUFFER           "Buffer"
-    IDS_RP_PATH             "Path%d"
-    IDS_RL_LANG             "Lang%d"
     IDS_M_SHOWSUBTITLES     "Show Subtitles"
     IDS_M_HIDESUBTITLES     "Hide Subtitles"
     IDS_M_ORIGINALPICTURE   "Original Picture"

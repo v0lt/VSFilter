@@ -52,3 +52,6 @@
 #define IDS_RG_ENABLEZPICON          L"EnableZPIcon"
 #define IDS_RG_FLIPSUBTITLES         L"FlipSubtitles"
 #define IDS_RG_DISABLERELOADER       L"DisableReloader"
+
+#define IDS_RP_PATH L"Path%d"
+#define IDS_RL_LANG L"Lang%d"
