@@ -201,7 +201,7 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 	m_tbid.graph = nullptr;
 	m_tbid.dvs = nullptr;
 	m_tbid.fRunOnce = false;
-	m_tbid.fShowIcon = (theApp.m_AppName.Find(L"zplayer", 0) < 0 || !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_ENABLEZPICON, 0));
+	m_tbid.fShowIcon = (theApp.m_AppName.Find(L"zplayer", 0) < 0 || theApp.GetProfileBool(IDS_R_GENERAL, IDS_RG_ENABLEZPICON, false));
 
 	HRESULT hr = S_OK;
 	m_pTextInputs.push_back(DNew CTextInputPin(this, m_pLock, &m_csSubLock, &hr));

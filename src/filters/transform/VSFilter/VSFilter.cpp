@@ -65,6 +65,16 @@ int CVSFilterApp::ExitInstance()
 	return CWinApp::ExitInstance();
 }
 
+bool CVSFilterApp::GetProfileBool(LPCTSTR lpszSection, LPCTSTR lpszEntry, bool bDefault)
+{
+	return !!GetProfileInt(lpszSection, lpszEntry, bDefault ? 1 : 0);
+}
+
+BOOL CVSFilterApp::WriteProfileBool(LPCTSTR lpszSection, LPCTSTR lpszEntry, bool bValue)
+{
+	return WriteProfileInt(lpszSection, lpszEntry, bValue ? 1 : 0);
+}
+
 HINSTANCE CVSFilterApp::LoadAppLangResourceDLL()
 {
 	CString fn;
@@ -118,14 +128,14 @@ AMOVIESETUP_FILTER sudFilter[] = {
 CFactoryTemplate g_Templates[] = {
 	{sudFilter[0].strName, sudFilter[0].clsID, CreateInstance<CDirectVobSubFilter>, nullptr, &sudFilter[0]},
 	{sudFilter[1].strName, sudFilter[1].clsID, CreateInstance<CDirectVobSubFilter2>, nullptr, &sudFilter[1]},
-	{L"DVSMainPPage", &__uuidof(CDVSMainPPage), CreateInstance<CDVSMainPPage>},
+	{L"DVSMainPPage",    &__uuidof(CDVSMainPPage),    CreateInstance<CDVSMainPPage>},
 	{L"DVSGeneralPPage", &__uuidof(CDVSGeneralPPage), CreateInstance<CDVSGeneralPPage>},
-	{L"DVSMiscPPage", &__uuidof(CDVSMiscPPage), CreateInstance<CDVSMiscPPage>},
-	{L"DVSTimingPPage", &__uuidof(CDVSTimingPPage), CreateInstance<CDVSTimingPPage>},
-	{L"DVSZoomPPage", &__uuidof(CDVSZoomPPage), CreateInstance<CDVSZoomPPage>},
-	{L"DVSColorPPage", &__uuidof(CDVSColorPPage), CreateInstance<CDVSColorPPage>},
-	{L"DVSPathsPPage", &__uuidof(CDVSPathsPPage), CreateInstance<CDVSPathsPPage>},
-	{L"DVSAboutPPage", &__uuidof(CDVSAboutPPage), CreateInstance<CDVSAboutPPage>},
+	{L"DVSMiscPPage",    &__uuidof(CDVSMiscPPage),    CreateInstance<CDVSMiscPPage>},
+	{L"DVSTimingPPage",  &__uuidof(CDVSTimingPPage),  CreateInstance<CDVSTimingPPage>},
+	{L"DVSZoomPPage",    &__uuidof(CDVSZoomPPage),    CreateInstance<CDVSZoomPPage>},
+	{L"DVSColorPPage",   &__uuidof(CDVSColorPPage),   CreateInstance<CDVSColorPPage>},
+	{L"DVSPathsPPage",   &__uuidof(CDVSPathsPPage),   CreateInstance<CDVSPathsPPage>},
+	{L"DVSAboutPPage",   &__uuidof(CDVSAboutPPage),   CreateInstance<CDVSAboutPPage>},
 };
 
 int g_cTemplates = std::size(g_Templates);

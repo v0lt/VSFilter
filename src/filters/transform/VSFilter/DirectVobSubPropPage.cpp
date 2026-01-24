@@ -145,7 +145,7 @@ INT_PTR CDVSBasePPage::OnReceiveMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LPA
 								&& LOWORD(wParam) != IDC_EDIT1
 								&& LOWORD(wParam) != IDC_ANIMWHENBUFFERING
 								&& LOWORD(wParam) != IDC_CHECK_ALLOW_DROPPING_SUBPIC
-								&& !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_INSTANTUPDATE, 1)) {
+								&& theApp.GetProfileBool(IDS_R_GENERAL, IDS_RG_INSTANTUPDATE, true)) {
 							OnApplyChanges();
 						}
 					}
@@ -369,7 +369,7 @@ bool CDVSMainPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 								}
 
 								if (!m_bDisableInstantUpdate
-										&& !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_INSTANTUPDATE, 1)) {
+										&& theApp.GetProfileBool(IDS_R_GENERAL, IDS_RG_INSTANTUPDATE, true)) {
 									OnApplyChanges();
 								}
 							}
@@ -605,7 +605,7 @@ bool CDVSMiscPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 					if (LOWORD(wParam) == IDC_INSTANTUPDATE) {
 						AFX_MANAGE_STATE(AfxGetStaticModuleState());
 						m_bApplyImmediatly = !!m_instupd.GetCheck();
-						theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_INSTANTUPDATE, m_bApplyImmediatly);
+						theApp.WriteProfileBool(IDS_R_GENERAL, IDS_RG_INSTANTUPDATE, m_bApplyImmediatly);
 						return true;
 					}
 				}
@@ -638,7 +638,7 @@ void CDVSMiscPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->put_SubtitleReloader(m_bReloaderDisabled);
 		m_pDirectVobSub->put_SaveFullPath(m_bSaveFullPath);
 
-		theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_INSTANTUPDATE, m_bApplyImmediatly);
+		theApp.WriteProfileBool(IDS_R_GENERAL, IDS_RG_INSTANTUPDATE, m_bApplyImmediatly);
 	} else {
 		m_pDirectVobSub->get_Flip(&m_bFlipPicture, &m_bFlipSubtitles);
 		m_pDirectVobSub->get_HideSubtitles(&m_bHideSubtitles);
@@ -649,7 +649,7 @@ void CDVSMiscPPage::UpdateObjectData(bool fSave)
 		m_pDirectVobSub->get_SubtitleReloader(&m_bReloaderDisabled);
 		m_pDirectVobSub->get_SaveFullPath(&m_bSaveFullPath);
 
-		m_bApplyImmediatly = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_INSTANTUPDATE, 1);
+		m_bApplyImmediatly = theApp.GetProfileBool(IDS_R_GENERAL, IDS_RG_INSTANTUPDATE, true);
 	}
 }
 

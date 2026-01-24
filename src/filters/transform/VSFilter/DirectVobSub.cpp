@@ -38,26 +38,26 @@ CDirectVobSub::CDirectVobSub()
 	UINT nSize;
 
 	m_iSelectedLanguage = 0;
-	m_bHideSubtitles = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_HIDE, 0);
-	m_uSubPictToBuffer = theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_SUBPICTTOBUFFER, 10);
-	m_bAnimWhenBuffering = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_ANIMWHENBUFFERING, 1);
-	m_bAllowDropSubPic = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_ALLOW_DROPPING_SUBPIC, 1);
-	m_bOverridePlacement = !!theApp.GetProfileInt(IDS_R_TEXT, ResStr(IDS_RT_OVERRIDEPLACEMENT), 0);
-	m_PlacementXperc = theApp.GetProfileInt(IDS_R_TEXT, ResStr(IDS_RT_XPERC), 50);
-	m_PlacementYperc = theApp.GetProfileInt(IDS_R_TEXT, ResStr(IDS_RT_YPERC), 90);
-	m_bBufferVobSub = !!theApp.GetProfileInt(IDS_R_VOBSUB, ResStr(IDS_RV_BUFFER), 1);
-	m_bOnlyShowForcedVobSubs = !!theApp.GetProfileInt(IDS_R_VOBSUB, ResStr(IDS_RV_ONLYSHOWFORCEDSUBS), 0);
-	m_bPolygonize = !!theApp.GetProfileInt(IDS_R_VOBSUB, ResStr(IDS_RV_POLYGONIZE), 0);
-	m_defStyle <<= theApp.GetProfileString(IDS_R_TEXT, ResStr(IDS_RT_STYLE), L"");
-	m_bFlipPicture = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_FLIPPICTURE, 0);
-	m_bFlipSubtitles = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_FLIPSUBTITLES, 0);
-	m_bOSD = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_SHOWOSDSTATS, 0);
-	m_bSaveFullPath = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_SAVEFULLPATH, 0);
-	m_nReloaderDisableCount = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_DISABLERELOADER, 0) ? 1 : 0;
-	m_SubtitleDelay = theApp.GetProfileInt(IDS_R_TIMING, ResStr(IDS_RTM_SUBTITLEDELAY), 0);
-	m_SubtitleSpeedMul = theApp.GetProfileInt(IDS_R_TIMING, ResStr(IDS_RTM_SUBTITLESPEEDMUL), 1000);
-	m_SubtitleSpeedDiv = theApp.GetProfileInt(IDS_R_TIMING, ResStr(IDS_RTM_SUBTITLESPEEDDIV), 1000);
-	m_bMediaFPSEnabled = !!theApp.GetProfileInt(IDS_R_TIMING, ResStr(IDS_RTM_MEDIAFPSENABLED), 0);
+	m_bHideSubtitles         = theApp.GetProfileBool(IDS_R_GENERAL, IDS_RG_HIDE, false);
+	m_uSubPictToBuffer       = theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_SUBPICTTOBUFFER, 10);
+	m_bAnimWhenBuffering     = theApp.GetProfileBool(IDS_R_GENERAL, IDS_RG_ANIMWHENBUFFERING, true);
+	m_bAllowDropSubPic       = theApp.GetProfileBool(IDS_R_GENERAL, IDS_RG_ALLOW_DROPPING_SUBPIC, true);
+	m_bOverridePlacement     = theApp.GetProfileBool(IDS_R_TEXT, ResStr(IDS_RT_OVERRIDEPLACEMENT), false);
+	m_PlacementXperc         = theApp.GetProfileInt(IDS_R_TEXT, ResStr(IDS_RT_XPERC), 50);
+	m_PlacementYperc         = theApp.GetProfileInt(IDS_R_TEXT, ResStr(IDS_RT_YPERC), 90);
+	m_bBufferVobSub          = theApp.GetProfileBool(IDS_R_VOBSUB, ResStr(IDS_RV_BUFFER), true);
+	m_bOnlyShowForcedVobSubs = theApp.GetProfileBool(IDS_R_VOBSUB, ResStr(IDS_RV_ONLYSHOWFORCEDSUBS), false);
+	m_bPolygonize            = theApp.GetProfileBool(IDS_R_VOBSUB, ResStr(IDS_RV_POLYGONIZE), false);
+	m_defStyle             <<= theApp.GetProfileString(IDS_R_TEXT, ResStr(IDS_RT_STYLE), L"");
+	m_bFlipPicture           = theApp.GetProfileBool(IDS_R_GENERAL, IDS_RG_FLIPPICTURE, false);
+	m_bFlipSubtitles         = theApp.GetProfileBool(IDS_R_GENERAL, IDS_RG_FLIPSUBTITLES, false);
+	m_bOSD                   = theApp.GetProfileBool(IDS_R_GENERAL, IDS_RG_SHOWOSDSTATS, false);
+	m_bSaveFullPath          = theApp.GetProfileBool(IDS_R_GENERAL, IDS_RG_SAVEFULLPATH, false);
+	m_nReloaderDisableCount  = theApp.GetProfileBool(IDS_R_GENERAL, IDS_RG_DISABLERELOADER, false) ? 1 : 0;
+	m_SubtitleDelay          = theApp.GetProfileInt(IDS_R_TIMING, ResStr(IDS_RTM_SUBTITLEDELAY), 0);
+	m_SubtitleSpeedMul       = theApp.GetProfileInt(IDS_R_TIMING, ResStr(IDS_RTM_SUBTITLESPEEDMUL), 1000);
+	m_SubtitleSpeedDiv       = theApp.GetProfileInt(IDS_R_TIMING, ResStr(IDS_RTM_SUBTITLESPEEDDIV), 1000);
+	m_bMediaFPSEnabled       = theApp.GetProfileBool(IDS_R_TIMING, ResStr(IDS_RTM_MEDIAFPSENABLED), false);
 	m_ePARCompensationType = static_cast<CSimpleTextSubtitle::EPARCompensationType>(theApp.GetProfileInt(IDS_R_TEXT, ResStr(IDS_RT_AUTOPARCOMPENSATION), 0));
 	pData = nullptr;
 	if (theApp.GetProfileBinary(IDS_R_TIMING, ResStr(IDS_RTM_MEDIAFPS), &pData, &nSize) && pData) {
@@ -556,26 +556,26 @@ STDMETHODIMP CDirectVobSub::UpdateRegistry()
 
 	CAutoLock cAutoLock(&m_propsLock);
 
-	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_HIDE, m_bHideSubtitles);
+	theApp.WriteProfileBool(IDS_R_GENERAL, IDS_RG_HIDE, m_bHideSubtitles);
 	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_SUBPICTTOBUFFER, m_uSubPictToBuffer);
-	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_ANIMWHENBUFFERING, m_bAnimWhenBuffering);
-	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_ALLOW_DROPPING_SUBPIC, m_bAllowDropSubPic);
-	theApp.WriteProfileInt(IDS_R_TEXT, ResStr(IDS_RT_OVERRIDEPLACEMENT), m_bOverridePlacement);
+	theApp.WriteProfileBool(IDS_R_GENERAL, IDS_RG_ANIMWHENBUFFERING, m_bAnimWhenBuffering);
+	theApp.WriteProfileBool(IDS_R_GENERAL, IDS_RG_ALLOW_DROPPING_SUBPIC, m_bAllowDropSubPic);
+	theApp.WriteProfileBool(IDS_R_TEXT, ResStr(IDS_RT_OVERRIDEPLACEMENT), m_bOverridePlacement);
 	theApp.WriteProfileInt(IDS_R_TEXT, ResStr(IDS_RT_XPERC), m_PlacementXperc);
 	theApp.WriteProfileInt(IDS_R_TEXT, ResStr(IDS_RT_YPERC), m_PlacementYperc);
-	theApp.WriteProfileInt(IDS_R_VOBSUB, ResStr(IDS_RV_BUFFER), m_bBufferVobSub);
-	theApp.WriteProfileInt(IDS_R_VOBSUB, ResStr(IDS_RV_ONLYSHOWFORCEDSUBS), m_bOnlyShowForcedVobSubs);
-	theApp.WriteProfileInt(IDS_R_VOBSUB, ResStr(IDS_RV_POLYGONIZE), m_bPolygonize);
+	theApp.WriteProfileBool(IDS_R_VOBSUB, ResStr(IDS_RV_BUFFER), m_bBufferVobSub);
+	theApp.WriteProfileBool(IDS_R_VOBSUB, ResStr(IDS_RV_ONLYSHOWFORCEDSUBS), m_bOnlyShowForcedVobSubs);
+	theApp.WriteProfileBool(IDS_R_VOBSUB, ResStr(IDS_RV_POLYGONIZE), m_bPolygonize);
 	CString style;
 	theApp.WriteProfileString(IDS_R_TEXT, ResStr(IDS_RT_STYLE), style <<= m_defStyle);
-	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_FLIPPICTURE, m_bFlipPicture);
-	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_FLIPSUBTITLES, m_bFlipSubtitles);
-	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_SHOWOSDSTATS, m_bOSD);
-	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_SAVEFULLPATH, m_bSaveFullPath);
+	theApp.WriteProfileBool(IDS_R_GENERAL, IDS_RG_FLIPPICTURE, m_bFlipPicture);
+	theApp.WriteProfileBool(IDS_R_GENERAL, IDS_RG_FLIPSUBTITLES, m_bFlipSubtitles);
+	theApp.WriteProfileBool(IDS_R_GENERAL, IDS_RG_SHOWOSDSTATS, m_bOSD);
+	theApp.WriteProfileBool(IDS_R_GENERAL, IDS_RG_SAVEFULLPATH, m_bSaveFullPath);
 	theApp.WriteProfileInt(IDS_R_TIMING, ResStr(IDS_RTM_SUBTITLEDELAY), m_SubtitleDelay);
 	theApp.WriteProfileInt(IDS_R_TIMING, ResStr(IDS_RTM_SUBTITLESPEEDMUL), m_SubtitleSpeedMul);
 	theApp.WriteProfileInt(IDS_R_TIMING, ResStr(IDS_RTM_SUBTITLESPEEDDIV), m_SubtitleSpeedDiv);
-	theApp.WriteProfileInt(IDS_R_TIMING, ResStr(IDS_RTM_MEDIAFPSENABLED), m_bMediaFPSEnabled);
+	theApp.WriteProfileBool(IDS_R_TIMING, ResStr(IDS_RTM_MEDIAFPSENABLED), m_bMediaFPSEnabled);
 	theApp.WriteProfileBinary(IDS_R_TIMING, ResStr(IDS_RTM_MEDIAFPS), (BYTE*)&m_MediaFPS, sizeof(m_MediaFPS));
 	theApp.WriteProfileInt(IDS_R_TEXT, ResStr(IDS_RT_AUTOPARCOMPENSATION), m_ePARCompensationType);
 
@@ -633,7 +633,7 @@ STDMETHODIMP CDirectVobSub::get_SubtitleReloader(bool* fDisabled)
 	CAutoLock cAutoLock(&m_propsLock);
 
 	if (fDisabled) {
-		*fDisabled = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_DISABLERELOADER, 0);
+		*fDisabled = theApp.GetProfileBool(IDS_R_GENERAL, IDS_RG_DISABLERELOADER, false);
 	}
 
 	return S_OK;
@@ -651,7 +651,7 @@ STDMETHODIMP CDirectVobSub::put_SubtitleReloader(bool fDisable)
 		return S_FALSE;
 	}
 
-	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_DISABLERELOADER, fDisable);
+	theApp.WriteProfileBool(IDS_R_GENERAL, IDS_RG_DISABLERELOADER, fDisable);
 
 	return S_OK;
 }
@@ -712,13 +712,13 @@ STDMETHODIMP CDirectVobSub::get_LoadSettings(int* level, bool* fExternalLoad, bo
 		*level = theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_LOADLEVEL, 0) & 3;
 	}
 	if (fExternalLoad) {
-		*fExternalLoad = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_EXTERNALLOAD, 1);
+		*fExternalLoad = theApp.GetProfileBool(IDS_R_GENERAL, IDS_RG_EXTERNALLOAD, true);
 	}
 	if (fWebLoad) {
-		*fWebLoad = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_WEBLOAD, 0);
+		*fWebLoad = theApp.GetProfileBool(IDS_R_GENERAL, IDS_RG_WEBLOAD, false);
 	}
 	if (fEmbeddedLoad) {
-		*fEmbeddedLoad = !!theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_EMBEDDEDLOAD, 1);
+		*fEmbeddedLoad = theApp.GetProfileBool(IDS_R_GENERAL, IDS_RG_EMBEDDEDLOAD, true);
 	}
 
 	return S_OK;
@@ -738,9 +738,9 @@ STDMETHODIMP CDirectVobSub::put_LoadSettings(int level, bool fExternalLoad, bool
 	}
 
 	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_LOADLEVEL, level & 3);
-	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_EXTERNALLOAD, fExternalLoad);
-	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_WEBLOAD, fWebLoad);
-	theApp.WriteProfileInt(IDS_R_GENERAL, IDS_RG_EMBEDDEDLOAD, fEmbeddedLoad);
+	theApp.WriteProfileBool(IDS_R_GENERAL, IDS_RG_EXTERNALLOAD, fExternalLoad);
+	theApp.WriteProfileBool(IDS_R_GENERAL, IDS_RG_WEBLOAD, fWebLoad);
+	theApp.WriteProfileBool(IDS_R_GENERAL, IDS_RG_EMBEDDEDLOAD, fEmbeddedLoad);
 
 	return S_OK;
 }

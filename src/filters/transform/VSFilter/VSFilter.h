@@ -35,6 +35,9 @@ public:
 	BOOL InitInstance();
 	BOOL ExitInstance();
 
+	bool GetProfileBool(LPCTSTR lpszSection, LPCTSTR lpszEntry, bool bDefault);
+	BOOL WriteProfileBool (LPCTSTR lpszSection, LPCTSTR lpszEntry, bool bValue);
+
 	DECLARE_MESSAGE_MAP()
 };
 
