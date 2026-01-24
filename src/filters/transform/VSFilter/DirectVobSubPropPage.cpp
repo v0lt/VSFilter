@@ -1092,9 +1092,10 @@ bool CDVSPathsPPage::OnMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 						break;
 
 						case IDC_ADD: {
-							CString path;
+							CStringW path;
 							m_path.GetWindowTextW(path);
-							if (!path.IsEmpty() && m_pathlist.FindString(-1, path) < 0) {
+							path.Trim();
+							if (!path.IsEmpty() && m_pathlist.FindStringExact(-1, path) < 0) {
 								m_pathlist.AddString(path);
 							}
 
