@@ -22,7 +22,7 @@
     <ProjectGuid>{F671100C-469F-4723-AAC4-B7FE4F5B8DC4}</ProjectGuid>
     <RootNamespace>VSFilter</RootNamespace>
     <Keyword>MFCProj</Keyword>
-    <ProjectName>VSFilter</ProjectName>
+    <ProjectName>VSFilterBE</ProjectName>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

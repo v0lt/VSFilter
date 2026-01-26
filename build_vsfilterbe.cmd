@@ -59,7 +59,7 @@ CD /D %~dp0
 CALL :SubCompiling x64
 
 IF /I "%SIGN%" == "True" (
-  SET FILES="%~dp0_bin\Filter_x86%SUFFIX%\VSFilter.dll" "%~dp0_bin\Filter_x64%SUFFIX%\VSFilter64.dll"
+  SET FILES="%~dp0_bin\Filter_x86%SUFFIX%\VSFilterBE.dll" "%~dp0_bin\Filter_x64%SUFFIX%\VSFilterBE.dll"
   CALL "%~dp0\sign.cmd" !FILES! || (CALL :SubMsg "ERROR" "Problem signing !FILES!" & EXIT /B)
   CALL :SubMsg "INFO" "!FILES! signed successfully."
 )
@@ -80,9 +80,9 @@ FOR /F "tokens=3,4 delims= " %%A IN (
   'FINDSTR /I /L /C:"define REV_NUM" "revision.h"') DO (SET "REVNUM=%%A")
 
 IF /I "%VERRELEASE%" == "1" (
-  SET "PCKG_NAME=VSFilter-%VERMAJOR%.%VERMINOR%.%VERBUILD%.%REVNUM%%SUFFIX%"
+  SET "PCKG_NAME=VSFilterBE-%VERMAJOR%.%VERMINOR%.%VERBUILD%.%REVNUM%%SUFFIX%"
 ) ELSE (
-  SET "PCKG_NAME=VSFilter-%VERMAJOR%.%VERMINOR%.%VERBUILD%.%REVNUM%_git%REVDATE%-%REVHASH%%SUFFIX%"
+  SET "PCKG_NAME=VSFilterBE-%VERMAJOR%.%VERMINOR%.%VERBUILD%.%REVNUM%_git%REVDATE%-%REVHASH%%SUFFIX%"
 )
 
 CALL :SubDetectSevenzipPath
@@ -92,13 +92,13 @@ IF DEFINED SEVENZIP (
     MKDIR _bin\x86
     MKDIR _bin\x64
 
-    COPY /Y /V "_bin\Filter_x86%SUFFIX%\VSFilter.dll" "_bin\x86\VSFilter.dll"
-    COPY /Y /V "distrib\Install_VSFilter.cmd"         "_bin\x86\Install_VSFilter.cmd"
-    COPY /Y /V "distrib\Uninstall_VSFilter.cmd"       "_bin\x86\Uninstall_VSFilter.cmd"
+    COPY /Y /V "_bin\Filter_x86%SUFFIX%\VSFilterBE.dll" "_bin\x86\VSFilterBE.dll"
+    COPY /Y /V "distrib\Install_VSFilterBE.cmd"         "_bin\x86\Install_VSFilterBE.cmd"
+    COPY /Y /V "distrib\Uninstall_VSFilterBE.cmd"       "_bin\x86\Uninstall_VSFilterBE.cmd"
 
-    COPY /Y /V "_bin\Filter_x64%SUFFIX%\VSFilter.dll" "_bin\x64\VSFilter.dll"
-    COPY /Y /V "distrib\Install_VSFilter.cmd"         "_bin\x64\Install_VSFilter.cmd"
-    COPY /Y /V "distrib\Uninstall_VSFilter.cmd"       "_bin\x64\Uninstall_VSFilter.cmd"
+    COPY /Y /V "_bin\Filter_x64%SUFFIX%\VSFilterBE.dll" "_bin\x64\VSFilterBE.dll"
+    COPY /Y /V "distrib\Install_VSFilterBE.cmd"         "_bin\x64\Install_VSFilterBE.cmd"
+    COPY /Y /V "distrib\Uninstall_VSFilterBE.cmd"       "_bin\x64\Uninstall_VSFilterBE.cmd"
 
     TITLE Creating archive %PCKG_NAME%.zip...
     START "7z" /B /WAIT "%SEVENZIP%" a -tzip -mx9 "_bin\%PCKG_NAME%.zip" ^
@@ -137,15 +137,15 @@ FOR /F "tokens=2*" %%A IN (
 EXIT /B
 
 :SubCompiling 
-TITLE Compiling VSFilter - %BUILDCFG%^|%1...
-MSBuild.exe VSFilter.sln %MSBUILD_SWITCHES%^
+TITLE Compiling VSFilter (MPC-BE project) - %BUILDCFG%^|%1...
+MSBuild.exe VSFilterBE.sln %MSBUILD_SWITCHES%^
  /target:%BUILDTYPE% /p:Configuration="%BUILDCFG%" /p:Platform=%1^
  /flp1:LogFile=%LOG_DIR%\errors_%BUILDCFG%_%1.log;errorsonly;Verbosity=diagnostic^
  /flp2:LogFile=%LOG_DIR%\warnings_%BUILDCFG%_%1.log;warningsonly;Verbosity=diagnostic
 IF %ERRORLEVEL% NEQ 0 (
-  CALL :SubMsg "ERROR" "VSFilter.sln %BUILDCFG% %1 - Compilation failed!"
+  CALL :SubMsg "ERROR" "VSFilterBE.sln %BUILDCFG% %1 - Compilation failed!"
 ) ELSE (
-  CALL :SubMsg "INFO" "VSFilter.sln %BUILDCFG% %1 compiled successfully"
+  CALL :SubMsg "INFO" "VSFilterBE.sln %BUILDCFG% %1 compiled successfully"
 )
 EXIT /B
 
