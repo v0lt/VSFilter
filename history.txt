@@ -1,4 +1,4 @@
-VSFilter (DirectVobSub)
+VSFilter (MPC-BE project)
 
 2.47
 ----------------------
@@ -15,3 +15,5 @@ For VirtualDub and AviSynth plugins, the DefaultCodePage parameter is now used i
 Fixed support for Unicode paths for the AviSynth plugin.
 Fixed display of VirtualDub plugin settings.
 Removed support for Avisynth v1.0.
+Fixed saving subtitle search paths in the settings dialog.
+Added the ability to use the '*' symbol for the last folder in the subtitle search path.
