@@ -44,7 +44,7 @@ BOOL CVSFilterApp::InitInstance()
 		return FALSE;
 	}
 
-	SetRegistryKey(L"Gabest");
+	SetRegistryKey(L"MPC-BE Filters");
 
 	DllEntryPoint(AfxGetInstanceHandle(), DLL_PROCESS_ATTACH, 0); // "DllMain" of the dshow baseclasses
 
