@@ -1,5 +1,5 @@
 /*
- * (C) 2022 see Authors.txt
+ * (C) 2022-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -22,7 +22,28 @@
 
 #include "MemSubPic.h"
 
-enum {MSP_P010,MSP_P016,MSP_RGB32,MSP_RGB24,MSP_RGB16,MSP_RGB15,MSP_YUY2,MSP_NV12,MSP_YV12,MSP_IYUV,MSP_AYUV,MSP_RGBA};
+enum {
+    MSP_RGB32,
+    MSP_RGB24,
+    MSP_RGB16,
+    MSP_RGB15,
+    MSP_YUY2,
+    MSP_YV12,
+    MSP_IYUV,
+    MSP_AYUV,
+    MSP_RGBA,        //pre-multiplied alpha. Use A*g + RGB to mix
+    MSP_RGBA_F,      //pre-multiplied alpha. Use (0xff-A)*g + RGB to mix
+    MSP_AYUV_PLANAR, //AYUV in planar form
+    MSP_XY_AUYV,
+    MSP_P010,
+    MSP_P016,
+    MSP_NV12,
+    MSP_NV21,
+    MSP_P210, // 4:2:2 10 bits
+    MSP_P216, // 4:2:2 16 bits
+    MSP_YV16, // 4:2:2 8 bits
+    MSP_YV24  // 4:4:4 8 bits
+};
 
 // CMemSubPicEx
 
