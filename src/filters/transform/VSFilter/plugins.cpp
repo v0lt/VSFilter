@@ -561,42 +561,67 @@ namespace Plugin
 	//
 	// Avisynth interface
 	//
-
-	namespace AviSynth25
+	// PF20180224 Avs2.6 interface using AVS+ headers
+	namespace AviSynth26
 	{
-#include <avisynth/avisynth25.h>
+#include <avisynth/avisynth.h>
 
 		static bool s_fSwapUV = false;
 
 		class CAvisynthFilter : public GenericVideoFilter, virtual public CFilter
 		{
 		public:
+			bool has_at_least_v8; // avs interface version check
+			bool useRGBAwhenRGB32; // instead of old method: bool "RGBA" Avisynth variable. default false for TextSub, true for MaskSub
+
 			VFRTranslator *vfr;
 
-			CAvisynthFilter(PClip c, IScriptEnvironment* env, VFRTranslator *_vfr=0) : GenericVideoFilter(c), vfr(_vfr) {}
+			CAvisynthFilter(PClip c, IScriptEnvironment* env, VFRTranslator *_vfr=0) : GenericVideoFilter(c), vfr(_vfr)
+			{
+				has_at_least_v8 = true;
+				try { env->CheckVersion(8); }
+				catch (const AvisynthError&) { has_at_least_v8 = false; }
+			}
 
 			PVideoFrame __stdcall GetFrame(int n, IScriptEnvironment* env) {
 				PVideoFrame frame = child->GetFrame(n, env);
 
-				env->MakeWritable(&frame);
-
 				SubPicDesc dst;
 				dst.w = vi.width;
 				dst.h = vi.height;
-				dst.pitch = frame->GetPitch();
-				dst.pitchUV = frame->GetPitch(PLANAR_U);
-				dst.bits = frame->GetWritePtr();
-				dst.bitsU = frame->GetWritePtr(PLANAR_U);
-				dst.bitsV = frame->GetWritePtr(PLANAR_V);
-				dst.bpp = dst.pitch/dst.w*8; //vi.BitsPerPixel();
-				dst.type =
-					vi.IsRGB32() ?( env->GetVar("RGBA").AsBool() ? MSP_RGBA : MSP_RGB32)  :
-						vi.IsRGB24() ? MSP_RGB24 :
-						vi.IsYUY2() ? MSP_YUY2 :
-				/*vi.IsYV12()*/ vi.pixel_type == VideoInfo::CS_YV12 ? (s_fSwapUV?MSP_IYUV:MSP_YV12) :
-				/*vi.IsIYUV()*/ vi.pixel_type == VideoInfo::CS_IYUV ? (s_fSwapUV?MSP_YV12:MSP_IYUV) :
-						-1;
 
+				dst.type =
+					vi.IsRGB32() ? (env->GetVar("RGBA").AsBool() ? MSP_RGBA : MSP_RGB32) :
+					vi.IsRGB24() ? MSP_RGB24 :
+					vi.IsYUY2() ? MSP_YUY2 :
+					/*vi.IsYV12()*/ vi.pixel_type == VideoInfo::CS_YV12 ? (s_fSwapUV ? MSP_IYUV : MSP_YV12) :
+					/*vi.IsIYUV()*/ vi.pixel_type == VideoInfo::CS_IYUV ? (s_fSwapUV ? MSP_YV12 : MSP_IYUV) :
+					-1;
+
+				if (dst.type == -1) {
+					env->ThrowError("Format not supported. Use RGB24, RGB32, YUY2, YV12.");
+				}
+
+				dst.bpp = frame->GetRowSize() / dst.w * 8;
+
+				{
+					// 8 bit classic
+					env->MakeWritable(&frame);
+
+					dst.pitch = frame->GetPitch();
+					dst.pitchUV = frame->GetPitch(PLANAR_U); // n/a for RGB
+					dst.bits = frame->GetWritePtr();
+					dst.bitsU = frame->GetWritePtr(PLANAR_U); // n/a for RGB
+					dst.bitsV = frame->GetWritePtr(PLANAR_V); // n/a for RGB
+					if (vi.IsRGB32() && useRGBAwhenRGB32) {
+						// MSP_RGB32 is flipped, MSP_RGBA is not flipped
+						// but since both is RGB32 in Avisynth, it must be adjusted here
+						dst.bits += (vi.height - 1) * dst.pitch;
+						dst.pitch = -dst.pitch;
+					}
+				}
+
+				// Common part
 				float fps = m_fps > 0 ? m_fps : (float)vi.fps_numerator / vi.fps_denominator;
 
 				REFERENCE_TIME timestamp;
@@ -706,17 +731,26 @@ namespace Plugin
 					   vfr));
 		}
 
-		extern "C" __declspec(dllexport) const char* __stdcall AvisynthPluginInit2(IScriptEnvironment* env)
+		/* New 2.6 requirement!!! */
+		// Declare and initialise server pointers static storage.
+		const AVS_Linkage* AVS_linkage = 0;
+
+		/* New 2.6 requirement!!! */
+		// DLL entry point called from LoadPlugin() to setup a user plugin.
+		extern "C" __declspec(dllexport) const char* __stdcall
+			AvisynthPluginInit3(IScriptEnvironment* env, const AVS_Linkage* const vectors)
 		{
+			/* New 2.6 requirement!!! */
+			// Save the server pointers.
+			AVS_linkage = vectors;
 			env->AddFunction("VobSub", "cs", VobSubCreateS, 0);
 			env->AddFunction("TextSub", "c[file]s[defcodepage]i[fps]f[vfr]s", TextSubCreateGeneral, 0);
 			env->AddFunction("TextSubSwapUV", "b", TextSubSwapUV, 0);
 			env->AddFunction("MaskSub", "[file]s[width]i[height]i[fps]f[length]i[defcodepage]i[vfr]s", MaskSubCreate, 0);
 			env->SetVar(env->SaveString("RGBA"),false);
-			return(nullptr);
+			return nullptr;
 		}
 	}
-
 }
 
 UINT_PTR CALLBACK OpenHookProc(HWND hDlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
