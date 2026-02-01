@@ -570,6 +570,7 @@ namespace Plugin
 
 		class CAvisynthFilter : public GenericVideoFilter, virtual public CFilter
 		{
+			int msp_type;
 		public:
 			bool has_at_least_v8; // avs interface version check
 
@@ -579,6 +580,18 @@ namespace Plugin
 				: GenericVideoFilter(c)
 				, vfr(_vfr)
 			{
+				msp_type =
+					vi.IsRGB32() ? (env->GetVar("RGBA").AsBool() ? MSP_RGBA : MSP_RGB32) :
+					vi.IsRGB24() ? MSP_RGB24 :
+					vi.IsYUY2() ? MSP_YUY2 :
+					/*vi.IsYV12()*/ vi.pixel_type == VideoInfo::CS_YV12 ? (s_fSwapUV ? MSP_IYUV : MSP_YV12) :
+					/*vi.IsIYUV()*/ vi.pixel_type == VideoInfo::CS_IYUV ? (s_fSwapUV ? MSP_YV12 : MSP_IYUV) :
+					-1;
+
+				if (msp_type == -1) {
+					env->ThrowError("Format not supported. Use RGB24, RGB32, YUY2, YV12.");
+				}
+
 				has_at_least_v8 = true;
 				try {
 					env->CheckVersion(8);
@@ -592,22 +605,10 @@ namespace Plugin
 				PVideoFrame frame = child->GetFrame(n, env);
 
 				SubPicDesc dst;
-				dst.w = vi.width;
-				dst.h = vi.height;
-
-				dst.type =
-					vi.IsRGB32() ? (env->GetVar("RGBA").AsBool() ? MSP_RGBA : MSP_RGB32) :
-					vi.IsRGB24() ? MSP_RGB24 :
-					vi.IsYUY2() ? MSP_YUY2 :
-					/*vi.IsYV12()*/ vi.pixel_type == VideoInfo::CS_YV12 ? (s_fSwapUV ? MSP_IYUV : MSP_YV12) :
-					/*vi.IsIYUV()*/ vi.pixel_type == VideoInfo::CS_IYUV ? (s_fSwapUV ? MSP_YV12 : MSP_IYUV) :
-					-1;
-
-				if (dst.type == -1) {
-					env->ThrowError("Format not supported. Use RGB24, RGB32, YUY2, YV12.");
-				}
-
-				dst.bpp = frame->GetRowSize() / dst.w * 8;
+				dst.w    = vi.width;
+				dst.h    = vi.height;
+				dst.type = msp_type;
+				dst.bpp  = frame->GetRowSize() / dst.w * 8;
 
 				{
 					// 8 bit classic
