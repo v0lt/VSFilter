@@ -572,15 +572,20 @@ namespace Plugin
 		{
 		public:
 			bool has_at_least_v8; // avs interface version check
-			bool useRGBAwhenRGB32; // instead of old method: bool "RGBA" Avisynth variable. default false for TextSub, true for MaskSub
 
 			VFRTranslator *vfr;
 
-			CAvisynthFilter(PClip c, IScriptEnvironment* env, VFRTranslator *_vfr=0) : GenericVideoFilter(c), vfr(_vfr)
+			CAvisynthFilter(PClip c, IScriptEnvironment* env, VFRTranslator *_vfr=0) 
+				: GenericVideoFilter(c)
+				, vfr(_vfr)
 			{
 				has_at_least_v8 = true;
-				try { env->CheckVersion(8); }
-				catch (const AvisynthError&) { has_at_least_v8 = false; }
+				try {
+					env->CheckVersion(8);
+				}
+				catch (const AvisynthError&) {
+					has_at_least_v8 = false;
+				}
 			}
 
 			PVideoFrame __stdcall GetFrame(int n, IScriptEnvironment* env) {
@@ -608,14 +613,12 @@ namespace Plugin
 					// 8 bit classic
 					env->MakeWritable(&frame);
 
-					dst.pitch = frame->GetPitch();
+					dst.pitch   = frame->GetPitch();
 					dst.pitchUV = frame->GetPitch(PLANAR_U); // n/a for RGB
-					dst.bits = frame->GetWritePtr();
-					dst.bitsU = frame->GetWritePtr(PLANAR_U); // n/a for RGB
-					dst.bitsV = frame->GetWritePtr(PLANAR_V); // n/a for RGB
-					if (vi.IsRGB32() && useRGBAwhenRGB32) {
-						// MSP_RGB32 is flipped, MSP_RGBA is not flipped
-						// but since both is RGB32 in Avisynth, it must be adjusted here
+					dst.bits    = frame->GetWritePtr();
+					dst.bitsU   = frame->GetWritePtr(PLANAR_U); // n/a for RGB
+					dst.bitsV   = frame->GetWritePtr(PLANAR_V); // n/a for RGB
+					if (vi.IsRGB32()) {
 						dst.bits += (vi.height - 1) * dst.pitch;
 						dst.pitch = -dst.pitch;
 					}
