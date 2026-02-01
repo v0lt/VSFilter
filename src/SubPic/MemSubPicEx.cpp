@@ -1,5 +1,5 @@
 /*
- * (C) 2022 see Authors.txt
+ * (C) 2022-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -181,7 +181,7 @@ STDMETHODIMP CMemSubPicEx::Unlock(RECT* pDirtyRect)
 	return S_OK;
 }
 
-static void AlphaBlt_YUY2_SSE2(int w, int h, BYTE* d, int dstpitch, BYTE* s, int srcpitch)
+static void AlphaBlt_YUY2_SSE2(int w, int h, BYTE* d, int dstpitch, const BYTE* s, int srcpitch)
 {
 	unsigned int ia;
 	static const __int64 _8181 = 0x0080001000800010i64;
@@ -190,8 +190,8 @@ static void AlphaBlt_YUY2_SSE2(int w, int h, BYTE* d, int dstpitch, BYTE* s, int
 
 	for (ptrdiff_t j = 0; j < h; j++, s += srcpitch, d += dstpitch) {
 		DWORD* d2 = (DWORD*)d;
-		BYTE* s2 = s;
-		BYTE* s2end = s2 + w * 4;
+		const BYTE* s2 = s;
+		const BYTE* s2end = s2 + w * 4;
 
 		for (; s2 < s2end; s2 += 8, d2++) {
 			ia = (s2[3] + s2[7]) >> 1;
@@ -219,14 +219,14 @@ static void AlphaBlt_YUY2_SSE2(int w, int h, BYTE* d, int dstpitch, BYTE* s, int
 }
 
 /*
-void AlphaBlt_YUY2_C(int w, int h, BYTE* d, int dstpitch, BYTE* s, int srcpitch)
+void AlphaBlt_YUY2_C(int w, int h, BYTE* d, int dstpitch, const BYTE* s, int srcpitch)
 {
 	unsigned int ia;
 
 	for (ptrdiff_t j = 0; j < h; j++, s += srcpitch, d += dstpitch) {
 		DWORD* d2 = (DWORD*)d;
-		BYTE* s2 = s;
-		BYTE* s2end = s2 + w*4;
+		const BYTE* s2 = s;
+		const BYTE* s2end = s2 + w*4;
 
 		for (; s2 < s2end; s2 += 8, d2++) {
 			ia = (s2[3]+s2[7])>>1;
@@ -272,8 +272,9 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 		return E_INVALIDARG;
 	}
 
-	int w = rs.Width(), h = rs.Height();
-	BYTE* s = src.bits + src.pitch * rs.top + ((rs.left * src.bpp) >> 3); //rs.left * 4;
+	const int w = rs.Width();
+	const int h = rs.Height();
+	const BYTE* s = src.bits + src.pitch * rs.top + ((rs.left * src.bpp) >> 3); //rs.left * 4;
 	BYTE* d = dst.bits + dst.pitch * rd.top + ((rd.left * dst.bpp) >> 3);
 
 	if (rd.top > rd.bottom) {
@@ -304,8 +305,8 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 
 				for(ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch)
 				{
-					BYTE* s2 = s;
-					BYTE* s2end = s2 + w * 4;
+					const BYTE* s2 = s;
+					const BYTE* s2end = s2 + w * 4;
 					WORD* d2 = (WORD*)d;
 					for(; s2 < s2end; s2 += 4, d2++)
 					{
@@ -327,8 +328,8 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 			}
 		case MSP_RGBA:
 				for (ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
-					BYTE* s2 = s;
-					BYTE* s2end = s2 + w * 4;
+					const BYTE* s2 = s;
+					const BYTE* s2end = s2 + w * 4;
 					DWORD* d2 = (DWORD*)d;
 					for (; s2 < s2end; s2 += 4, d2++) {
 						if (s2[3] < 0xff) {
@@ -345,8 +346,8 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 		case MSP_RGB32:
 		case MSP_AYUV:
 				for (ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
-					BYTE* s2 = s;
-					BYTE* s2end = s2 + w*4;
+					const BYTE* s2 = s;
+					const BYTE* s2end = s2 + w*4;
 
 					DWORD* d2 = (DWORD*)d;
 					for (; s2 < s2end; s2 += 4, d2++) {
@@ -367,8 +368,8 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 			break;
 		case MSP_RGB24:
 				for (ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
-					BYTE* s2 = s;
-					BYTE* s2end = s2 + w * 4;
+					const BYTE* s2 = s;
+					const BYTE* s2end = s2 + w * 4;
 					BYTE* d2 = d;
 					for (; s2 < s2end; s2 += 4, d2 += 3) {
 						if (s2[3] < 0xff) {
@@ -381,8 +382,8 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 			break;
 		case MSP_RGB16:
 				for (ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
-					BYTE* s2 = s;
-					BYTE* s2end = s2 + w * 4;
+					const BYTE* s2 = s;
+					const BYTE* s2end = s2 + w * 4;
 					WORD* d2 = (WORD*)d;
 					for (; s2 < s2end; s2 += 4, d2++) {
 						if (s2[3] < 0x1f) {
@@ -394,8 +395,8 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 			break;
 		case MSP_RGB15:
 				for (ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
-					BYTE* s2 = s;
-					BYTE* s2end = s2 + w * 4;
+					const BYTE* s2 = s;
+					const BYTE* s2end = s2 + w * 4;
 					WORD* d2 = (WORD*)d;
 					for (; s2 < s2end; s2 += 4, d2++) {
 						if (s2[3] < 0x1f) {
@@ -412,8 +413,8 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 		case MSP_NV12:
 		case MSP_IYUV:
 				for (ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
-					BYTE* s2 = s;
-					BYTE* s2end = s2 + w * 4;
+					const BYTE* s2 = s;
+					const BYTE* s2end = s2 + w * 4;
 					BYTE* d2 = d;
 					for (; s2 < s2end; s2 += 4, d2++) {
 						if (s2[3] < 0xff) {
@@ -510,8 +511,8 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 			d = dd[i];
 			BYTE* is = ss[1-i];
 			for (ptrdiff_t j = 0; j < h2; j++, s += src.pitch * 2, d += dst.pitchUV, is += src.pitch * 2) {
-				BYTE* s2 = s;
-				BYTE* s2end = s2 + w * 4;
+				const BYTE* s2 = s;
+				const BYTE* s2end = s2 + w * 4;
 				BYTE* d2 = d;
 				BYTE* is2 = is;
 				for (; s2 < s2end; s2 += 8, d2++, is2 += 8) {
@@ -546,8 +547,8 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 			d = dd[i];
 			BYTE* is = ss[1-i];
 			for (ptrdiff_t j = 0; j < h2; j++, s += src.pitch * 2, d += dst.pitch, is += src.pitch * 2) {
-				BYTE* s2 = s;
-				BYTE* s2end = s2 + w * 4;
+				const BYTE* s2 = s;
+				const BYTE* s2end = s2 + w * 4;
 				BYTE* d2 = d;
 				BYTE* is2 = is;
 				for (; s2 < s2end; s2 += 8, d2 += 2, is2 += 8) {
