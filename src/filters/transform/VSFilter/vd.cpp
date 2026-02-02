@@ -57,105 +57,102 @@ void VDCPUTest() {
 
 bool BitBltFromI420ToI420(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
 {
-	VDPixmap srcbm = {0};
+	const VDPixmap srcbm = {
+		.data   = srcy,
+		.w      = w,
+		.h      = h,
+		.pitch  = srcpitch,
+		.format = nsVDPixmap::kPixFormat_YUV420_Planar,
+		.data2  = srcu,
+		.pitch2 = srcpitch / 2,
+		.data3  = srcv,
+		.pitch3 = srcpitch / 2
+	};
 
-	srcbm.data		= srcy;
-	srcbm.pitch		= srcpitch;
-	srcbm.w			= w;
-	srcbm.h			= h;
-	srcbm.format	= nsVDPixmap::kPixFormat_YUV420_Planar;
-	srcbm.data2		= srcu;
-	srcbm.pitch2	= srcpitch / 2;
-	srcbm.data3		= srcv;
-	srcbm.pitch3	= srcpitch / 2;
-
-	VDPixmap dstpxm = {0};
-
-	dstpxm.data		= dsty;
-	dstpxm.pitch	= dstpitch;
-	dstpxm.w		= w;
-	dstpxm.h		= h;
-	dstpxm.format	= nsVDPixmap::kPixFormat_YUV420_Planar;
-	dstpxm.data2	= dstu;
-	dstpxm.pitch2	= dstpitch / 2;
-	dstpxm.data3	= dstv;
-	dstpxm.pitch3	= dstpitch / 2;
+	const VDPixmap dstpxm = {
+		.data   = dsty,
+		.w      = w,
+		.h      = h,
+		.pitch  = dstpitch,
+		.format = nsVDPixmap::kPixFormat_YUV420_Planar,
+		.data2  = dstu,
+		.pitch2 = dstpitch / 2,
+		.data3  = dstv,
+		.pitch3 = dstpitch / 2
+	};
 
 	return VDPixmapBlt(dstpxm, srcbm);
 }
 
 bool BitBltFromI420ToNV12(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
 {
-	VDPixmap srcbm = {0};
+	const VDPixmap srcbm = {
+		.data   = srcy,
+		.w      = w,
+		.h      = h,
+		.pitch  = srcpitch,
+		.format = nsVDPixmap::kPixFormat_YUV420_Planar,
+		.data2  = srcu,
+		.pitch2 = srcpitch / 2,
+		.data3  = srcv,
+		.pitch3 = srcpitch / 2
+	};
 
-	srcbm.data		= srcy;
-	srcbm.pitch		= srcpitch;
-	srcbm.w			= w;
-	srcbm.h			= h;
-	srcbm.format	= nsVDPixmap::kPixFormat_YUV420_Planar;
-	srcbm.data2		= srcu;
-	srcbm.pitch2	= srcpitch / 2;
-	srcbm.data3		= srcv;
-	srcbm.pitch3	= srcpitch / 2;
-
-	VDPixmap dstpxm	= {0};
-
-	dstpxm.data		= dsty;
-	dstpxm.pitch	= dstpitch;
-	dstpxm.w		= w;
-	dstpxm.h		= h;
-	dstpxm.format	= nsVDPixmap::kPixFormat_YUV420_NV12;
-	dstpxm.data2	= dstu;
-	dstpxm.pitch2	= dstpitch;
-	dstpxm.data3	= dstv;
-	dstpxm.pitch3	= dstpitch;
+	const VDPixmap dstpxm = {
+		.data   = dsty,
+		.w      = w,
+		.h      = h,
+		.pitch  = dstpitch,
+		.format = nsVDPixmap::kPixFormat_YUV420_NV12,
+		.data2  = dstu,
+		.pitch2 = dstpitch,
+		.data3  = dstv,
+		.pitch3 = dstpitch,
+	};
 
 	return VDPixmapBlt(dstpxm, srcbm);
 }
 
 bool BitBltFromYUY2ToYUY2(int w, int h, BYTE* dst, int dstpitch, BYTE* src, int srcpitch)
 {
-	VDPixmap srcbm = {0};
-
-	srcbm.data		= src;
-	srcbm.pitch		= srcpitch;
-	srcbm.w			= w;
-	srcbm.h			= h;
-	srcbm.format	= nsVDPixmap::kPixFormat_YUV422_YUYV;
-
-	VDPixmap dstpxm = {
-		dst,
-		NULL,
-		w,
-		h,
-		dstpitch
+	const VDPixmap srcbm = {
+		.data   = src,
+		.w      = w,
+		.h      = h,
+		.pitch  = srcpitch,
+		.format = nsVDPixmap::kPixFormat_YUV422_YUYV
 	};
 
-	dstpxm.format = nsVDPixmap::kPixFormat_YUV422_YUYV;
+	const VDPixmap dstpxm = {
+		.data   = dst,
+		.w      = w,
+		.h      = h,
+		.pitch  = dstpitch,
+		.format = nsVDPixmap::kPixFormat_YUV422_YUYV
+	};
 
 	return VDPixmapBlt(dstpxm, srcbm);
 }
 
 bool BitBltFromI420ToRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
 {
-	VDPixmap srcbm = {0};
-
-	srcbm.data		= srcy;
-	srcbm.pitch		= srcpitch;
-	srcbm.w			= w;
-	srcbm.h			= h;
-	srcbm.format	= nsVDPixmap::kPixFormat_YUV420_Planar;
-	srcbm.data2		= srcu;
-	srcbm.pitch2	= srcpitch/2;
-	srcbm.data3		= srcv;
-	srcbm.pitch3	= srcpitch/2;
+	const VDPixmap srcbm = {
+		.data   = srcy,
+		.w      = w,
+		.h      = h,
+		.pitch  = srcpitch,
+		.format = nsVDPixmap::kPixFormat_YUV420_Planar,
+		.data2  = srcu,
+		.pitch2 = srcpitch/2,
+		.data3  = srcv,
+		.pitch3 = srcpitch/2
+	};
 
 	VDPixmap dstpxm = {
-		(char *)dst + dstpitch * (h - 1),
-		NULL,
-		w,
-		h,
-		-dstpitch
+		.data   = dst + dstpitch * (h - 1),
+		.w      = w,
+		.h      = h,
+		.pitch  = -dstpitch
 	};
 
 	switch(dbpp) {
@@ -191,27 +188,25 @@ bool BitBltFromI420ToYUY2(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy, BYT
 	}
 #endif
 
-	VDPixmap srcbm = {0};
-
-	srcbm.data		= srcy;
-	srcbm.pitch		= srcpitch;
-	srcbm.w			= w;
-	srcbm.h			= h;
-	srcbm.format	= nsVDPixmap::kPixFormat_YUV420_Planar;
-	srcbm.data2		= srcu;
-	srcbm.pitch2	= srcpitch/2;
-	srcbm.data3		= srcv;
-	srcbm.pitch3	= srcpitch/2;
-
-	VDPixmap dstpxm = {
-		dst,
-		NULL,
-		w,
-		h,
-		dstpitch
+	const VDPixmap srcbm = {
+		.data   = srcy,
+		.w      = w,
+		.h      = h,
+		.pitch  = srcpitch,
+		.format = nsVDPixmap::kPixFormat_YUV420_Planar,
+		.data2  = srcu,
+		.pitch2 = srcpitch / 2,
+		.data3  = srcv,
+		.pitch3 = srcpitch / 2
 	};
 
-	dstpxm.format = nsVDPixmap::kPixFormat_YUV422_YUYV;
+	const VDPixmap dstpxm = {
+		.data   = dst,
+		.w      = w,
+		.h      = h,
+		.pitch  = dstpitch,
+		.format = nsVDPixmap::kPixFormat_YUV422_YUYV
+	};
 
 	return VDPixmapBlt(dstpxm, srcbm);
 }
@@ -219,11 +214,10 @@ bool BitBltFromI420ToYUY2(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy, BYT
 bool BitBltFromRGBToRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* src, int srcpitch, int sbpp)
 {
 	VDPixmap srcbm = {
-		(char *)src + srcpitch * (h - 1),
-		NULL,
-		w,
-		h,
-		-srcpitch
+		.data   = src + srcpitch * (h - 1),
+		.w      = w,
+		.h      = h,
+		.pitch  = -srcpitch
 	};
 
 	switch(sbpp) {
@@ -244,11 +238,10 @@ bool BitBltFromRGBToRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* s
 	}
 
 	VDPixmap dstpxm = {
-		(char *)dst + dstpitch * (h - 1),
-		NULL,
-		w,
-		h,
-		-dstpitch
+		.data   = dst + dstpitch * (h - 1),
+		.w      = w,
+		.h      = h,
+		.pitch  = -dstpitch
 	};
 
 	switch(dbpp) {
@@ -274,11 +267,10 @@ bool BitBltFromRGBToRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* s
 bool BitBltFromRGBToRGBStretch(int dstw, int dsth, BYTE* dst, int dstpitch, int dbpp, int srcw, int srch, BYTE* src, int srcpitch, int sbpp)
 {
 	VDPixmap srcbm = {
-		(char *)src + srcpitch * (srch - 1),
-		NULL,
-		srcw,
-		srch,
-		-srcpitch
+		.data   = src + srcpitch * (srch - 1),
+		.w      = srcw,
+		.h      = srch,
+		.pitch  = -srcpitch
 	};
 
 	switch(sbpp) {
@@ -299,11 +291,10 @@ bool BitBltFromRGBToRGBStretch(int dstw, int dsth, BYTE* dst, int dstpitch, int 
 	}
 
 	VDPixmap dstpxm = {
-		(char *)dst + dstpitch * (dsth - 1),
-		NULL,
-		dstw,
-		dsth,
-		-dstpitch
+		.data   = dst + dstpitch * (dsth - 1),
+		.w      = dstw,
+		.h      = dsth,
+		.pitch  = -dstpitch
 	};
 
 	switch(dbpp) {
@@ -330,20 +321,19 @@ bool BitBltFromYUY2ToRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* 
 {
 	if(srcpitch == 0) srcpitch = w;
 
-	VDPixmap srcbm = {0};
-
-	srcbm.data		= src;
-	srcbm.pitch		= srcpitch;
-	srcbm.w			= w;
-	srcbm.h			= h;
-	srcbm.format	= nsVDPixmap::kPixFormat_YUV422_YUYV;
+	const VDPixmap srcbm = {
+		.data   = src,
+		.w      = w,
+		.h      = h,
+		.pitch  = srcpitch,
+		.format = nsVDPixmap::kPixFormat_YUV422_YUYV
+	};
 
 	VDPixmap dstpxm = {
-		(char *)dst + dstpitch * (h - 1),
-		NULL,
-		w,
-		h,
-		-dstpitch
+		.data   = dst + dstpitch * (h - 1),
+		.w      = w,
+		.h      = h,
+		.pitch  = -dstpitch
 	};
 
 	switch(dbpp) {
