@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2025 see Authors.txt
+ * (C) 2006-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -48,11 +48,6 @@ static const VIDEO_OUTPUT_FORMATS VSFilterDefaultFormats[] = {
 	{&MEDIASUBTYPE_RGB24, BI_RGB,       24, 3},
 	{&MEDIASUBTYPE_RGB565,BI_RGB,       16, 2},
 	{&MEDIASUBTYPE_RGB555,BI_RGB,       16, 2},
-	{&MEDIASUBTYPE_ARGB32,BI_BITFIELDS, 32, 4},
-	{&MEDIASUBTYPE_RGB32, BI_BITFIELDS, 32, 4},
-	{&MEDIASUBTYPE_RGB24, BI_BITFIELDS, 24, 3},
-	{&MEDIASUBTYPE_RGB565,BI_BITFIELDS, 16, 2},
-	{&MEDIASUBTYPE_RGB555,BI_BITFIELDS, 16, 2},
 };
 
 LPCWSTR MediaSubtype2String(const GUID& subtype);

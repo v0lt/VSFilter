@@ -299,7 +299,7 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 
 	int pitchOut = 0;
 
-	if (bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS) {
+	if (bihOut.biCompression == BI_RGB) {
 		pitchOut = bihOut.biWidth * bihOut.biBitCount >> 3;
 
 		if (bihOut.biHeight > 0) {
@@ -351,7 +351,7 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 			BitBltFromI420ToI420(w, h, pOut, pOutU, pOutV, bihOut.biWidth, pIn, pInU, pInV, pitchIn);
 		} else if(bihOut.biCompression == FCC('NV12')) {
 			BitBltFromI420ToNV12(w, h, pOut, pOutU, pOutV, bihOut.biWidth, pIn, pInU, pInV, pitchIn);
-		} else if (bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS) {
+		} else if (bihOut.biCompression == BI_RGB) {
 			if (!BitBltFromI420ToRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pIn, pInU, pInV, pitchIn)) {
 				for (int y = 0; y < h; y++, pOut += pitchOut) {
 					memset_u32(pOut, 0, pitchOut);
@@ -376,7 +376,7 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 	} else if (subtype == MEDIASUBTYPE_YUY2) {
 		if (bihOut.biCompression == FCC('YUY2')) {
 			BitBltFromYUY2ToYUY2(w, h, pOut, bihOut.biWidth * 2, pInYUV[0], pitchIn);
-		} else if (bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS) {
+		} else if (bihOut.biCompression == BI_RGB) {
 			if (!BitBltFromYUY2ToRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pInYUV[0], pitchIn)) {
 				for (int y = 0; y < h; y++, pOut += pitchOut) {
 					memset_u32(pOut, 0, pitchOut);
@@ -392,7 +392,7 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 		if (bihOut.biCompression == FCC('YUY2')) {
 			// TODO
 			// BitBltFromRGBToYUY2();
-		} else if (bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS) {
+		} else if (bihOut.biCompression == BI_RGB) {
 			if (!BitBltFromRGBToRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pInYUV[0], pitchIn, sbpp)) {
 				for (int y = 0; y < h; y++, pOut += pitchOut) {
 					memset_u32(pOut, 0, pitchOut);
