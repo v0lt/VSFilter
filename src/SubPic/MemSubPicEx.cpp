@@ -268,16 +268,25 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 	BYTE* d = dst.bits + dst.pitch * rd.top + ((rd.left * dst.bpp) >> 3);
 
 	if (rd.top > rd.bottom) {
-		if (dst.type == MSP_RGB32 || dst.type == MSP_RGB24
-				|| dst.type == MSP_YUY2 || dst.type == MSP_AYUV) {
+		switch (dst.type) {
+		case MSP_RGB32:
+		case MSP_RGB24:
+		case MSP_YUY2:
+		case MSP_AYUV:
 			d = dst.bits + dst.pitch * (rd.top - 1) + (rd.left * dst.bpp >> 3);
-		} else if (dst.type == MSP_YV12 || dst.type == MSP_IYUV) {
+			break;
+		case MSP_YV12:
+		case MSP_IYUV:
 			d = dst.bits + dst.pitch * (rd.top - 1) + (rd.left * 8 >> 3);
-		} else if (dst.type == MSP_NV12) {
+			break;
+		case MSP_NV12:
 			d = dst.bits + dst.pitch * (rd.top - 1) + rd.left;
-		} else if (dst.type == MSP_P010 || dst.type == MSP_P016) {
+			break;
+		case MSP_P010:
+		case MSP_P016:
 			d = dst.bits + dst.pitch * (rd.top - 1) + rd.left * 2;
-		} else {
+			break;
+		default:
 			return E_NOTIMPL;
 		}
 
