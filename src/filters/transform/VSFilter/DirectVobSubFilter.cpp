@@ -1010,15 +1010,14 @@ HRESULT CDirectVobSubFilter::DoCheckTransform(const CMediaType* mtIn, const CMed
 		return VFW_E_TYPE_NOT_ACCEPTED;
 	}
 
-	if (mtIn->majortype == MEDIATYPE_Video
-				&& (mtIn->subtype == MEDIASUBTYPE_P016 || mtIn->subtype == MEDIASUBTYPE_P010)) {
+	if (mtIn->subtype == MEDIASUBTYPE_P010 || mtIn->subtype == MEDIASUBTYPE_P016) {
 		if (mtOut->subtype != mtIn->subtype && checkReconnection) {
 			return VFW_E_TYPE_NOT_ACCEPTED;
 		}
-	} else if (mtIn->majortype == MEDIATYPE_Video
-				&& (mtIn->subtype == MEDIASUBTYPE_YV12
-				|| mtIn->subtype == MEDIASUBTYPE_I420
-				|| mtIn->subtype == MEDIASUBTYPE_IYUV)) {
+	}
+	else if (mtIn->subtype == MEDIASUBTYPE_YV12
+			|| mtIn->subtype == MEDIASUBTYPE_I420
+			|| mtIn->subtype == MEDIASUBTYPE_IYUV) {
 		if (mtOut->subtype != MEDIASUBTYPE_YV12
 				&& mtOut->subtype != MEDIASUBTYPE_NV12
 				&& mtOut->subtype != MEDIASUBTYPE_I420
@@ -1029,23 +1028,23 @@ HRESULT CDirectVobSubFilter::DoCheckTransform(const CMediaType* mtIn, const CMed
 				&& mtOut->subtype != MEDIASUBTYPE_RGB24) {
 			return VFW_E_TYPE_NOT_ACCEPTED;
 		}
-	} else if (mtOut->majortype == MEDIATYPE_Video
-				&& (mtOut->subtype == MEDIASUBTYPE_P016 || mtOut->subtype == MEDIASUBTYPE_P010 || mtOut->subtype == MEDIASUBTYPE_NV12)) {
+	}
+	else if (mtOut->subtype == MEDIASUBTYPE_P010 || mtOut->subtype == MEDIASUBTYPE_P016 || mtOut->subtype == MEDIASUBTYPE_NV12) {
 		if (mtOut->subtype != mtIn->subtype) {
 			return VFW_E_TYPE_NOT_ACCEPTED;
 		}
-	} else if (mtIn->majortype == MEDIATYPE_Video
-			   && (mtIn->subtype == MEDIASUBTYPE_YUY2)) {
+	}
+	else if (mtIn->subtype == MEDIASUBTYPE_YUY2) {
 		if (mtOut->subtype != MEDIASUBTYPE_YUY2
 				&& mtOut->subtype != MEDIASUBTYPE_ARGB32
 				&& mtOut->subtype != MEDIASUBTYPE_RGB32
 				&& mtOut->subtype != MEDIASUBTYPE_RGB24) {
 			return VFW_E_TYPE_NOT_ACCEPTED;
 		}
-	} else if (mtIn->majortype == MEDIATYPE_Video
-			   && (mtIn->subtype == MEDIASUBTYPE_ARGB32
-				   || mtIn->subtype == MEDIASUBTYPE_RGB32
-				   || mtIn->subtype == MEDIASUBTYPE_RGB24)) {
+	}
+	else if (mtIn->subtype == MEDIASUBTYPE_ARGB32
+			|| mtIn->subtype == MEDIASUBTYPE_RGB32
+			|| mtIn->subtype == MEDIASUBTYPE_RGB24) {
 		if (mtOut->subtype != MEDIASUBTYPE_ARGB32
 				&& mtOut->subtype != MEDIASUBTYPE_RGB32
 				&& mtOut->subtype != MEDIASUBTYPE_RGB24) {
