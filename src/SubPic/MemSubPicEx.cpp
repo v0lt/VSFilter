@@ -99,30 +99,32 @@ STDMETHODIMP CMemSubPicEx::Unlock(RECT* pDirtyRect)
 		return S_OK;
 	}
 
-	if(m_spd.type == MSP_YUY2 || m_spd.type == MSP_YV12 || m_spd.type == MSP_IYUV || m_spd.type == MSP_AYUV
-		|| m_spd.type == MSP_P010 || m_spd.type == MSP_P016 || m_spd.type == MSP_NV12) {
+	switch (m_spd.type) {
+	case MSP_NV12:
+	case MSP_YV12:
+	case MSP_IYUV:
+	case MSP_P010:
+	case MSP_P016:
+		m_rcDirty.top &= ~1;
+		m_rcDirty.bottom = (m_rcDirty.bottom + 1) & ~1;
+		[[fallthrough]];
+	case MSP_YUY2:
+		m_rcDirty.left &= ~1;
+		m_rcDirty.right = (m_rcDirty.right + 1) & ~1;
+		[[fallthrough]];
+	case MSP_AYUV:
 		ColorConvInit();
-
-		if(m_spd.type == MSP_YUY2 || m_spd.type == MSP_YV12 || m_spd.type == MSP_IYUV
-			|| m_spd.type == MSP_P010 || m_spd.type == MSP_P016 || m_spd.type == MSP_NV12)
-		{
-			m_rcDirty.left &= ~1;
-			m_rcDirty.right = (m_rcDirty.right+1)&~1;
-
-			if(m_spd.type == MSP_YV12 || m_spd.type == MSP_IYUV
-				|| m_spd.type == MSP_P010 || m_spd.type == MSP_P016 || m_spd.type == MSP_NV12) {
-				m_rcDirty.top &= ~1;
-				m_rcDirty.bottom = (m_rcDirty.bottom+1)&~1;
-			}
-		}
+		break;
 	}
 
-	int w = m_rcDirty.Width(), h = m_rcDirty.Height();
+	const int w = m_rcDirty.Width();
+	const int h = m_rcDirty.Height();
 	BYTE* top = m_spd.bits + m_spd.pitch*m_rcDirty.top + m_rcDirty.left*4;
-	BYTE* bottom = top + m_spd.pitch*h;
+	const BYTE* bottom = top + m_spd.pitch * h;
 
-	if (m_spd.type == MSP_RGB16) {
-		for (; top < bottom ; top += m_spd.pitch) {
+	switch (m_spd.type) {
+	case MSP_RGB16:
+		for (; top < bottom; top += m_spd.pitch) {
 			DWORD* s = (DWORD*)top;
 			DWORD* e = s + w;
 			for (; s < e; s++) {
@@ -130,7 +132,8 @@ STDMETHODIMP CMemSubPicEx::Unlock(RECT* pDirtyRect)
 				//*s = (*s&0xff000000)|((*s>>8)&0xf800)|((*s>>5)&0x07e0)|((*s>>3)&0x001f);
 			}
 		}
-	} else if (m_spd.type == MSP_RGB15) {
+		break;
+	case MSP_RGB15:
 		for (; top < bottom; top += m_spd.pitch) {
 			DWORD* s = (DWORD*)top;
 			DWORD* e = s + w;
@@ -139,9 +142,14 @@ STDMETHODIMP CMemSubPicEx::Unlock(RECT* pDirtyRect)
 				//*s = (*s&0xff000000)|((*s>>9)&0x7c00)|((*s>>6)&0x03e0)|((*s>>3)&0x001f);
 			}
 		}
-	} else if(m_spd.type == MSP_YUY2 || m_spd.type == MSP_YV12 || m_spd.type == MSP_IYUV
-		|| m_spd.type == MSP_P010 || m_spd.type == MSP_P016 || m_spd.type == MSP_NV12) {
-		for(; top < bottom ; top += m_spd.pitch) {
+		break;
+	case MSP_NV12:
+	case MSP_YV12:
+	case MSP_IYUV:
+	case MSP_P010:
+	case MSP_P016:
+	case MSP_YUY2:
+		for (; top < bottom; top += m_spd.pitch) {
 			BYTE* s = top;
 			BYTE* e = s + w*4;
 			for(; s < e; s+=8) { // ARGB ARGB -> AxYU AxYV
@@ -159,8 +167,9 @@ STDMETHODIMP CMemSubPicEx::Unlock(RECT* pDirtyRect)
 				}
 			}
 		}
-	} else if (m_spd.type == MSP_AYUV) {
-		for (; top < bottom ; top += m_spd.pitch) {
+		break;
+	case MSP_AYUV:
+		for (; top < bottom; top += m_spd.pitch) {
 			BYTE* s = top;
 			BYTE* e = s + w*4;
 			for (; s < e; s+=4) { // ARGB -> AYUV
@@ -176,6 +185,7 @@ STDMETHODIMP CMemSubPicEx::Unlock(RECT* pDirtyRect)
 				}
 			}
 		}
+		break;
 	}
 
 	return S_OK;
