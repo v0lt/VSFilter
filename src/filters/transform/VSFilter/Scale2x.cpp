@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2017 see Authors.txt
+ * (C) 2006-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -145,68 +145,6 @@ void Scale2x_YUY2( int w, int h, BYTE* d, int dpitch, BYTE* s, int spitch )
 	AvgLines8(d, h*2, dpitch);
 }
 
-void Scale2x_RGB555( int w, int h, BYTE* d, int dpitch, BYTE* s, int spitch )
-{
-	BYTE* s1;
-	BYTE* s2;
-	BYTE* d1;
-
-	for (s1 = s, s2 = s + h*spitch, d1 = d; s1 < s2; d1 += dpitch) { // TODO: replace this mess with mmx code
-		BYTE* stmp = s1 + spitch;
-		BYTE* dtmp = d1 + dpitch;
-
-		for (BYTE* s3 = s1 + (w-1)*2; s1 < s3; s1 += 2, d1 += 4) {
-			*((WORD*)d1) = *((WORD*)s1);
-			*((WORD*)d1+1) =
-				((((*((WORD*)s1)&0x7c00) + (*((WORD*)s1+1)&0x7c00)) >> 1)&0x7c00)|
-				((((*((WORD*)s1)&0x03e0) + (*((WORD*)s1+1)&0x03e0)) >> 1)&0x03e0)|
-				((((*((WORD*)s1)&0x001f) + (*((WORD*)s1+1)&0x001f)) >> 1)&0x001f);
-		}
-
-		*((WORD*)d1) = *((WORD*)s1);
-		*((WORD*)d1+1) = *((WORD*)s1);
-
-		s1 += 2;
-		d1 += 4;
-
-		s1 = stmp;
-		d1 = dtmp;
-	}
-
-	AvgLines555(d, h*2, dpitch);
-}
-
-void Scale2x_RGB565( int w, int h, BYTE* d, int dpitch, BYTE* s, int spitch )
-{
-	BYTE* s1;
-	BYTE* s2;
-	BYTE* d1;
-
-	for (s1 = s, s2 = s + h*spitch, d1 = d; s1 < s2; d1 += dpitch) { // TODO: replace this mess with mmx code
-		BYTE* stmp = s1 + spitch;
-		BYTE* dtmp = d1 + dpitch;
-
-		for (BYTE* s3 = s1 + (w-1)*2; s1 < s3; s1 += 2, d1 += 4) {
-			*((WORD*)d1) = *((WORD*)s1);
-			*((WORD*)d1+1) =
-				((((*((WORD*)s1)&0xf800) + (*((WORD*)s1+1)&0xf800)) >> 1)&0xf800)|
-				((((*((WORD*)s1)&0x07e0) + (*((WORD*)s1+1)&0x07e0)) >> 1)&0x07e0)|
-				((((*((WORD*)s1)&0x001f) + (*((WORD*)s1+1)&0x001f)) >> 1)&0x001f);
-		}
-
-		*((WORD*)d1) = *((WORD*)s1);
-		*((WORD*)d1+1) = *((WORD*)s1);
-
-		s1 += 2;
-		d1 += 4;
-
-		s1 = stmp;
-		d1 = dtmp;
-	}
-
-	AvgLines565(d, h*2, dpitch);
-}
-
 void Scale2x_RGB24( int w, int h, BYTE* d, int dpitch, BYTE* s, int spitch )
 {
 	BYTE* s1;
@@ -312,10 +250,6 @@ void Scale2x(const GUID& subtype, BYTE* d, int dpitch, BYTE* s, int spitch, int 
 		Scale2x_YV(w, h, d, dpitch, s, spitch);
 	} else if (subtype == MEDIASUBTYPE_YUY2) {
 		Scale2x_YUY2(w, h, d, dpitch, s, spitch);
-	} else if (subtype == MEDIASUBTYPE_RGB555) {
-		Scale2x_RGB555(w, h, d, dpitch, s, spitch);
-	} else if (subtype == MEDIASUBTYPE_RGB565) {
-		Scale2x_RGB565(w, h, d, dpitch, s, spitch);
 	} else if (subtype == MEDIASUBTYPE_RGB24) {
 		Scale2x_RGB24(w, h, d, dpitch, s, spitch);
 	} else if (subtype == MEDIASUBTYPE_RGB32 || subtype == MEDIASUBTYPE_ARGB32) {

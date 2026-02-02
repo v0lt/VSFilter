@@ -46,8 +46,6 @@ static const VIDEO_OUTPUT_FORMATS VSFilterDefaultFormats[] = {
 	{&MEDIASUBTYPE_ARGB32,BI_RGB,       32, 4},
 	{&MEDIASUBTYPE_RGB32, BI_RGB,       32, 4},
 	{&MEDIASUBTYPE_RGB24, BI_RGB,       24, 3},
-	{&MEDIASUBTYPE_RGB565,BI_RGB,       16, 2},
-	{&MEDIASUBTYPE_RGB555,BI_RGB,       16, 2},
 };
 
 LPCWSTR MediaSubtype2String(const GUID& subtype);

@@ -123,26 +123,6 @@ STDMETHODIMP CMemSubPicEx::Unlock(RECT* pDirtyRect)
 	const BYTE* bottom = top + m_spd.pitch * h;
 
 	switch (m_spd.type) {
-	case MSP_RGB16:
-		for (; top < bottom; top += m_spd.pitch) {
-			DWORD* s = (DWORD*)top;
-			DWORD* e = s + w;
-			for (; s < e; s++) {
-				*s = ((*s>>3)&0x1f000000)|((*s>>8)&0xf800)|((*s>>5)&0x07e0)|((*s>>3)&0x001f);
-				//*s = (*s&0xff000000)|((*s>>8)&0xf800)|((*s>>5)&0x07e0)|((*s>>3)&0x001f);
-			}
-		}
-		break;
-	case MSP_RGB15:
-		for (; top < bottom; top += m_spd.pitch) {
-			DWORD* s = (DWORD*)top;
-			DWORD* e = s + w;
-			for (; s < e; s++) {
-				*s = ((*s>>3)&0x1f000000)|((*s>>9)&0x7c00)|((*s>>6)&0x03e0)|((*s>>3)&0x001f);
-				//*s = (*s&0xff000000)|((*s>>9)&0x7c00)|((*s>>6)&0x03e0)|((*s>>3)&0x001f);
-			}
-		}
-		break;
 	case MSP_NV12:
 	case MSP_YV12:
 	case MSP_IYUV:
@@ -289,7 +269,6 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 
 	if (rd.top > rd.bottom) {
 		if (dst.type == MSP_RGB32 || dst.type == MSP_RGB24
-				|| dst.type == MSP_RGB16 || dst.type == MSP_RGB15
 				|| dst.type == MSP_YUY2 || dst.type == MSP_AYUV) {
 			d = dst.bits + dst.pitch * (rd.top - 1) + (rd.left * dst.bpp >> 3);
 		} else if (dst.type == MSP_YV12 || dst.type == MSP_IYUV) {
@@ -386,32 +365,6 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 							d2[0] = ((d2[0] *s2[3]) >> 8) + s2[0];
 							d2[1] = ((d2[1] *s2[3]) >> 8) + s2[1];
 							d2[2] = ((d2[2] *s2[3]) >> 8) + s2[2];
-						}
-					}
-				}
-			break;
-		case MSP_RGB16:
-				for (ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
-					const BYTE* s2 = s;
-					const BYTE* s2end = s2 + w * 4;
-					WORD* d2 = (WORD*)d;
-					for (; s2 < s2end; s2 += 4, d2++) {
-						if (s2[3] < 0x1f) {
-							*d2 = (WORD)((((((*d2&0xf81f)*s2[3])>>5) + (*(DWORD*)s2&0xf81f))&0xf81f)
-										 | (((((*d2&0x07e0)*s2[3])>>5) + (*(DWORD*)s2&0x07e0))&0x07e0));
-						}
-					}
-				}
-			break;
-		case MSP_RGB15:
-				for (ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
-					const BYTE* s2 = s;
-					const BYTE* s2end = s2 + w * 4;
-					WORD* d2 = (WORD*)d;
-					for (; s2 < s2end; s2 += 4, d2++) {
-						if (s2[3] < 0x1f) {
-							*d2 = (WORD)((((((*d2&0x7c1f)*s2[3])>>5) + (*(DWORD*)s2&0x7c1f))&0x7c1f)
-										 | (((((*d2&0x03e0)*s2[3])>>5) + (*(DWORD*)s2&0x03e0))&0x03e0));
 						}
 					}
 				}

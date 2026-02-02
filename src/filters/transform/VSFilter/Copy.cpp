@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2022 see Authors.txt
+ * (C) 2006-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -69,24 +69,6 @@ void BltLineRGB32(DWORD* d, BYTE* sub, int w, const GUID& subtype)
 			if (sub[3] < 0xff) {
 				int y = (c2y_yb[sub[0]] + c2y_yg[sub[1]] + c2y_yr[sub[2]] + 0x108000) >> 16;
 				*ds = 0x8000|y; // w/o colors
-			}
-		}
-	} else if (subtype == MEDIASUBTYPE_RGB555) {
-		WORD* ds = (WORD*)d;
-		WORD* dstend = ds + w;
-
-		for (; ds < dstend; sub += 4, ds++) {
-			if (sub[3] < 0xff) {
-				*ds = ((*((DWORD*)sub)>>9)&0x7c00)|((*((DWORD*)sub)>>6)&0x03e0)|((*((DWORD*)sub)>>3)&0x001f);
-			}
-		}
-	} else if (subtype == MEDIASUBTYPE_RGB565) {
-		WORD* ds = (WORD*)d;
-		WORD* dstend = ds + w;
-
-		for (; ds < dstend; sub += 4, ds++) {
-			if (sub[3] < 0xff) {
-				*ds = ((*((DWORD*)sub)>>8)&0xf800)|((*((DWORD*)sub)>>5)&0x07e0)|((*((DWORD*)sub)>>3)&0x001f);
 			}
 		}
 	} else if (subtype == MEDIASUBTYPE_RGB24) {

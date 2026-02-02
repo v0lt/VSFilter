@@ -122,7 +122,7 @@ namespace Plugin
 			CRect r;
 			pSubPic->GetDirtyRect(r);
 
-			if (dst.type == MSP_RGB32 || dst.type == MSP_RGB24 || dst.type == MSP_RGB16 || dst.type == MSP_RGB15) {
+			if (dst.type == MSP_RGB32 || dst.type == MSP_RGB24) {
 				dst.h = -dst.h;
 			}
 

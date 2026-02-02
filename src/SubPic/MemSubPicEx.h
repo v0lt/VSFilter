@@ -25,8 +25,8 @@
 enum {
     MSP_RGB32,
     MSP_RGB24,
-    MSP_RGB16,
-    MSP_RGB15,
+    MSP_RGB16, // obsolete, no longer supported
+    MSP_RGB15, // obsolete, no longer supported
     MSP_YUY2,
     MSP_YV12,
     MSP_IYUV,

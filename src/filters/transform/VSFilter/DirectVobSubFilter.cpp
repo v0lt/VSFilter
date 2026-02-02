@@ -56,8 +56,6 @@ LPCWSTR MediaSubtype2String(const GUID& subtype)
 	if (subtype == MEDIASUBTYPE_ARGB32) { return L"ARGB32"; }
 	if (subtype == MEDIASUBTYPE_RGB32)  { return L"RGB32";  }
 	if (subtype == MEDIASUBTYPE_RGB24)  { return L"RGB24";  }
-	if (subtype == MEDIASUBTYPE_RGB565) { return L"RGB565"; }
-	if (subtype == MEDIASUBTYPE_RGB555) { return L"RGB555"; }
 
 	return L"unknown";
 }
@@ -383,11 +381,9 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 				}
 			}
 		}
-	} else if (subtype == MEDIASUBTYPE_ARGB32 || subtype == MEDIASUBTYPE_RGB32 || subtype == MEDIASUBTYPE_RGB24 || subtype == MEDIASUBTYPE_RGB565) {
+	} else if (subtype == MEDIASUBTYPE_ARGB32 || subtype == MEDIASUBTYPE_RGB32 || subtype == MEDIASUBTYPE_RGB24) {
 		int sbpp =
-			subtype == MEDIASUBTYPE_ARGB32 || subtype == MEDIASUBTYPE_RGB32 ? 32 :
-			subtype == MEDIASUBTYPE_RGB24 ? 24 :
-			subtype == MEDIASUBTYPE_RGB565 ? 16 : 0;
+			subtype == MEDIASUBTYPE_RGB24 ? 24 : 32;
 
 		if (bihOut.biCompression == FCC('YUY2')) {
 			// TODO
@@ -985,8 +981,7 @@ HRESULT CDirectVobSubFilter::CheckInputType(const CMediaType* mtIn)
 			   || mtIn->subtype == MEDIASUBTYPE_YUY2
 			   || mtIn->subtype == MEDIASUBTYPE_ARGB32
 			   || mtIn->subtype == MEDIASUBTYPE_RGB32
-			   || mtIn->subtype == MEDIASUBTYPE_RGB24
-			   || mtIn->subtype == MEDIASUBTYPE_RGB565)
+			   || mtIn->subtype == MEDIASUBTYPE_RGB24)
 		   && (mtIn->formattype == FORMAT_VideoInfo
 			   || mtIn->formattype == FORMAT_VideoInfo2)
 		   && bih.biHeight > 0
@@ -1031,8 +1026,7 @@ HRESULT CDirectVobSubFilter::DoCheckTransform(const CMediaType* mtIn, const CMed
 				&& mtOut->subtype != MEDIASUBTYPE_YUY2
 				&& mtOut->subtype != MEDIASUBTYPE_ARGB32
 				&& mtOut->subtype != MEDIASUBTYPE_RGB32
-				&& mtOut->subtype != MEDIASUBTYPE_RGB24
-				&& mtOut->subtype != MEDIASUBTYPE_RGB565) {
+				&& mtOut->subtype != MEDIASUBTYPE_RGB24) {
 			return VFW_E_TYPE_NOT_ACCEPTED;
 		}
 	} else if (mtOut->majortype == MEDIATYPE_Video
@@ -1045,19 +1039,16 @@ HRESULT CDirectVobSubFilter::DoCheckTransform(const CMediaType* mtIn, const CMed
 		if (mtOut->subtype != MEDIASUBTYPE_YUY2
 				&& mtOut->subtype != MEDIASUBTYPE_ARGB32
 				&& mtOut->subtype != MEDIASUBTYPE_RGB32
-				&& mtOut->subtype != MEDIASUBTYPE_RGB24
-				&& mtOut->subtype != MEDIASUBTYPE_RGB565) {
+				&& mtOut->subtype != MEDIASUBTYPE_RGB24) {
 			return VFW_E_TYPE_NOT_ACCEPTED;
 		}
 	} else if (mtIn->majortype == MEDIATYPE_Video
 			   && (mtIn->subtype == MEDIASUBTYPE_ARGB32
 				   || mtIn->subtype == MEDIASUBTYPE_RGB32
-				   || mtIn->subtype == MEDIASUBTYPE_RGB24
-				   || mtIn->subtype == MEDIASUBTYPE_RGB565)) {
+				   || mtIn->subtype == MEDIASUBTYPE_RGB24)) {
 		if (mtOut->subtype != MEDIASUBTYPE_ARGB32
 				&& mtOut->subtype != MEDIASUBTYPE_RGB32
-				&& mtOut->subtype != MEDIASUBTYPE_RGB24
-				&& mtOut->subtype != MEDIASUBTYPE_RGB565) {
+				&& mtOut->subtype != MEDIASUBTYPE_RGB24) {
 			return VFW_E_TYPE_NOT_ACCEPTED;
 		}
 	}
@@ -1103,10 +1094,6 @@ void CDirectVobSubFilter::InitSubPicQueue()
 		m_spd.type = MSP_RGB32;
 	} else if (subtype == MEDIASUBTYPE_RGB24) {
 		m_spd.type = MSP_RGB24;
-	} else if (subtype == MEDIASUBTYPE_RGB565) {
-		m_spd.type = MSP_RGB16;
-	} else if (subtype == MEDIASUBTYPE_RGB555) {
-		m_spd.type = MSP_RGB15;
 	}
 	m_spd.w = m_wout;
 	m_spd.h = m_hout;
