@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2023 see Authors.txt
+ * (C) 2006-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -23,20 +23,7 @@
 
 #include <d3d9.h>
 #include <dxva2api.h>
-
-struct VIDEO_OUTPUT_FORMATS {
-	const GUID* subtype;
-	DWORD       biCompression;
-	UINT        biBitCount;
-	UINT        packsize;
-
-	bool operator == (const struct VIDEO_OUTPUT_FORMATS& fmt) const {
-		return (subtype == fmt.subtype
-				&& biCompression == fmt.biCompression
-				&& biBitCount == fmt.biBitCount
-				&& packsize == fmt.packsize);
-	}
-};
+#include "VideoFormats.h"
 
 enum DECODER_MODE {
 	MODE_NONE = 0,
@@ -75,7 +62,7 @@ protected:
 	virtual void GetOutputSize(int& w, int& h, int& arx, int& ary) {}
 	virtual HRESULT Transform(IMediaSample* pIn) PURE;
 	virtual bool IsVideoInterlaced() { return true; }
-	virtual void GetOutputFormats(int& nNumber, VIDEO_OUTPUT_FORMATS** ppFormats) PURE;
+	virtual void GetOutputFormats(int& nNumber, VFormatDesc** ppFormats) PURE;
 
 public:
 	CBaseVideoFilter(LPCWSTR pName, LPUNKNOWN lpunk, HRESULT* phr, REFCLSID clsid, long cBuffers = 1);
