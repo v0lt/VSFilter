@@ -168,23 +168,15 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 	BITMAPINFOHEADER bihOut;
 	ExtractBIH(&m_pOutput->CurrentMediaType(), &bihOut);
 
-	CString msg, tmp;
+	CStringW msg, tmp;
 
 	if (m_bOSD) {
-		CString input = MediaSubtype2String(m_pInput->CurrentMediaType().subtype);
-		if (!input.Left(13).CompareNoCase(L"MEDIASUBTYPE_")) {
-			input = input.Mid(13);
-		}
-		CString output = MediaSubtype2String(m_pOutput->CurrentMediaType().subtype);
-		if (!output.Left(13).CompareNoCase(L"MEDIASUBTYPE_")) {
-			output = output.Mid(13);
-		}
-
-		tmp.Format(L"in: %dx%d %s\nout: %dx%d %s\n",
-				   m_win, m_hout,
-				   input,
-				   bihOut.biWidth, bihOut.biHeight,
-				   output);
+		tmp.Format(
+			L"in: %dx%d %s\nout: %dx%d %s\n",
+			m_win, m_hout,
+			GetVFormatDesc(m_pInput->CurrentMediaType().subtype)->name,
+			bihOut.biWidth, bihOut.biHeight,
+			GetVFormatDesc(m_pOutput->CurrentMediaType().subtype)->name);
 		msg += tmp;
 
 		tmp.Format(L"real fps: %.3f, current fps: %.3f\nmedia time: %d, subtitle time: %d [ms]\nframe number: %d (calculated)\nrate: %.4f\n",

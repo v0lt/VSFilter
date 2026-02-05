@@ -35,20 +35,21 @@ struct SystrayIconData {
 	bool fRunOnce, fShowIcon;
 };
 
-static const VIDEO_OUTPUT_FORMATS VSFilterDefaultFormats[] = {
-	{&MEDIASUBTYPE_P010,  FCC('P010'),  24, 2},
-	{&MEDIASUBTYPE_P016,  FCC('P016'),  24, 2},
-	{&MEDIASUBTYPE_NV12,  FCC('NV12'),  12, 1},
-	{&MEDIASUBTYPE_YV12,  FCC('YV12'),  12, 1},
-	{&MEDIASUBTYPE_YUY2,  FCC('YUY2'),  16, 2},
-	{&MEDIASUBTYPE_I420,  FCC('I420'),  12, 1},
-	{&MEDIASUBTYPE_IYUV,  FCC('IYUV'),  12, 1},
-	{&MEDIASUBTYPE_ARGB32,BI_RGB,       32, 4},
-	{&MEDIASUBTYPE_RGB32, BI_RGB,       32, 4},
-	{&MEDIASUBTYPE_RGB24, BI_RGB,       24, 3},
+static const VFormatDesc VSFilterDefaultFormats[] = {
+	VFormat_P010,
+	VFormat_P016,
+	VFormat_NV12,
+	VFormat_YV12,
+	VFormat_YUY2,
+	VFormat_IYUV,
+	VFormat_YV24,
+	VFormat_AYUV,
+	VFormat_ARGB32,
+	VFormat_RGB32,
+	VFormat_RGB24,
 };
 
-LPCWSTR MediaSubtype2String(const GUID& subtype);
+const VFormatDesc* GetVFormatDesc(const GUID& subtype);
 
 void ShowPPage(CStringW DisplayName, HWND hParentWnd);
 void ShowPPage(IUnknown* pUnknown, HWND hParentWnd);
@@ -77,7 +78,7 @@ class __declspec(uuid("93A22E7A-5091-45ef-BA61-6DA26156A5D0"))
 	HRESULT CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int pitchIn, const GUID& subtype, bool fInterlaced = false);
 
 protected:
-	void GetOutputFormats(int& nNumber, VIDEO_OUTPUT_FORMATS** ppFormats);
+	void GetOutputFormats(int& nNumber, VFormatDesc** ppFormats);
 	void GetOutputSize(int& w, int& h, int& arx, int& ary) override;
 	HRESULT Transform(IMediaSample* pIn);
 
@@ -152,7 +153,7 @@ public:
 	STDMETHODIMP GetClassID(CLSID* pClsid);
 
 protected:
-	std::vector<VIDEO_OUTPUT_FORMATS> m_VideoOutputFormats;
+	std::vector<VFormatDesc> m_VideoOutputFormats;
 
 	HDC m_hdc;
 	HBITMAP m_hbm;

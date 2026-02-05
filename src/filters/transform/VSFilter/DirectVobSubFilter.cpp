@@ -44,20 +44,21 @@
 /*removeme*/
 bool g_RegOK = true;//false; // doesn't work with the dvd graph builder
 
-LPCWSTR MediaSubtype2String(const GUID& subtype)
+const VFormatDesc* GetVFormatDesc(const GUID& subtype)
 {
-	if (subtype == MEDIASUBTYPE_P010)   { return L"P010";   }
-	if (subtype == MEDIASUBTYPE_P016)   { return L"P016";   }
-	if (subtype == MEDIASUBTYPE_NV12)   { return L"NV12";   }
-	if (subtype == MEDIASUBTYPE_YV12)   { return L"YV12";   }
-	if (subtype == MEDIASUBTYPE_YUY2)   { return L"YUY2";   }
-	if (subtype == MEDIASUBTYPE_I420)   { return L"I420";   }
-	if (subtype == MEDIASUBTYPE_IYUV)   { return L"IYUV";   }
-	if (subtype == MEDIASUBTYPE_ARGB32) { return L"ARGB32"; }
-	if (subtype == MEDIASUBTYPE_RGB32)  { return L"RGB32";  }
-	if (subtype == MEDIASUBTYPE_RGB24)  { return L"RGB24";  }
+	if (subtype == MEDIASUBTYPE_P010)   { return &VFormat_P010;   }
+	if (subtype == MEDIASUBTYPE_P016)   { return &VFormat_P016;   }
+	if (subtype == MEDIASUBTYPE_NV12)   { return &VFormat_NV12;   }
+	if (subtype == MEDIASUBTYPE_YV12)   { return &VFormat_YV12;   }
+	if (subtype == MEDIASUBTYPE_YUY2)   { return &VFormat_YUY2;   }
+	if (subtype == MEDIASUBTYPE_IYUV)   { return &VFormat_IYUV;   }
+	if (subtype == MEDIASUBTYPE_YV24)   { return &VFormat_YV24;   }
+	if (subtype == MEDIASUBTYPE_AYUV)   { return &VFormat_AYUV;   }
+	if (subtype == MEDIASUBTYPE_ARGB32) { return &VFormat_ARGB32; }
+	if (subtype == MEDIASUBTYPE_RGB32)  { return &VFormat_RGB32;  }
+	if (subtype == MEDIASUBTYPE_RGB24)  { return &VFormat_RGB24;  }
 
-	return L"unknown";
+	return nullptr;
 }
 
 int Eval_Exception(int n_except)
@@ -402,7 +403,7 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 	return S_OK;
 }
 
-void CDirectVobSubFilter::GetOutputFormats(int& nNumber, VIDEO_OUTPUT_FORMATS** ppFormats)
+void CDirectVobSubFilter::GetOutputFormats(int& nNumber, VFormatDesc** ppFormats)
 {
 	nNumber    = m_VideoOutputFormats.size();
 	*ppFormats = m_VideoOutputFormats.size() ? m_VideoOutputFormats.data() : nullptr;
@@ -698,8 +699,8 @@ STDMETHODIMP CDirectVobSubFilter::QueryFilterInfo(FILTER_INFO* pInfo)
 
 HRESULT CDirectVobSubFilter::GetMediaType(int iPosition, CMediaType* pmt)
 {
-	VIDEO_OUTPUT_FORMATS* fmts;
-	int                   nFormatCount;
+	VFormatDesc* fmts;
+	int          nFormatCount;
 
 	if (m_pInput->IsConnected() == FALSE) {
 		return E_UNEXPECTED;
@@ -743,8 +744,8 @@ HRESULT CDirectVobSubFilter::GetMediaType(int iPosition, CMediaType* pmt)
 	bihOut.biWidth       = w;
 	bihOut.biHeight      = h;
 	bihOut.biPlanes      = 1; // this value must be set to 1
-	bihOut.biBitCount    = fmts[iPosition].biBitCount;
-	bihOut.biCompression = fmts[iPosition].biCompression;
+	bihOut.biBitCount    = fmts[iPosition].GetBihBitCount();
+	bihOut.biCompression = fmts[iPosition].fourcc;
 	bihOut.biSizeImage   = DIBSIZE(bihOut);
 
 	pmt->formattype = FORMAT_VideoInfo2;
@@ -800,7 +801,7 @@ HRESULT CDirectVobSubFilter::SetMediaType(PIN_DIRECTION dir, const CMediaType* p
 			m_VideoOutputFormats.clear();
 
 			IPin* pPin = m_pInput->GetConnected();
-			std::list<VIDEO_OUTPUT_FORMATS> fmts;
+			std::list<VFormatDesc> fmts;
 
 			BeginEnumMediaTypes(pPin, pEMT, pmt) {
 				for (const auto& VSFilterFormat : VSFilterDefaultFormats) {
@@ -853,8 +854,8 @@ HRESULT CDirectVobSubFilter::CompleteConnect(PIN_DIRECTION dir, IPin* pReceivePi
 		bool can_transform	= SUCCEEDED(DoCheckTransform(mtIn, mtOut, true));
 		if (mtIn->subtype != mtOut->subtype) {
 
-			VIDEO_OUTPUT_FORMATS*	fmts;
-			int						nFormatCount, iPosition;
+			VFormatDesc* fmts;
+			int nFormatCount, iPosition;
 			GetOutputFormats(nFormatCount, &fmts);
 			for (int iPosition = 0; iPosition < nFormatCount; iPosition++) {
 				if (mtOut->subtype == *fmts[iPosition].subtype) {

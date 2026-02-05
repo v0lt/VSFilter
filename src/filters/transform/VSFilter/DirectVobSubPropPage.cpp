@@ -992,20 +992,17 @@ void CDVSColorPPage::UpdateControlData(bool fSave)
 
 		if (pData) {
 			for (UINT i = 0; i < nSize; i++) {
-				CString guid = MediaSubtype2String(*VSFilterDefaultFormats[i].subtype);
-				if (!guid.Left(13).CompareNoCase(L"MEDIASUBTYPE_")) {
-					guid = guid.Mid(13);
-				}
+				LPCWSTR fmtname = GetVFormatDesc(*VSFilterDefaultFormats[i].subtype)->name;
 
-				AddStringData(m_dynchglist, guid, pData[i]);
-				AddStringData(m_preflist, guid, pData[i]);
+				AddStringData(m_dynchglist, fmtname, pData[i]);
+				AddStringData(m_preflist, fmtname, pData[i]);
 			}
 
 			int iPosition = -1;
 			m_pDirectVobSub->get_ColorFormat(&iPosition);
 			m_dynchglist.SetCurSel(iPosition);
 
-			delete [] pData;
+			delete[] pData;
 		}
 
 		m_forcergb.SetCheck(theApp.GetProfileInt(IDS_R_GENERAL, IDS_RG_FORCERGB, 0)?BST_CHECKED:BST_UNCHECKED);
