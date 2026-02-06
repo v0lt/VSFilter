@@ -992,7 +992,7 @@ void CDVSColorPPage::UpdateControlData(bool fSave)
 
 		if (pData) {
 			for (UINT i = 0; i < nSize; i++) {
-				LPCWSTR fmtname = GetVFormatDesc(*VSFilterDefaultFormats[i].subtype)->name;
+				LPCWSTR fmtname = GetVFormatDesc(*VSFilterDefaultFormats[i].subtype).name;
 
 				AddStringData(m_dynchglist, fmtname, pData[i]);
 				AddStringData(m_preflist, fmtname, pData[i]);

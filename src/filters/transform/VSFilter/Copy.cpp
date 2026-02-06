@@ -163,7 +163,8 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 
 	ColorConvInit();
 
-	const GUID& subtype = m_pOutput->CurrentMediaType().subtype;
+	auto vfInput = GetVFormatDesc(m_pInput->CurrentMediaType().subtype);
+	auto vfOutput = GetVFormatDesc(m_pOutput->CurrentMediaType().subtype);
 
 	BITMAPINFOHEADER bihOut;
 	ExtractBIH(&m_pOutput->CurrentMediaType(), &bihOut);
@@ -174,9 +175,9 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 		tmp.Format(
 			L"in: %dx%d %s\nout: %dx%d %s\n",
 			m_win, m_hout,
-			GetVFormatDesc(m_pInput->CurrentMediaType().subtype)->name,
+			vfInput.name,
 			bihOut.biWidth, bihOut.biHeight,
-			GetVFormatDesc(m_pOutput->CurrentMediaType().subtype)->name);
+			vfOutput.name);
 		msg += tmp;
 
 		tmp.Format(L"real fps: %.3f, current fps: %.3f\nmedia time: %d, subtitle time: %d [ms]\nframe number: %d (calculated)\nrate: %.4f\n",
@@ -228,17 +229,7 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 
 	BYTE* pIn = (BYTE*)bm.bmBits;
 	int pitchIn = bm.bmWidthBytes;
-	int pitchOut = bihOut.biWidth * bihOut.biBitCount >> 3;
-
-	if (subtype == MEDIASUBTYPE_YV12 || subtype == MEDIASUBTYPE_I420 || subtype == MEDIASUBTYPE_IYUV
-		|| subtype== MEDIASUBTYPE_NV12) {
-		pitchOut = bihOut.biWidth;
-	} else if (subtype == MEDIASUBTYPE_P010 || subtype == MEDIASUBTYPE_P016) {
-		pitchOut = bihOut.biWidth * 2;
-	}
-
-	pitchIn = (pitchIn+3)&~3;
-	pitchOut = (pitchOut+3)&~3;
+	int pitchOut = vfOutput.GetWidthBytes(bihOut.biWidth);
 
 	if (bihOut.biHeight > 0 && bihOut.biCompression <= 3) { // flip if the dst bitmap is flipped rgb (m_hbm is a top-down bitmap, not like the subpictures)
 		pOut += pitchOut * (abs(bihOut.biHeight)-1);
@@ -249,7 +240,7 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 	pOut += pitchOut * r.top;
 
 	for (int w = std::min((int)r.right, m_win), h = r.Height(); h--; pIn += pitchIn, pOut += pitchOut) {
-		BltLineRGB32((DWORD*)pOut, pIn, w, subtype);
+		BltLineRGB32((DWORD*)pOut, pIn, w, *vfOutput.subtype);
 		memset_u32(pIn, 0xff000000, r.right*4);
 	}
 

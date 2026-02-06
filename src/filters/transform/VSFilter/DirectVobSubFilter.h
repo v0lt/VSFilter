@@ -49,7 +49,7 @@ static const VFormatDesc VSFilterDefaultFormats[] = {
 	VFormat_RGB24,
 };
 
-const VFormatDesc* GetVFormatDesc(const GUID& subtype);
+const VFormatDesc& GetVFormatDesc(const GUID& subtype);
 
 void ShowPPage(CStringW DisplayName, HWND hParentWnd);
 void ShowPPage(IUnknown* pUnknown, HWND hParentWnd);

@@ -44,21 +44,22 @@
 /*removeme*/
 bool g_RegOK = true;//false; // doesn't work with the dvd graph builder
 
-const VFormatDesc* GetVFormatDesc(const GUID& subtype)
+const VFormatDesc& GetVFormatDesc(const GUID& subtype)
 {
-	if (subtype == MEDIASUBTYPE_P010)   { return &VFormat_P010;   }
-	if (subtype == MEDIASUBTYPE_P016)   { return &VFormat_P016;   }
-	if (subtype == MEDIASUBTYPE_NV12)   { return &VFormat_NV12;   }
-	if (subtype == MEDIASUBTYPE_YV12)   { return &VFormat_YV12;   }
-	if (subtype == MEDIASUBTYPE_YUY2)   { return &VFormat_YUY2;   }
-	if (subtype == MEDIASUBTYPE_IYUV)   { return &VFormat_IYUV;   }
-	if (subtype == MEDIASUBTYPE_YV24)   { return &VFormat_YV24;   }
-	if (subtype == MEDIASUBTYPE_AYUV)   { return &VFormat_AYUV;   }
-	if (subtype == MEDIASUBTYPE_ARGB32) { return &VFormat_ARGB32; }
-	if (subtype == MEDIASUBTYPE_RGB32)  { return &VFormat_RGB32;  }
-	if (subtype == MEDIASUBTYPE_RGB24)  { return &VFormat_RGB24;  }
+	if (subtype == MEDIASUBTYPE_P010)   { return VFormat_P010;   }
+	if (subtype == MEDIASUBTYPE_P016)   { return VFormat_P016;   }
+	if (subtype == MEDIASUBTYPE_NV12)   { return VFormat_NV12;   }
+	if (subtype == MEDIASUBTYPE_YV12)   { return VFormat_YV12;   }
+	if (subtype == MEDIASUBTYPE_YUY2)   { return VFormat_YUY2;   }
+	if (subtype == MEDIASUBTYPE_IYUV)   { return VFormat_IYUV;   }
+	if (subtype == MEDIASUBTYPE_YV24)   { return VFormat_YV24;   }
+	if (subtype == MEDIASUBTYPE_AYUV)   { return VFormat_AYUV;   }
+	if (subtype == MEDIASUBTYPE_ARGB32) { return VFormat_ARGB32; }
+	if (subtype == MEDIASUBTYPE_RGB32)  { return VFormat_RGB32;  }
+	if (subtype == MEDIASUBTYPE_RGB24)  { return VFormat_RGB24;  }
 
-	return nullptr;
+	ASSERT(0);
+	return VFormat_None;
 }
 
 int Eval_Exception(int n_except)
