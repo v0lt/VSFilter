@@ -29,66 +29,88 @@ extern int c2y_yg[256];
 extern int c2y_yr[256];
 extern void ColorConvInit();
 
-void BltLineRGB32(DWORD* d, BYTE* sub, int w, const GUID& subtype)
+union pixrgba {
+	uint32_t u32;
+	struct {
+		uint8_t r;
+		uint8_t g;
+		uint8_t b;
+		uint8_t a;
+	};
+};
+
+typedef void(*BltLineFn)(uint8_t* dst, const uint32_t* src, const int w);
+
+
+void BltLineRGB32(uint8_t* dst, const uint32_t* src, const int w)
 {
-	if (subtype == MEDIASUBTYPE_YV12 || subtype == MEDIASUBTYPE_I420 || subtype == MEDIASUBTYPE_IYUV
-		|| subtype == MEDIASUBTYPE_NV12) {
-		BYTE* db = (BYTE*)d;
-		BYTE* dbtend = db + w;
+	uint32_t* dst32 = (uint32_t*)dst;
+	uint32_t* end = dst32 + w;
+	pixrgba pix;
 
-		for (; db < dbtend; sub += 4, db++) {
-			if (sub[3] < 0xff) {
-				int y = (c2y_yb[sub[0]] + c2y_yg[sub[1]] + c2y_yr[sub[2]] + 0x108000) >> 16;
-				*db = y; // w/o colors
-			}
+	for (; dst32 < end; dst32++) {
+		pix.u32 = *src++;
+		if (pix.a < 0xff) {
+			*dst32 = pix.u32 & 0xffffff;
 		}
 	}
-	else if (subtype == MEDIASUBTYPE_P010 || subtype == MEDIASUBTYPE_P016)
-	{
-		// Y plane is 16 bits
-		WORD* dstY = reinterpret_cast<WORD*>(d);
-		WORD* dstYEnd = dstY + w; // What units is w given in?
+}
 
-		for (; dstY < dstYEnd; dstY++, sub += 4)
-		{
-			if (sub[3] < 0xff)
-			{
-				// Look up table generates a 32-bit luminance value which is then scaled to 16 bits.
-				int y = (c2y_yb[sub[0]] + c2y_yg[sub[1]] + c2y_yr[sub[2]] + 0x108000) >> 16;
+void BltLineRGB24(uint8_t* dst, const uint32_t* src, const int w)
+{
+	uint8_t* end = dst + w * 3;
+	pixrgba pix;
 
-				// Do I need to perform any scaling as per SMPTE 274M?
-				*dstY = y;
-			}
+	for (; dst < end; dst += 3) {
+		pix.u32 = *src++;
+		if (pix.a < 0xff) {
+			dst[0] = pix.r;
+			dst[1] = pix.g;
+			dst[2] = pix.b;
 		}
 	}
-	else if (subtype == MEDIASUBTYPE_YUY2) {
-		WORD* ds = (WORD*)d;
-		WORD* dstend = ds + w;
+}
 
-		for (; ds < dstend; sub+=4, ds++) {
-			if (sub[3] < 0xff) {
-				int y = (c2y_yb[sub[0]] + c2y_yg[sub[1]] + c2y_yr[sub[2]] + 0x108000) >> 16;
-				*ds = 0x8000|y; // w/o colors
-			}
+void BltLineYUY2(uint8_t* dst, const uint32_t* src, const int w)
+{
+	uint16_t* dst16 = (uint16_t*)dst;
+	uint16_t* end = dst16 + w;
+	pixrgba pix;
+
+	for (; dst16 < end; dst16++) {
+		pix.u32 = *src++;
+		if (pix.a < 0xff) {
+			int y = (c2y_yb[pix.r] + c2y_yg[pix.g] + c2y_yr[pix.b] + 0x108000) >> 16;
+			*dst16 = 0x8000 | y; // w/o colors
 		}
-	} else if (subtype == MEDIASUBTYPE_RGB24) {
-		BYTE* dt = (BYTE*)d;
-		BYTE* dstend = dt + w*3;
+	}
+}
 
-		for (; dt < dstend; sub += 4, dt+=3) {
-			if (sub[3] < 0xff) {
-				dt[0] = sub[0];
-				dt[1] = sub[1];
-				dt[2] = sub[2];
-			}
+void BltLineYUVxxxP(uint8_t* dst, const uint32_t* src, const int w)
+{
+	uint8_t* end = dst + w;
+	pixrgba pix;
+
+	for (; dst < end; dst++) {
+		pix.u32 = *src++;
+		if (pix.a < 0xff) {
+			int y = (c2y_yb[pix.r] + c2y_yg[pix.g] + c2y_yr[pix.b] + 0x108000) >> 16;
+			*dst = (uint8_t)y; // w/o colors
 		}
-	} else if (subtype == MEDIASUBTYPE_RGB32 || subtype == MEDIASUBTYPE_ARGB32) {
-		DWORD* dstend = d + w;
+	}
+}
 
-		for (; d < dstend; sub+=4, d++) {
-			if (sub[3] < 0xff) {
-				*d = *((DWORD*)sub)&0xffffff;
-			}
+void BltLineYUVxxxP16(uint8_t* dst, const uint32_t* src, const int w)
+{
+	uint16_t* dst16 = (uint16_t*)dst;
+	uint16_t* end = dst16 + w;
+	pixrgba pix;
+
+	for (; dst16 < end; dst16++) {
+		pix.u32 = *src++;
+		if (pix.a < 0xff) {
+			int y = (c2y_yb[pix.r] + c2y_yg[pix.g] + c2y_yr[pix.b] + 0x108000) >> 8;
+			*dst16 = (uint16_t)y; // w/o colors
 		}
 	}
 }
@@ -239,9 +261,31 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 	pIn += pitchIn * r.top;
 	pOut += pitchOut * r.top;
 
-	for (int w = std::min((int)r.right, m_win), h = r.Height(); h--; pIn += pitchIn, pOut += pitchOut) {
-		BltLineRGB32((DWORD*)pOut, pIn, w, *vfOutput.subtype);
-		memset_u32(pIn, 0xff000000, r.right*4);
+	BltLineFn fnBltLine = nullptr;
+
+	if (*vfOutput.subtype == MEDIASUBTYPE_NV12 || *vfOutput.subtype == MEDIASUBTYPE_YV12
+			|| *vfOutput.subtype == MEDIASUBTYPE_I420 || *vfOutput.subtype == MEDIASUBTYPE_IYUV) {
+		fnBltLine = BltLineYUVxxxP;
+	}
+	else if (*vfOutput.subtype == MEDIASUBTYPE_P010 || *vfOutput.subtype == MEDIASUBTYPE_P016)
+	{
+		fnBltLine = BltLineYUVxxxP16;
+	}
+	else if (*vfOutput.subtype == MEDIASUBTYPE_YUY2) {
+		fnBltLine = BltLineYUY2;
+	}
+	else if (*vfOutput.subtype == MEDIASUBTYPE_RGB24) {
+		fnBltLine = BltLineRGB24;
+	}
+	else if (*vfOutput.subtype == MEDIASUBTYPE_RGB32 || *vfOutput.subtype == MEDIASUBTYPE_ARGB32) {
+		fnBltLine = BltLineRGB32;
+	}
+
+	if (fnBltLine) {
+		for (int w = std::min((int)r.right, m_win), h = r.Height(); h--; pIn += pitchIn, pOut += pitchOut) {
+			fnBltLine(pOut, (uint32_t*)pIn, w);
+			memset_u32(pIn, 0xff000000, r.right * 4);
+		}
 	}
 
 	SelectObject(m_hdc, hOldBitmap);
