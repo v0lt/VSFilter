@@ -46,18 +46,11 @@ bool g_RegOK = true;//false; // doesn't work with the dvd graph builder
 
 const VFormatDesc& GetVFormatDesc(const GUID& subtype)
 {
-	if (subtype == MEDIASUBTYPE_P010)   { return VFormat_P010;   }
-	if (subtype == MEDIASUBTYPE_P016)   { return VFormat_P016;   }
-	if (subtype == MEDIASUBTYPE_NV12)   { return VFormat_NV12;   }
-	if (subtype == MEDIASUBTYPE_YV12)   { return VFormat_YV12;   }
-	if (subtype == MEDIASUBTYPE_YUY2)   { return VFormat_YUY2;   }
-	if (subtype == MEDIASUBTYPE_IYUV)   { return VFormat_IYUV;   }
-	if (subtype == MEDIASUBTYPE_YV24)   { return VFormat_YV24;   }
-	if (subtype == MEDIASUBTYPE_AYUV)   { return VFormat_AYUV;   }
-	if (subtype == MEDIASUBTYPE_ARGB32) { return VFormat_ARGB32; }
-	if (subtype == MEDIASUBTYPE_RGB32)  { return VFormat_RGB32;  }
-	if (subtype == MEDIASUBTYPE_RGB24)  { return VFormat_RGB24;  }
-
+	for (const auto& vfmt : VSFilterDefaultFormats) {
+		if (subtype == *vfmt.subtype) {
+			return vfmt;
+		}
+	}
 	ASSERT(0);
 	return VFormat_None;
 }
@@ -476,26 +469,36 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 		return S_FALSE;
 	}
 
-	const CMediaType& mt = m_pInput->CurrentMediaType();
+	const CMediaType& mtInput = m_pInput->CurrentMediaType();
+	const CMediaType& mtOutput = m_pOutput->CurrentMediaType();
+
+	if (mtInput.subtype != *m_pInputVFormat->subtype) {
+		m_pInputVFormat = &GetVFormatDesc(mtInput.subtype);
+		SetupInputFunc();
+	}
+	if (mtOutput.subtype != *m_pOutputVFormat->subtype) {
+		m_pOutputVFormat = &GetVFormatDesc(mtOutput.subtype);
+		SetupOutputFunc();
+	}
 
 	BITMAPINFOHEADER bihIn;
-	ExtractBIH(&mt, &bihIn);
+	ExtractBIH(&mtInput, &bihIn);
 
-	bool fYV12 = (mt.subtype == MEDIASUBTYPE_YV12 || mt.subtype == MEDIASUBTYPE_I420 || mt.subtype == MEDIASUBTYPE_IYUV);
+	bool fYV12 = (mtInput.subtype == MEDIASUBTYPE_YV12 || mtInput.subtype == MEDIASUBTYPE_I420 || mtInput.subtype == MEDIASUBTYPE_IYUV);
 	int bpp = fYV12 ? 8 : bihIn.biBitCount;
 	DWORD black = fYV12 ? 0x10101010 : (bihIn.biCompression == FCC('YUY2')) ? 0x80108010 : 0;
 
-	if (mt.subtype == MEDIASUBTYPE_P010 || mt.subtype == MEDIASUBTYPE_P016) {
+	if (mtInput.subtype == MEDIASUBTYPE_P010 || mtInput.subtype == MEDIASUBTYPE_P016) {
 		bpp = 16;
 		black = 0x10001000;
-	} else if (mt.subtype == MEDIASUBTYPE_NV12) {
+	} else if (mtInput.subtype == MEDIASUBTYPE_NV12) {
 		bpp = 8;
 		black = 0x10101010;
 	}
 	CSize sub(m_wout, m_hout);
 	CSize in(bihIn.biWidth, bihIn.biHeight);
 
-	if (FAILED(Copy(m_pTempPicBuff.get(), pDataIn, sub, in, bpp, mt.subtype, black))) {
+	if (FAILED(Copy(m_pTempPicBuff.get(), pDataIn, sub, in, bpp, mtInput.subtype, black))) {
 		SetEvent(m_hEvtTransform);
 		return E_FAIL;
 	}
@@ -509,30 +512,30 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 		in.cy >>= 1;
 		BYTE* pSubU = pSubV + (sub.cx*bpp>>3)*sub.cy;
 		BYTE* pInU = pInV + (in.cx*bpp>>3)*in.cy;
-		if (FAILED(Copy(pSubV, pInV, sub, in, bpp, mt.subtype, 0x80808080))) {
+		if (FAILED(Copy(pSubV, pInV, sub, in, bpp, mtInput.subtype, 0x80808080))) {
 			SetEvent(m_hEvtTransform);
 			return E_FAIL;
 		}
-		if (FAILED(Copy(pSubU, pInU, sub, in, bpp, mt.subtype, 0x80808080))) {
+		if (FAILED(Copy(pSubU, pInU, sub, in, bpp, mtInput.subtype, 0x80808080))) {
 			SetEvent(m_hEvtTransform);
 			return E_FAIL;
 		}
 	}
 
-	if (mt.subtype == MEDIASUBTYPE_P010 || mt.subtype == MEDIASUBTYPE_P016 || mt.subtype == MEDIASUBTYPE_NV12) {
+	if (mtInput.subtype == MEDIASUBTYPE_P010 || mtInput.subtype == MEDIASUBTYPE_P016 || mtInput.subtype == MEDIASUBTYPE_NV12) {
 		BYTE* pSubUV = m_pTempPicBuff.get() + (sub.cx * bpp >> 3) * sub.cy;
 		BYTE* pInUV = pDataIn + (in.cx * bpp >> 3) * in.cy;
 		sub.cy >>= 1;
 		in.cy >>= 1;
-		if (FAILED(Copy(pSubUV, pInUV, sub, in, bpp, mt.subtype, mt.subtype == MEDIASUBTYPE_NV12 ? 0x80808080 : 0x80008000))) {
+		if (FAILED(Copy(pSubUV, pInUV, sub, in, bpp, mtInput.subtype, mtInput.subtype == MEDIASUBTYPE_NV12 ? 0x80808080 : 0x80008000))) {
 			SetEvent(m_hEvtTransform);
 			return E_FAIL;
 		}
 	}
 
 	DXVA2_ExtendedFormat dxvaExtFormat = { 0 };
-	if (mt.formattype == FORMAT_VideoInfo2) {
-		VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)mt.Format();
+	if (mtInput.formattype == FORMAT_VideoInfo2) {
+		VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)mtInput.Format();
 		dxvaExtFormat.value = vih2->dwControlFlags;
 	}
 
@@ -597,7 +600,7 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 		}
 	}
 
-	CopyBuffer(pDataOut, spd.bits, spd.w, abs(spd.h)*(fFlip?-1:1), spd.pitch, mt.subtype);
+	CopyBuffer(pDataOut, spd.bits, spd.w, abs(spd.h)*(fFlip?-1:1), spd.pitch, mtInput.subtype);
 
 	{
 		// copy dwTypeSpecificFlags from input IMediaSample

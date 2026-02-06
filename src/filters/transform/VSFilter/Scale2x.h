@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2014 see Authors.txt
+ * (C) 2006-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -21,4 +21,9 @@
 
 #pragma once
 
-extern void Scale2x(const GUID& subtype, BYTE* d, int dpitch, BYTE* s, int spitch, int w, int h);
+typedef void(*Scale2xFn)(int w, int h, BYTE* d, int dpitch, BYTE* s, int spitch);
+
+void Scale2x_YV(int w, int h, BYTE* d, int dpitch, BYTE* s, int spitch);
+void Scale2x_YUY2(int w, int h, BYTE* d, int dpitch, BYTE* s, int spitch);
+void Scale2x_RGB24(int w, int h, BYTE* d, int dpitch, BYTE* s, int spitch);
+void Scale2x_XRGB32(int w, int h, BYTE* d, int dpitch, BYTE* s, int spitch);

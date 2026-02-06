@@ -27,6 +27,7 @@
 #include "DirectVobSub.h"
 #include "../BaseVideoFilter/BaseVideoFilter.h"
 #include "SubPic/ISubPic.h"
+#include "Scale2x.h"
 
 struct SystrayIconData {
 	HWND hSystrayWnd;
@@ -208,8 +209,20 @@ private:
 	DWORD ThreadProc();
 
 private:
-	HANDLE m_hSystrayThread;
+	typedef void(*BltLineFn)(uint8_t* dst, const uint32_t* src, const int w);
+
+	void SetupInputFunc();
+	void SetupOutputFunc();
+
+ 	HANDLE m_hSystrayThread;
 	SystrayIconData m_tbid;
+
+	const VFormatDesc* m_pInputVFormat = &VFormat_None;
+	const VFormatDesc* m_pOutputVFormat = &VFormat_None;
+
+	Scale2xFn m_fnScale2x = nullptr;
+
+	BltLineFn m_fnBltLine = nullptr;
 
 	VIDEOINFOHEADER2 m_CurrentVIH2;
 

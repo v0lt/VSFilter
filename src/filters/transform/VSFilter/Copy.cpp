@@ -22,7 +22,6 @@
 #include "stdafx.h"
 #include <moreuuids.h>
 #include "DirectVobSubFilter.h"
-#include "Scale2x.h"
 
 extern int c2y_yb[256];
 extern int c2y_yg[256];
@@ -38,8 +37,6 @@ union pixrgba {
 		uint8_t a;
 	};
 };
-
-typedef void(*BltLineFn)(uint8_t* dst, const uint32_t* src, const int w);
 
 
 void BltLineRGB32(uint8_t* dst, const uint32_t* src, const int w)
@@ -151,9 +148,10 @@ HRESULT CDirectVobSubFilter::Copy(BYTE* pSub, BYTE* pIn, CSize sub, CSize in, in
 		}
 
 		if (fScale2x) {
-			Scale2x(subtype,
-					pSub + dpLeft, pitchSub, pIn, pitchIn,
-					in.cx, (std::min(j, hSub) - i) >> 1);
+			if (m_fnScale2x) {
+				m_fnScale2x(in.cx, (std::min(j, hSub) - i) >> 1,
+					pSub + dpLeft, pitchSub, pIn, pitchIn);
+			}
 
 			for (int k = std::min(j, hSub); i < k; i++, pIn += pitchIn, pSub += pitchSub) {
 				memset_u32(pSub, black, dpLeft);
@@ -177,6 +175,63 @@ HRESULT CDirectVobSubFilter::Copy(BYTE* pSub, BYTE* pIn, CSize sub, CSize in, in
 	return NOERROR;
 }
 
+void CDirectVobSubFilter::SetupInputFunc()
+{
+	auto& subtype = *m_pOutputVFormat->subtype;
+
+	switch (m_pOutputVFormat->fourcc) {
+	case FCC('YV12'):
+	case FCC('IYUV'):
+	case FCC('I420'):
+		m_fnScale2x = Scale2x_YV;
+		break;
+	case FCC('YUY2'):
+		m_fnScale2x = Scale2x_YUY2;
+		break;
+	default:
+		if (subtype == MEDIASUBTYPE_RGB32 || subtype == MEDIASUBTYPE_ARGB32) {
+			m_fnScale2x = Scale2x_XRGB32;
+		}
+		else if (subtype == MEDIASUBTYPE_RGB24) {
+			m_fnScale2x = Scale2x_RGB24;
+		}
+		else {
+			m_fnScale2x = nullptr;
+		}
+	}
+}
+
+void CDirectVobSubFilter::SetupOutputFunc()
+{
+	auto& subtype = *m_pOutputVFormat->subtype;
+
+	switch (m_pOutputVFormat->fourcc) {
+	case FCC('NV12'):
+	case FCC('YV12'):
+	case FCC('IYUV'):
+	case FCC('I420'):
+		m_fnBltLine = BltLineYUVxxxP;
+		break;
+	case FCC('P010'):
+	case FCC('P016'):
+		m_fnBltLine = BltLineYUVxxxP16;
+		break;
+	case FCC('YUY2'):
+		m_fnBltLine = BltLineYUY2;
+		break;
+	default:
+		if (subtype == MEDIASUBTYPE_RGB32 || subtype == MEDIASUBTYPE_ARGB32) {
+			m_fnBltLine = BltLineRGB32;
+		}
+		else if (subtype == MEDIASUBTYPE_RGB24) {
+			m_fnBltLine = BltLineRGB24;
+		}
+		else {
+			m_fnBltLine = nullptr;
+		}
+	}
+}
+
 void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 {
 	if (!m_hdc || !m_hbm) {
@@ -184,9 +239,6 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 	}
 
 	ColorConvInit();
-
-	auto vfInput = GetVFormatDesc(m_pInput->CurrentMediaType().subtype);
-	auto vfOutput = GetVFormatDesc(m_pOutput->CurrentMediaType().subtype);
 
 	BITMAPINFOHEADER bihOut;
 	ExtractBIH(&m_pOutput->CurrentMediaType(), &bihOut);
@@ -197,9 +249,9 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 		tmp.Format(
 			L"in: %dx%d %s\nout: %dx%d %s\n",
 			m_win, m_hout,
-			vfInput.name,
+			m_pInputVFormat->name,
 			bihOut.biWidth, bihOut.biHeight,
-			vfOutput.name);
+			m_pOutputVFormat->name);
 		msg += tmp;
 
 		tmp.Format(L"real fps: %.3f, current fps: %.3f\nmedia time: %d, subtitle time: %d [ms]\nframe number: %d (calculated)\nrate: %.4f\n",
@@ -251,7 +303,7 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 
 	BYTE* pIn = (BYTE*)bm.bmBits;
 	int pitchIn = bm.bmWidthBytes;
-	int pitchOut = vfOutput.GetWidthBytes(bihOut.biWidth);
+	int pitchOut = m_pOutputVFormat->GetWidthBytes(bihOut.biWidth);
 
 	if (bihOut.biHeight > 0 && bihOut.biCompression <= 3) { // flip if the dst bitmap is flipped rgb (m_hbm is a top-down bitmap, not like the subpictures)
 		pOut += pitchOut * (abs(bihOut.biHeight)-1);
@@ -261,29 +313,10 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 	pIn += pitchIn * r.top;
 	pOut += pitchOut * r.top;
 
-	BltLineFn fnBltLine = nullptr;
-
-	if (*vfOutput.subtype == MEDIASUBTYPE_NV12 || *vfOutput.subtype == MEDIASUBTYPE_YV12
-			|| *vfOutput.subtype == MEDIASUBTYPE_I420 || *vfOutput.subtype == MEDIASUBTYPE_IYUV) {
-		fnBltLine = BltLineYUVxxxP;
-	}
-	else if (*vfOutput.subtype == MEDIASUBTYPE_P010 || *vfOutput.subtype == MEDIASUBTYPE_P016)
-	{
-		fnBltLine = BltLineYUVxxxP16;
-	}
-	else if (*vfOutput.subtype == MEDIASUBTYPE_YUY2) {
-		fnBltLine = BltLineYUY2;
-	}
-	else if (*vfOutput.subtype == MEDIASUBTYPE_RGB24) {
-		fnBltLine = BltLineRGB24;
-	}
-	else if (*vfOutput.subtype == MEDIASUBTYPE_RGB32 || *vfOutput.subtype == MEDIASUBTYPE_ARGB32) {
-		fnBltLine = BltLineRGB32;
-	}
-
-	if (fnBltLine) {
-		for (int w = std::min((int)r.right, m_win), h = r.Height(); h--; pIn += pitchIn, pOut += pitchOut) {
-			fnBltLine(pOut, (uint32_t*)pIn, w);
+	if (m_fnBltLine) {
+		const int w = std::min((int)r.right, m_win);
+		for (int h = r.Height(); h--; pIn += pitchIn, pOut += pitchOut) {
+			m_fnBltLine(pOut, (uint32_t*)pIn, w);
 			memset_u32(pIn, 0xff000000, r.right * 4);
 		}
 	}

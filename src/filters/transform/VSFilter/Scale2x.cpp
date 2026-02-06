@@ -242,17 +242,3 @@ void Scale2x_XRGB32( int w, int h, BYTE* d, int dpitch, BYTE* s, int spitch )
 
 	AvgLines8(d, h*2, dpitch);
 }
-
-/* ResX2 */
-void Scale2x(const GUID& subtype, BYTE* d, int dpitch, BYTE* s, int spitch, int w, int h)
-{
-	if (subtype == MEDIASUBTYPE_YV12 || subtype == MEDIASUBTYPE_I420 || subtype == MEDIASUBTYPE_IYUV) {
-		Scale2x_YV(w, h, d, dpitch, s, spitch);
-	} else if (subtype == MEDIASUBTYPE_YUY2) {
-		Scale2x_YUY2(w, h, d, dpitch, s, spitch);
-	} else if (subtype == MEDIASUBTYPE_RGB24) {
-		Scale2x_RGB24(w, h, d, dpitch, s, spitch);
-	} else if (subtype == MEDIASUBTYPE_RGB32 || subtype == MEDIASUBTYPE_ARGB32) {
-		Scale2x_XRGB32(w, h, d, dpitch, s, spitch);
-	}
-}
