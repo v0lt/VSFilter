@@ -140,10 +140,6 @@ void ShowPPage(IUnknown* pUnk, HWND hParentWnd)
 
 CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUID& clsid)
 	: CBaseVideoFilter(L"CDirectVobSubFilter", punk, phr, clsid)
-	, m_nSubtitleId((DWORD_PTR)-1)
-	, m_bMSMpeg4Fix(false)
-	, m_fps(25)
-	, m_hEvtTransform(nullptr)
 {
 	m_pInput = DNew CBaseVideoInputPin(L"CBaseVideoInputPin", this, phr, L"Video");
 	if (!m_pInput) {
@@ -162,10 +158,6 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 	}
 
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
-
-	m_hdc = 0;
-	m_hbm = 0;
-	m_hfont = 0;
 
 	{
 		LOGFONT lf;
@@ -189,11 +181,6 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 
 	m_bLoading = true;
 
-	m_hSystrayThread = 0;
-	m_tbid.hSystrayWnd = nullptr;
-	m_tbid.graph = nullptr;
-	m_tbid.dvs = nullptr;
-	m_tbid.fRunOnce = false;
 	m_tbid.fShowIcon = (theApp.m_AppName.Find(L"zplayer", 0) < 0 || theApp.GetProfileBool(IDS_R_GENERAL, IDS_RG_ENABLEZPICON, false));
 
 	HRESULT hr = S_OK;
@@ -203,8 +190,6 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 	CAMThread::Create();
 	m_frd.EndThreadEvent.Create(0, FALSE, FALSE, 0);
 	m_frd.RefreshEvent.Create(0, FALSE, FALSE, 0);
-
-	memset(&m_CurrentVIH2, 0, sizeof(VIDEOINFOHEADER2));
 
 	m_hEvtTransform = CreateEventW(nullptr, FALSE, TRUE, nullptr);
 

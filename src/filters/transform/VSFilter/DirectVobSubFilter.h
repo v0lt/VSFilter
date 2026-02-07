@@ -74,7 +74,7 @@ class __declspec(uuid("93A22E7A-5091-45ef-BA61-6DA26156A5D0"))
 
 	bool AdjustFrameSize(CSize& s);
 
-	HANDLE m_hEvtTransform;
+	HANDLE m_hEvtTransform = nullptr;
 
 	HRESULT CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int pitchIn, const GUID& subtype, bool fInterlaced = false);
 
@@ -156,9 +156,9 @@ public:
 protected:
 	std::vector<VFormatDesc> m_VideoOutputFormats;
 
-	HDC m_hdc;
-	HBITMAP m_hbm;
-	HFONT m_hfont;
+	HDC m_hdc     = nullptr;
+	HBITMAP m_hbm = nullptr;
+	HFONT m_hfont = nullptr;
 	void PrintMessages(BYTE* pOut);
 
 	/* ResX2 */
@@ -169,13 +169,13 @@ protected:
 	CRefTime m_tPrev;
 	REFERENCE_TIME CalcCurrentTime();
 
-	double m_fps;
+	double m_fps = 25.0;
 
 	// 3.x- versions of microsoft's mpeg4 codec output flipped image
-	bool m_bMSMpeg4Fix;
+	bool m_bMSMpeg4Fix = false;
 
 	// don't set the "hide subtitles" stream until we are finished with loading
-	bool m_bLoading;
+	bool m_bLoading = false;
 
 	CString m_videoFileName;
 
@@ -186,7 +186,7 @@ protected:
 
 	CCritSec m_csSubLock;
 	CInterfaceList<ISubStream> m_pSubStreams;
-	DWORD_PTR m_nSubtitleId;
+	DWORD_PTR m_nSubtitleId = (DWORD_PTR)-1;
 	void UpdateSubtitle(bool fApplyDefStyle = true);
 	void SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyle = true);
 	void InvalidateSubtitle(REFERENCE_TIME rtInvalidate = -1, DWORD_PTR nSubtitleId = -1);
@@ -214,8 +214,8 @@ private:
 	void SetupInputFunc();
 	void SetupOutputFunc();
 
- 	HANDLE m_hSystrayThread;
-	SystrayIconData m_tbid;
+ 	HANDLE m_hSystrayThread = nullptr;
+	SystrayIconData m_tbid = {};
 
 	const VFormatDesc* m_pInputVFormat = &VFormat_None;
 	const VFormatDesc* m_pOutputVFormat = &VFormat_None;
@@ -224,7 +224,7 @@ private:
 
 	BltLineFn m_fnBltLine = nullptr;
 
-	VIDEOINFOHEADER2 m_CurrentVIH2;
+	VIDEOINFOHEADER2 m_CurrentVIH2 = {};
 
 	bool m_bExternalSubtitle = false;
 	std::list<ISubStream*> m_ExternalSubstreams;

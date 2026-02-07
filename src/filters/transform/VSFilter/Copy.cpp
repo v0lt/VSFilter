@@ -177,9 +177,9 @@ HRESULT CDirectVobSubFilter::Copy(BYTE* pSub, BYTE* pIn, CSize sub, CSize in, in
 
 void CDirectVobSubFilter::SetupInputFunc()
 {
-	auto& subtype = *m_pOutputVFormat->subtype;
+	auto& subtype = *m_pInputVFormat->subtype;
 
-	switch (m_pOutputVFormat->fourcc) {
+	switch (m_pInputVFormat->fourcc) {
 	case FCC('YV12'):
 	case FCC('IYUV'):
 	case FCC('I420'):
@@ -305,7 +305,7 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 	int pitchIn = bm.bmWidthBytes;
 	int pitchOut = m_pOutputVFormat->GetWidthBytes(bihOut.biWidth);
 
-	if (bihOut.biHeight > 0 && bihOut.biCompression <= 3) { // flip if the dst bitmap is flipped rgb (m_hbm is a top-down bitmap, not like the subpictures)
+	if (bihOut.biHeight > 0 && bihOut.biCompression == BI_RGB) { // flip if the dst bitmap is flipped rgb (m_hbm is a top-down bitmap, not like the subpictures)
 		pOut += pitchOut * (abs(bihOut.biHeight)-1);
 		pitchOut = -pitchOut;
 	}
