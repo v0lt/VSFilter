@@ -57,7 +57,7 @@ void VDCPUTest() {
 	VDFastMemcpyAutodetect();
 }
 
-bool BitBltFromI420ToI420(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
+bool BitBltYUV420P(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
 {
 	CopyPlane(h, dsty, dstpitch, srcy, srcpitch);
 
@@ -71,43 +71,22 @@ bool BitBltFromI420ToI420(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int 
 	return true;
 }
 
-bool BitBltFromI420ToNV12(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
+bool BitBltYUV420PtoNV12(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
 {
-	const VDPixmap srcbm = {
-		.data   = srcy,
-		.w      = w,
-		.h      = h,
-		.pitch  = srcpitch,
-		.format = nsVDPixmap::kPixFormat_YUV420_Planar,
-		.data2  = srcu,
-		.pitch2 = srcpitch / 2,
-		.data3  = srcv,
-		.pitch3 = srcpitch / 2
-	};
+	BYTE* src[3] = { srcy, srcu, srcv };
+	CopyI420toNV12(w, h, dsty, dstpitch, src, srcpitch);
 
-	const VDPixmap dstpxm = {
-		.data   = dsty,
-		.w      = w,
-		.h      = h,
-		.pitch  = dstpitch,
-		.format = nsVDPixmap::kPixFormat_YUV420_NV12,
-		.data2  = dstu,
-		.pitch2 = dstpitch,
-		.data3  = dstv,
-		.pitch3 = dstpitch,
-	};
-
-	return VDPixmapBlt(dstpxm, srcbm);
+	return true;
 }
 
-bool BitBltFromYUY2ToYUY2(int w, int h, BYTE* dst, int dstpitch, BYTE* src, int srcpitch)
+bool BitBltYUY2(int w, int h, BYTE* dst, int dstpitch, BYTE* src, int srcpitch)
 {
 	CopyPlane(h, dst, dstpitch, src, srcpitch);
 
 	return true;
 }
 
-bool BitBltFromI420ToRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
+bool BitBltYUV420PtoRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
 {
 	const VDPixmap srcbm = {
 		.data   = srcy,
@@ -145,7 +124,7 @@ bool BitBltFromI420ToRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* 
 	return VDPixmapBlt(dstpxm, srcbm);
 }
 
-bool BitBltFromI420ToYUY2(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
+bool BitBltYUV420PtoYUY2(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
 {
 	BYTE* src[3] = { srcy, srcu, srcv };
 	ConvertI420toYUY2(h, dst, dstpitch, src, srcpitch, false);
@@ -153,7 +132,7 @@ bool BitBltFromI420ToYUY2(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy, BYT
 	return true;
 }
 
-bool BitBltFromI420ToYUY2Interlaced(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
+bool BitBltYUV420PtoYUY2Interlaced(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
 {
 	BYTE* src[3] = { srcy, srcu, srcv };
 	ConvertI420toYUY2(h, dst, dstpitch, src, srcpitch, true);
@@ -161,7 +140,18 @@ bool BitBltFromI420ToYUY2Interlaced(int w, int h, BYTE* dst, int dstpitch, BYTE*
 	return true;
 }
 
-bool BitBltFromRGBToRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* src, int srcpitch, int sbpp)
+bool BitBltNV12orP01x(int w, int h, BYTE* dsty, BYTE* dstuv, int dstpitch, BYTE* srcy, BYTE* srcuv, int srcpitch)
+{
+	CopyPlane(h, dsty, dstpitch, srcy, srcpitch);
+
+	h /= 2;
+
+	CopyPlane(h, dstuv, dstpitch, srcuv, srcpitch);
+
+	return true;
+}
+
+bool BitBltRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* src, int srcpitch, int sbpp)
 {
 	VDPixmap srcbm = {
 		.data   = src + srcpitch * (h - 1),
@@ -202,7 +192,7 @@ bool BitBltFromRGBToRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* s
 	return VDPixmapBlt(dstpxm, srcbm);
 }
 
-bool BitBltFromRGBToRGBStretch(int dstw, int dsth, BYTE* dst, int dstpitch, int dbpp, int srcw, int srch, BYTE* src, int srcpitch, int sbpp)
+bool BitBltRGBStretch(int dstw, int dsth, BYTE* dst, int dstpitch, int dbpp, int srcw, int srch, BYTE* src, int srcpitch, int sbpp)
 {
 	VDPixmap srcbm = {
 		.data   = src + srcpitch * (srch - 1),
@@ -243,7 +233,7 @@ bool BitBltFromRGBToRGBStretch(int dstw, int dsth, BYTE* dst, int dstpitch, int 
 	return VDPixmapResample(dstpxm, srcbm, IVDPixmapResampler::kFilterPoint);
 }
 
-bool BitBltFromYUY2ToRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* src, int srcpitch)
+bool BitBltYUY2toRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* src, int srcpitch)
 {
 	if(srcpitch == 0) srcpitch = w;
 

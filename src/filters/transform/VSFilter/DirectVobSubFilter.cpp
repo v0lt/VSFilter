@@ -246,27 +246,6 @@ STDMETHODIMP CDirectVobSubFilter::NonDelegatingQueryInterface(REFIID riid, void*
 
 // CBaseVideoFilter
 
-static inline bool BitBltFromP016ToP016(size_t w, size_t h, BYTE* dstY, BYTE* dstUV, int dstPitch, BYTE* srcY, BYTE* srcUV, int srcPitch)
-{
-	// Copy Y plane
-	for (size_t row = 0; row < h; row++) {
-		BYTE* src = srcY + row * srcPitch;
-		BYTE* dst = dstY + row * dstPitch;
-
-		memcpy(dst, src, dstPitch);
-	}
-
-	// Copy UV plane. UV plane is half height.
-	for (size_t row = 0; row < h / 2; row++) {
-		BYTE* src = srcUV + row * srcPitch;
-		BYTE* dst = dstUV + row * dstPitch;
-
-		memcpy(dst, src, dstPitch);
-	}
-
-	return true;
-}
-
 HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int pitchIn, const GUID& subtype, bool fInterlaced)
 {
 	int abs_h = abs(h);
@@ -321,16 +300,16 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 
 		if (bihOut.biCompression == FCC('YUY2')) {
 			if (!fInterlaced) {
-				BitBltFromI420ToYUY2(w, h, pOut, bihOut.biWidth * 2, pIn, pInU, pInV, pitchIn);
+				BitBltYUV420PtoYUY2(w, h, pOut, bihOut.biWidth * 2, pIn, pInU, pInV, pitchIn);
 			} else {
-				BitBltFromI420ToYUY2Interlaced(w, h, pOut, bihOut.biWidth * 2, pIn, pInU, pInV, pitchIn);
+				BitBltYUV420PtoYUY2Interlaced(w, h, pOut, bihOut.biWidth * 2, pIn, pInU, pInV, pitchIn);
 			}
 		} else if (bihOut.biCompression == FCC('I420') || bihOut.biCompression == FCC('IYUV') || bihOut.biCompression == FCC('YV12')) {
-			BitBltFromI420ToI420(w, h, pOut, pOutU, pOutV, bihOut.biWidth, pIn, pInU, pInV, pitchIn);
+			BitBltYUV420P(w, h, pOut, pOutU, pOutV, bihOut.biWidth, pIn, pInU, pInV, pitchIn);
 		} else if(bihOut.biCompression == FCC('NV12')) {
-			BitBltFromI420ToNV12(w, h, pOut, pOutU, pOutV, bihOut.biWidth, pIn, pInU, pInV, pitchIn);
+			BitBltYUV420PtoNV12(w, h, pOut, pOutU, pOutV, bihOut.biWidth, pIn, pInU, pInV, pitchIn);
 		} else if (bihOut.biCompression == BI_RGB) {
-			if (!BitBltFromI420ToRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pIn, pInU, pInV, pitchIn)) {
+			if (!BitBltYUV420PtoRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pIn, pInU, pInV, pitchIn)) {
 				for (int y = 0; y < h; y++, pOut += pitchOut) {
 					memset_u32(pOut, 0, pitchOut);
 				}
@@ -344,18 +323,18 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 		BYTE* pInY  = pInYUV[0];
 		BYTE* pInUV = pInYUV[1];
 		BYTE* pOutUV = pOut + bihOut.biWidth * h * 2; // 2 bytes per pixel
-		BitBltFromP016ToP016(w, h, pOut, pOutUV, bihOut.biWidth * 2, pInY, pInUV, pitchIn);
+		BitBltNV12orP01x(w, h, pOut, pOutUV, bihOut.biWidth * 2, pInY, pInUV, pitchIn);
 	} else if (subtype == MEDIASUBTYPE_NV12 && bihOut.biCompression == FCC('NV12')) {
 		// We currently don't support outputting NV12 input to something other than NV12
 		BYTE* pInY  = pInYUV[0];
 		BYTE* pInUV = pInYUV[1];
 		BYTE* pOutUV = pOut + bihOut.biWidth * h; // 1 bytes per pixel
-		BitBltFromP016ToP016(w, h, pOut, pOutUV, bihOut.biWidth, pInY, pInUV, pitchIn);
+		BitBltNV12orP01x(w, h, pOut, pOutUV, bihOut.biWidth, pInY, pInUV, pitchIn);
 	} else if (subtype == MEDIASUBTYPE_YUY2) {
 		if (bihOut.biCompression == FCC('YUY2')) {
-			BitBltFromYUY2ToYUY2(w, h, pOut, bihOut.biWidth * 2, pInYUV[0], pitchIn);
+			BitBltYUY2(w, h, pOut, bihOut.biWidth * 2, pInYUV[0], pitchIn);
 		} else if (bihOut.biCompression == BI_RGB) {
-			if (!BitBltFromYUY2ToRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pInYUV[0], pitchIn)) {
+			if (!BitBltYUY2toRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pInYUV[0], pitchIn)) {
 				for (int y = 0; y < h; y++, pOut += pitchOut) {
 					memset_u32(pOut, 0, pitchOut);
 				}
@@ -369,7 +348,7 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 			// TODO
 			// BitBltFromRGBToYUY2();
 		} else if (bihOut.biCompression == BI_RGB) {
-			if (!BitBltFromRGBToRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pInYUV[0], pitchIn, sbpp)) {
+			if (!BitBltRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pInYUV[0], pitchIn, sbpp)) {
 				for (int y = 0; y < h; y++, pOut += pitchOut) {
 					memset_u32(pOut, 0, pitchOut);
 				}
