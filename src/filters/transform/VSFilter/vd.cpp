@@ -108,9 +108,6 @@ bool BitBltYUV420PtoRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* s
 	};
 
 	switch(dbpp) {
-	case 16:
-		dstpxm.format = nsVDPixmap::kPixFormat_RGB565;
-		break;
 	case 24:
 		dstpxm.format = nsVDPixmap::kPixFormat_RGB888;
 		break;
@@ -253,9 +250,6 @@ bool BitBltYUY2toRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* src,
 	};
 
 	switch(dbpp) {
-	case 16:
-		dstpxm.format = nsVDPixmap::kPixFormat_RGB565;
-		break;
 	case 24:
 		dstpxm.format = nsVDPixmap::kPixFormat_RGB888;
 		break;
