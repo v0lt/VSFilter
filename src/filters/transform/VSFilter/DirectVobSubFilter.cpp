@@ -448,52 +448,33 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 	BITMAPINFOHEADER bihIn;
 	ExtractBIH(&mtInput, &bihIn);
 
-	bool fYV12 = (mtInput.subtype == MEDIASUBTYPE_YV12 || mtInput.subtype == MEDIASUBTYPE_I420 || mtInput.subtype == MEDIASUBTYPE_IYUV);
-	int bpp = fYV12 ? 8 : bihIn.biBitCount;
-	DWORD black = fYV12 ? 0x10101010 : (bihIn.biCompression == FCC('YUY2')) ? 0x80108010 : 0;
-
-	if (mtInput.subtype == MEDIASUBTYPE_P010 || mtInput.subtype == MEDIASUBTYPE_P016) {
-		bpp = 16;
-		black = 0x10001000;
-	} else if (mtInput.subtype == MEDIASUBTYPE_NV12) {
-		bpp = 8;
-		black = 0x10101010;
-	}
 	CSize sub(m_wout, m_hout);
 	CSize in(bihIn.biWidth, bihIn.biHeight);
 
-	if (FAILED(Copy(m_pTempPicBuff.get(), pDataIn, sub, in, bpp, mtInput.subtype, black))) {
-		SetEvent(m_hEvtTransform);
-		return E_FAIL;
-	}
+	CopyPlane(m_pTempPicBuff.get(), pDataIn, sub, in, m_black);
 
-	if (fYV12) {
-		BYTE* pSubV = m_pTempPicBuff.get() + (sub.cx*bpp>>3)*sub.cy;
-		BYTE* pInV = pDataIn + (in.cx*bpp>>3)*in.cy;
-		sub.cx >>= 1;
-		sub.cy >>= 1;
-		in.cx >>= 1;
-		in.cy >>= 1;
-		BYTE* pSubU = pSubV + (sub.cx*bpp>>3)*sub.cy;
-		BYTE* pInU = pInV + (in.cx*bpp>>3)*in.cy;
-		if (FAILED(Copy(pSubV, pInV, sub, in, bpp, mtInput.subtype, 0x80808080))) {
-			SetEvent(m_hEvtTransform);
-			return E_FAIL;
-		}
-		if (FAILED(Copy(pSubU, pInU, sub, in, bpp, mtInput.subtype, 0x80808080))) {
-			SetEvent(m_hEvtTransform);
-			return E_FAIL;
-		}
-	}
+	if (m_pInputVFormat->cmodel == Cm_YUV420) {
+		auto& packsize = m_pInputVFormat->packsize;
+		if (m_pInputVFormat->planes == 3) {
+			BYTE* pSubV = m_pTempPicBuff.get() + (sub.cx * packsize) * sub.cy;
+			BYTE* pInV = pDataIn + (in.cx * packsize) * in.cy;
+			sub.cx >>= 1;
+			sub.cy >>= 1;
+			in.cx >>= 1;
+			in.cy >>= 1;
+			BYTE* pSubU = pSubV + (sub.cx * packsize) * sub.cy;
+			BYTE* pInU = pInV + (in.cx * packsize) * in.cy;
 
-	if (mtInput.subtype == MEDIASUBTYPE_P010 || mtInput.subtype == MEDIASUBTYPE_P016 || mtInput.subtype == MEDIASUBTYPE_NV12) {
-		BYTE* pSubUV = m_pTempPicBuff.get() + (sub.cx * bpp >> 3) * sub.cy;
-		BYTE* pInUV = pDataIn + (in.cx * bpp >> 3) * in.cy;
-		sub.cy >>= 1;
-		in.cy >>= 1;
-		if (FAILED(Copy(pSubUV, pInUV, sub, in, bpp, mtInput.subtype, mtInput.subtype == MEDIASUBTYPE_NV12 ? 0x80808080 : 0x80008000))) {
-			SetEvent(m_hEvtTransform);
-			return E_FAIL;
+			CopyPlane(pSubV, pInV, sub, in, m_blackUV);
+			CopyPlane(pSubU, pInU, sub, in, m_blackUV);
+		}
+		else if (m_pInputVFormat->planes == 2) {
+			BYTE* pSubUV = m_pTempPicBuff.get() + (sub.cx * packsize) * sub.cy;
+			BYTE* pInUV = pDataIn + (in.cx * packsize) * in.cy;
+			sub.cy >>= 1;
+			in.cy >>= 1;
+
+			CopyPlane(pSubUV, pInUV, sub, in, m_blackUV);
 		}
 	}
 

@@ -112,23 +112,30 @@ void BltLineYUVxxxP16(uint8_t* dst, const uint32_t* src, const int w)
 	}
 }
 
-HRESULT CDirectVobSubFilter::Copy(BYTE* pSub, BYTE* pIn, CSize sub, CSize in, int bpp, const GUID& subtype, DWORD black)
+void CDirectVobSubFilter::CopyPlane(BYTE* pSub, BYTE* pIn, CSize sub, CSize in, uint32_t black)
 {
-	int wIn = in.cx, hIn = in.cy, pitchIn = wIn*bpp>>3;
-	int wSub = sub.cx, hSub = sub.cy, pitchSub = wSub*bpp>>3;
-	bool fScale2x = wIn*2 <= wSub;
+	auto& packsize = m_pInputVFormat->packsize;
 
+	int wIn = in.cx;
+	int hIn = in.cy;
+	int pitchIn = wIn * packsize;
+
+	int wSub = sub.cx;
+	int hSub = sub.cy;
+	int pitchSub = wSub * packsize;
+
+	bool fScale2x = wIn*2 <= wSub;
 	if (fScale2x) {
 		wIn <<= 1, hIn <<= 1;
 	}
 
-	int left = ((wSub - wIn)>>1)&~1;
-	int mid = wIn;
+	int left  = ((wSub - wIn)>>1)&~1;
+	int mid   = wIn;
 	int right = left + ((wSub - wIn)&1);
 
-	int dpLeft = left*bpp>>3;
-	int dpMid = mid*bpp>>3;
-	int dpRight = right*bpp>>3;
+	int dpLeft  = left * packsize;
+	int dpMid   = mid * packsize;
+	int dpRight = right * packsize;
 
 	ASSERT(wSub >= wIn);
 
@@ -171,12 +178,14 @@ HRESULT CDirectVobSubFilter::Copy(BYTE* pSub, BYTE* pIn, CSize sub, CSize in, in
 			memset_u32(pSub, black, dpLeft+dpMid+dpRight);
 		}
 	}
-
-	return NOERROR;
 }
 
 void CDirectVobSubFilter::SetupInputFunc()
 {
+	m_fnScale2x = nullptr;
+	m_black   = 0;
+	m_blackUV = 0;
+
 	auto& subtype = *m_pInputVFormat->subtype;
 
 	switch (m_pInputVFormat->fourcc) {
@@ -184,20 +193,30 @@ void CDirectVobSubFilter::SetupInputFunc()
 	case FCC('IYUV'):
 	case FCC('I420'):
 		m_fnScale2x = Scale2x_YV;
+		m_black   = 0x10101010;
+		m_blackUV = 0x80808080;
 		break;
 	case FCC('YUY2'):
 		m_fnScale2x = Scale2x_YUY2;
+		m_black = 0x80108010;
 		break;
-	default:
+	case FCC('NV12'):
+		m_black   = 0x10101010;
+		m_blackUV = 0x80808080;
+		break;
+	case FCC('P010'):
+	case FCC('P016'):
+		m_black   = 0x10001000;
+		m_blackUV = 0x80008000;
+		break;
+	case BI_RGB:
 		if (subtype == MEDIASUBTYPE_RGB32 || subtype == MEDIASUBTYPE_ARGB32) {
 			m_fnScale2x = Scale2x_XRGB32;
 		}
 		else if (subtype == MEDIASUBTYPE_RGB24) {
 			m_fnScale2x = Scale2x_RGB24;
 		}
-		else {
-			m_fnScale2x = nullptr;
-		}
+		break;
 	}
 }
 

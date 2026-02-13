@@ -163,7 +163,7 @@ protected:
 
 	/* ResX2 */
 	std::unique_ptr<BYTE> m_pTempPicBuff;
-	HRESULT Copy(BYTE* pSub, BYTE* pIn, CSize sub, CSize in, int bpp, const GUID& subtype, DWORD black);
+	void CopyPlane(BYTE* pSub, BYTE* pIn, CSize sub, CSize in, uint32_t black);
 
 	// segment start time, absolute time
 	CRefTime m_tPrev;
@@ -214,11 +214,13 @@ private:
 	void SetupInputFunc();
 	void SetupOutputFunc();
 
- 	HANDLE m_hSystrayThread = nullptr;
+	HANDLE m_hSystrayThread = nullptr;
 	SystrayIconData m_tbid = {};
 
 	const VFormatDesc* m_pInputVFormat = &VFormat_None;
 	const VFormatDesc* m_pOutputVFormat = &VFormat_None;
+	uint32_t m_black   = 0;
+	uint32_t m_blackUV = 0;
 
 	Scale2xFn m_fnScale2x = nullptr;
 
