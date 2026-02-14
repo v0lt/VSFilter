@@ -18,5 +18,3 @@
 #pragma once
 
 extern void AvgLines8(BYTE* dst, DWORD h, DWORD pitch);
-extern void AvgLines555(BYTE* dst, DWORD h, DWORD pitch);
-extern void AvgLines565(BYTE* dst, DWORD h, DWORD pitch);
