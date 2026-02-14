@@ -436,10 +436,6 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 	const CMediaType& mtInput = m_pInput->CurrentMediaType();
 	const CMediaType& mtOutput = m_pOutput->CurrentMediaType();
 
-	if (mtInput.subtype != *m_pInputVFormat->subtype) {
-		m_pInputVFormat = &GetVFormatDesc(mtInput.subtype);
-		SetupInputFunc();
-	}
 	if (mtOutput.subtype != *m_pOutputVFormat->subtype) {
 		m_pOutputVFormat = &GetVFormatDesc(mtOutput.subtype);
 		SetupOutputFunc();
@@ -744,6 +740,11 @@ HRESULT CDirectVobSubFilter::SetMediaType(PIN_DIRECTION dir, const CMediaType* p
 			m_CurrentVIH2 = *(VIDEOINFOHEADER2*)pmt->Format();
 		}
 
+		if (pmt->subtype != *m_pInputVFormat->subtype) {
+			m_pInputVFormat = &GetVFormatDesc(pmt->subtype);
+			SetupInputFunc();
+		}
+
 		InitSubPicQueue();
 
 		{
@@ -1044,19 +1045,25 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	} else if (subtype == MEDIASUBTYPE_RGB24) {
 		m_spd.type = MSP_RGB24;
 	}
-	m_spd.w = m_wout;
-	m_spd.h = m_hout;
-	m_spd.bpp = (m_spd.type == MSP_YV12 || m_spd.type == MSP_IYUV || m_spd.type == MSP_NV12) ? 8 : bihIn.biBitCount;
-	m_spd.bpp = (m_spd.type == MSP_P010 || m_spd.type == MSP_P016) ? 16 : m_spd.bpp;
-	m_spd.pitch = m_spd.w * m_spd.bpp >> 3;
+	m_spd.w     = m_wout;
+	m_spd.h     = m_hout;
+	m_spd.bpp   = m_pInputVFormat->packsize * 8;
+	m_spd.pitch = (m_spd.w * m_pInputVFormat->packsize + 15) & ~15;
 
 	size_t picbufsize;
-	if (m_spd.type == MSP_YV12 || m_spd.type == MSP_IYUV || m_spd.type == MSP_NV12) {
-		picbufsize = 4 * m_spd.pitch * m_spd.h;
-	} else if (m_spd.type == MSP_P010 || m_spd.type == MSP_P016) {
-		picbufsize = m_spd.pitch * m_spd.h + m_spd.pitch * m_spd.h / 2;
-	} else {
+	if (m_pInputVFormat->planes == 1) {
 		picbufsize = m_spd.pitch * m_spd.h;
+	}
+	else {
+		if (m_pInputVFormat->cmodel == Cm_YUV420) {
+			picbufsize = m_spd.pitch * m_spd.h * 3 / 2;
+		}
+		else if (m_pInputVFormat->cmodel == Cm_YUV422) {
+			picbufsize = m_spd.pitch * m_spd.h * 2;
+		}
+		else {
+			picbufsize = m_spd.pitch * m_spd.h * m_pInputVFormat->planes;
+		}
 	}
 
 	m_pTempPicBuff.reset(new(std::nothrow) BYTE[picbufsize]);
