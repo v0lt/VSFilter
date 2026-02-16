@@ -86,8 +86,9 @@ void ColorConvInit()
 // CMemSubPicEx
 //
 
-CMemSubPicEx::CMemSubPicEx(SubPicDesc& spd)
+CMemSubPicEx::CMemSubPicEx(SubPicDesc& spd, int alpha_blt_dst_type)
 	: CMemSubPic(spd)
+	, m_alpha_blt_dst_type(alpha_blt_dst_type)
 {
 }
 
@@ -99,7 +100,7 @@ STDMETHODIMP CMemSubPicEx::Unlock(RECT* pDirtyRect)
 		return S_OK;
 	}
 
-	switch (m_spd.type) {
+	switch (m_alpha_blt_dst_type) {
 	case MSP_NV12:
 	case MSP_YV12:
 	case MSP_IYUV:
@@ -122,7 +123,7 @@ STDMETHODIMP CMemSubPicEx::Unlock(RECT* pDirtyRect)
 	BYTE* top = m_spd.bits + m_spd.pitch*m_rcDirty.top + m_rcDirty.left*4;
 	const BYTE* bottom = top + m_spd.pitch * h;
 
-	switch (m_spd.type) {
+	switch (m_alpha_blt_dst_type) {
 	case MSP_NV12:
 	case MSP_YV12:
 	case MSP_IYUV:
@@ -246,7 +247,7 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 	const SubPicDesc& src = m_spd;
 	SubPicDesc dst = *pTarget;
 
-	if (src.type != dst.type) {
+	if (m_alpha_blt_dst_type != dst.type) {
 		return E_INVALIDARG;
 	}
 
@@ -540,8 +541,9 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 // CMemSubPicExAllocator
 //
 
-CMemSubPicExAllocator::CMemSubPicExAllocator(int type, SIZE maxsize)
-	: CMemSubPicAllocator(type, maxsize)
+CMemSubPicExAllocator::CMemSubPicExAllocator(int alpha_blt_dst_type, SIZE maxsize)
+	: CMemSubPicAllocator(maxsize)
+	, m_alpha_blt_dst_type(alpha_blt_dst_type)
 {
 }
 
@@ -554,17 +556,17 @@ bool CMemSubPicExAllocator::Alloc(bool fStatic, ISubPic** ppSubPic)
 	}
 
 	SubPicDesc spd;
-	spd.w = m_maxsize.cx;
-	spd.h = m_maxsize.cy;
-	spd.bpp = 32;
-	spd.pitch = (spd.w * spd.bpp) >> 3;
-	spd.type = m_type;
-	spd.bits = new(std::nothrow) BYTE[spd.pitch * spd.h];
+	spd.w     = m_maxsize.cx;
+	spd.h     = m_maxsize.cy;
+	spd.bpp   = 32;
+	spd.pitch = spd.w * 4;
+	spd.type  = MSP_RGB32;
+	spd.bits  = new(std::nothrow) BYTE[spd.pitch * spd.h];
 	if (!spd.bits) {
 		return false;
 	}
 
-	*ppSubPic = DNew CMemSubPicEx(spd);
+	*ppSubPic = DNew CMemSubPicEx(spd, m_alpha_blt_dst_type);
 	if (!(*ppSubPic)) {
 		return false;
 	}
