@@ -47,7 +47,7 @@ void BltLineRGB32(uint8_t* dst, const uint32_t* src, const int w)
 	for (; dst32 < end; dst32++) {
 		pix.u32 = *src++;
 		if (pix.a < 0xff) {
-			*dst32 = pix.u32 & 0xffffff;
+			*dst32 = pix.u32 & 0x00ffffff;
 		}
 	}
 }
@@ -78,6 +78,21 @@ void BltLineYUY2(uint8_t* dst, const uint32_t* src, const int w)
 		if (pix.a < 0xff) {
 			int y = (c2y_yb[pix.r] + c2y_yg[pix.g] + c2y_yr[pix.b] + 0x108000) >> 16;
 			*dst16 = 0x8000 | y; // w/o colors
+		}
+	}
+}
+
+void BltLineAYUV(uint8_t* dst, const uint32_t* src, const int w)
+{
+	uint32_t* dst32 = (uint32_t*)dst;
+	uint32_t* end = dst32 + w;
+	pixrgba pix;
+
+	for (; dst32 < end; dst32++) {
+		pix.u32 = *src++;
+		if (pix.a < 0xff) {
+			int y = (c2y_yb[pix.r] + c2y_yg[pix.g] + c2y_yr[pix.b] + 0x108000) & 0x00ff0000;
+			*dst32 = 0x00008080 | y; // w/o colors
 		}
 	}
 }
@@ -201,6 +216,9 @@ void CDirectVobSubFilter::SetupInputFunc()
 		m_fnScale2x = Scale2x_YUY2;
 		m_black = 0x80108010;
 		break;
+	case FCC('AYUV'):
+		m_black = 0xff108080;
+		break;
 	case FCC('P010'):
 	case FCC('P016'):
 		m_black   = 0x10001000;
@@ -234,6 +252,9 @@ void CDirectVobSubFilter::SetupOutputFunc()
 		break;
 	case FCC('YUY2'):
 		m_fnBltLine = BltLineYUY2;
+		break;
+	case FCC('AYUV'):
+		m_fnBltLine = BltLineAYUV;
 		break;
 	default:
 		if (subtype == MEDIASUBTYPE_RGB32 || subtype == MEDIASUBTYPE_ARGB32) {

@@ -338,6 +338,9 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 			}
 		}
 	}
+	else if (subtype == MEDIASUBTYPE_AYUV && bihOut.biCompression == FCC('AYUV')) {
+		::CopyPlane(abs_h, pOut, bihOut.biWidth * 4, pIn, pitchIn);
+	}
 	else if (subtype == MEDIASUBTYPE_ARGB32 || subtype == MEDIASUBTYPE_RGB32 || subtype == MEDIASUBTYPE_RGB24) {
 		int sbpp = (subtype == MEDIASUBTYPE_RGB24) ? 24 : 32;
 
@@ -925,6 +928,7 @@ HRESULT CDirectVobSubFilter::CheckInputType(const CMediaType* mtIn)
 		 || mtIn->subtype == MEDIASUBTYPE_I420
 		 || (mtIn->subtype == MEDIASUBTYPE_IYUV && FAILED(m_pGraph->FindFilterByName(L"Lentoid HEVC Decoder", &pFilter)))
 		 || mtIn->subtype == MEDIASUBTYPE_YUY2
+		 || mtIn->subtype == MEDIASUBTYPE_AYUV
 		 || mtIn->subtype == MEDIASUBTYPE_ARGB32
 		 || mtIn->subtype == MEDIASUBTYPE_RGB32
 		 || mtIn->subtype == MEDIASUBTYPE_RGB24)
@@ -976,7 +980,8 @@ HRESULT CDirectVobSubFilter::DoCheckTransform(const CMediaType* mtIn, const CMed
 	}
 	else if (mtIn->subtype == MEDIASUBTYPE_P010
 			|| mtIn->subtype == MEDIASUBTYPE_P016
-			|| mtIn->subtype == MEDIASUBTYPE_NV12) {
+			|| mtIn->subtype == MEDIASUBTYPE_NV12
+			|| mtIn->subtype == MEDIASUBTYPE_AYUV) {
 		if (mtIn->subtype != mtOut->subtype) {
 			return VFW_E_TYPE_NOT_ACCEPTED;
 		}
@@ -1036,6 +1041,8 @@ void CDirectVobSubFilter::InitSubPicQueue()
 		m_spd.type = MSP_IYUV;
 	} else if (subtype == MEDIASUBTYPE_YUY2) {
 		m_spd.type = MSP_YUY2;
+	} else if (subtype == MEDIASUBTYPE_AYUV) {
+		m_spd.type = MSP_AYUV;
 	} else if (subtype == MEDIASUBTYPE_RGB32) {
 		m_spd.type = MSP_RGB32;
 	} else if (subtype == MEDIASUBTYPE_RGB24) {
