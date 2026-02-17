@@ -31,9 +31,6 @@ extern bool BitBltYUV420PtoYUY2(int w, int h, BYTE* dst, int dstpitch, BYTE* src
 extern bool BitBltYUV420PtoYUY2Interlaced(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch);
 extern bool BitBltYUV420PtoRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch /* TODO: , bool fInterlaced = false */);
 
-extern bool BitBltNV12orP01x(int w, int h, BYTE* dsty, BYTE* dstuv, int dstpitch, BYTE* srcy, BYTE* srcuv, int srcpitch);
-
-extern bool BitBltYUY2(int w, int h, BYTE* dst, int dstpitch, BYTE* src, int srcpitch);
 extern bool BitBltYUY2toRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* src, int srcpitch);
 
 extern bool BitBltRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* src, int srcpitch, int sbpp);

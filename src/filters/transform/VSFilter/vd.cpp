@@ -79,13 +79,6 @@ bool BitBltYUV420PtoNV12(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int d
 	return true;
 }
 
-bool BitBltYUY2(int w, int h, BYTE* dst, int dstpitch, BYTE* src, int srcpitch)
-{
-	CopyPlane(h, dst, dstpitch, src, srcpitch);
-
-	return true;
-}
-
 bool BitBltYUV420PtoRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
 {
 	const VDPixmap srcbm = {
@@ -133,17 +126,6 @@ bool BitBltYUV420PtoYUY2Interlaced(int w, int h, BYTE* dst, int dstpitch, BYTE* 
 {
 	BYTE* src[3] = { srcy, srcu, srcv };
 	ConvertI420toYUY2(h, dst, dstpitch, src, srcpitch, true);
-
-	return true;
-}
-
-bool BitBltNV12orP01x(int w, int h, BYTE* dsty, BYTE* dstuv, int dstpitch, BYTE* srcy, BYTE* srcuv, int srcpitch)
-{
-	CopyPlane(h, dsty, dstpitch, srcy, srcpitch);
-
-	h /= 2;
-
-	CopyPlane(h, dstuv, dstpitch, srcuv, srcpitch);
 
 	return true;
 }

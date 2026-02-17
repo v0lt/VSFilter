@@ -38,6 +38,7 @@
 #include "Subtitles/RenderedHdmvSubtitle.h"
 #include "resource.h"
 #include "SettingsDefines.h"
+#include "DSUtil/PixelUtils.h"
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -320,19 +321,15 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 		&& (bihOut.biCompression == FCC('P010') || bihOut.biCompression == FCC('P016'))) {
 		// We currently don't support outputting P010/P016 input to something other than P010/P016
 		// P010 and P016 share the same memory layout
-		BYTE* pInY  = pInYUV[0];
-		BYTE* pInUV = pInYUV[1];
-		BYTE* pOutUV = pOut + bihOut.biWidth * h * 2; // 2 bytes per pixel
-		BitBltNV12orP01x(w, h, pOut, pOutUV, bihOut.biWidth * 2, pInY, pInUV, pitchIn);
-	} else if (subtype == MEDIASUBTYPE_NV12 && bihOut.biCompression == FCC('NV12')) {
+		::CopyPlane(abs_h * 3 / 2, pOut, bihOut.biWidth * 2, pIn, pitchIn);
+	}
+	else if (subtype == MEDIASUBTYPE_NV12 && bihOut.biCompression == FCC('NV12')) {
 		// We currently don't support outputting NV12 input to something other than NV12
-		BYTE* pInY  = pInYUV[0];
-		BYTE* pInUV = pInYUV[1];
-		BYTE* pOutUV = pOut + bihOut.biWidth * h; // 1 bytes per pixel
-		BitBltNV12orP01x(w, h, pOut, pOutUV, bihOut.biWidth, pInY, pInUV, pitchIn);
-	} else if (subtype == MEDIASUBTYPE_YUY2) {
+		::CopyPlane(abs_h * 3 / 2, pOut, bihOut.biWidth, pIn, pitchIn);
+	}
+	else if (subtype == MEDIASUBTYPE_YUY2) {
 		if (bihOut.biCompression == FCC('YUY2')) {
-			BitBltYUY2(w, h, pOut, bihOut.biWidth * 2, pInYUV[0], pitchIn);
+			::CopyPlane(abs_h, pOut, bihOut.biWidth * 2, pIn, pitchIn);
 		} else if (bihOut.biCompression == BI_RGB) {
 			if (!BitBltYUY2toRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pInYUV[0], pitchIn)) {
 				for (int y = 0; y < h; y++, pOut += pitchOut) {
@@ -340,21 +337,19 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 				}
 			}
 		}
-	} else if (subtype == MEDIASUBTYPE_ARGB32 || subtype == MEDIASUBTYPE_RGB32 || subtype == MEDIASUBTYPE_RGB24) {
-		int sbpp =
-			subtype == MEDIASUBTYPE_RGB24 ? 24 : 32;
+	}
+	else if (subtype == MEDIASUBTYPE_ARGB32 || subtype == MEDIASUBTYPE_RGB32 || subtype == MEDIASUBTYPE_RGB24) {
+		int sbpp = (subtype == MEDIASUBTYPE_RGB24) ? 24 : 32;
 
-		if (bihOut.biCompression == FCC('YUY2')) {
-			// TODO
-			// BitBltFromRGBToYUY2();
-		} else if (bihOut.biCompression == BI_RGB) {
+		if (bihOut.biCompression == BI_RGB) {
 			if (!BitBltRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pInYUV[0], pitchIn, sbpp)) {
 				for (int y = 0; y < h; y++, pOut += pitchOut) {
 					memset_u32(pOut, 0, pitchOut);
 				}
 			}
 		}
-	} else {
+	}
+	else {
 		return VFW_E_TYPE_NOT_ACCEPTED;
 	}
 
@@ -924,20 +919,19 @@ HRESULT CDirectVobSubFilter::CheckInputType(const CMediaType* mtIn)
 
 	return mtIn->majortype == MEDIATYPE_Video
 		&& (mtIn->subtype == MEDIASUBTYPE_P016
-		       || mtIn->subtype == MEDIASUBTYPE_P010
-		       || mtIn->subtype == MEDIASUBTYPE_NV12
-		       || mtIn->subtype == MEDIASUBTYPE_YV12
-			   || mtIn->subtype == MEDIASUBTYPE_I420
-			   || (mtIn->subtype == MEDIASUBTYPE_IYUV && FAILED(m_pGraph->FindFilterByName(L"Lentoid HEVC Decoder", &pFilter)))
-			   || mtIn->subtype == MEDIASUBTYPE_YUY2
-			   || mtIn->subtype == MEDIASUBTYPE_ARGB32
-			   || mtIn->subtype == MEDIASUBTYPE_RGB32
-			   || mtIn->subtype == MEDIASUBTYPE_RGB24)
-		   && (mtIn->formattype == FORMAT_VideoInfo
-			   || mtIn->formattype == FORMAT_VideoInfo2)
-		   && bih.biHeight > 0
-		   ? S_OK
-		   : VFW_E_TYPE_NOT_ACCEPTED;
+		 || mtIn->subtype == MEDIASUBTYPE_P010
+		 || mtIn->subtype == MEDIASUBTYPE_NV12
+		 || mtIn->subtype == MEDIASUBTYPE_YV12
+		 || mtIn->subtype == MEDIASUBTYPE_I420
+		 || (mtIn->subtype == MEDIASUBTYPE_IYUV && FAILED(m_pGraph->FindFilterByName(L"Lentoid HEVC Decoder", &pFilter)))
+		 || mtIn->subtype == MEDIASUBTYPE_YUY2
+		 || mtIn->subtype == MEDIASUBTYPE_ARGB32
+		 || mtIn->subtype == MEDIASUBTYPE_RGB32
+		 || mtIn->subtype == MEDIASUBTYPE_RGB24)
+		&& (mtIn->formattype == FORMAT_VideoInfo || mtIn->formattype == FORMAT_VideoInfo2)
+		&& bih.biHeight > 0
+		? S_OK
+		: VFW_E_TYPE_NOT_ACCEPTED;
 }
 
 HRESULT CDirectVobSubFilter::CheckOutputType(const CMediaType& mtOut)
@@ -980,8 +974,10 @@ HRESULT CDirectVobSubFilter::DoCheckTransform(const CMediaType* mtIn, const CMed
 			return VFW_E_TYPE_NOT_ACCEPTED;
 		}
 	}
-	else if (mtOut->subtype == MEDIASUBTYPE_P010 || mtOut->subtype == MEDIASUBTYPE_P016 || mtOut->subtype == MEDIASUBTYPE_NV12) {
-		if (mtOut->subtype != mtIn->subtype) {
+	else if (mtIn->subtype == MEDIASUBTYPE_P010
+			|| mtIn->subtype == MEDIASUBTYPE_P016
+			|| mtIn->subtype == MEDIASUBTYPE_NV12) {
+		if (mtIn->subtype != mtOut->subtype) {
 			return VFW_E_TYPE_NOT_ACCEPTED;
 		}
 	}
@@ -1048,7 +1044,7 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	m_spd.w     = m_wout;
 	m_spd.h     = m_hout;
 	m_spd.bpp   = m_pInputVFormat->packsize * 8;
-	m_spd.pitch = (m_spd.w * m_pInputVFormat->packsize + 15) & ~15;
+	m_spd.pitch = (m_spd.w * m_pInputVFormat->packsize + 3) & ~3;
 
 	size_t picbufsize;
 	if (m_pInputVFormat->planes == 1) {

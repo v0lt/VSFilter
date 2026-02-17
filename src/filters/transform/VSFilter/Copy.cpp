@@ -38,7 +38,6 @@ union pixrgba {
 	};
 };
 
-
 void BltLineRGB32(uint8_t* dst, const uint32_t* src, const int w)
 {
 	uint32_t* dst32 = (uint32_t*)dst;
@@ -193,16 +192,14 @@ void CDirectVobSubFilter::SetupInputFunc()
 	case FCC('IYUV'):
 	case FCC('I420'):
 		m_fnScale2x = Scale2x_YV;
+		[[fallthrough]];
+	case FCC('NV12'):
 		m_black   = 0x10101010;
 		m_blackUV = 0x80808080;
 		break;
 	case FCC('YUY2'):
 		m_fnScale2x = Scale2x_YUY2;
 		m_black = 0x80108010;
-		break;
-	case FCC('NV12'):
-		m_black   = 0x10101010;
-		m_blackUV = 0x80808080;
 		break;
 	case FCC('P010'):
 	case FCC('P016'):
