@@ -447,28 +447,32 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 
 	CopyPlane(m_pTempPicBuff.get(), pDataIn, sub, in, m_black);
 
-	if (m_pInputVFormat->cmodel == Cm_YUV420) {
-		auto& packsize = m_pInputVFormat->packsize;
-		if (m_pInputVFormat->planes == 3) {
-			BYTE* pSubV = m_pTempPicBuff.get() + (sub.cx * packsize) * sub.cy;
-			BYTE* pInV = pDataIn + (in.cx * packsize) * in.cy;
+	auto& packsize = m_pInputVFormat->packsize;
+
+	if (m_pInputVFormat->planes == 2) {
+		BYTE* pSubUV = m_pTempPicBuff.get() + (sub.cx * packsize) * sub.cy;
+		BYTE* pInUV = pDataIn + (in.cx * packsize) * in.cy;
+
+		if (m_pInputVFormat->cmodel == Cm_YUV420) {
+			sub.cy >>= 1;
+			in.cy >>= 1;
+			CopyPlane(pSubUV, pInUV, sub, in, m_blackUV);
+		}
+	}
+	else if (m_pInputVFormat->planes == 3) {
+		BYTE* pSub2 = m_pTempPicBuff.get() + (sub.cx * packsize) * sub.cy;
+		BYTE* pIn2  = pDataIn + (in.cx * packsize) * in.cy;
+
+		if (m_pInputVFormat->cmodel == Cm_YUV420) {
 			sub.cx >>= 1;
 			sub.cy >>= 1;
 			in.cx >>= 1;
 			in.cy >>= 1;
-			BYTE* pSubU = pSubV + (sub.cx * packsize) * sub.cy;
-			BYTE* pInU = pInV + (in.cx * packsize) * in.cy;
+			BYTE* pSub3 = pSub2 + (sub.cx * packsize) * sub.cy;
+			BYTE* pIn3 = pIn2 + (in.cx * packsize) * in.cy;
 
-			CopyPlane(pSubV, pInV, sub, in, m_blackUV);
-			CopyPlane(pSubU, pInU, sub, in, m_blackUV);
-		}
-		else if (m_pInputVFormat->planes == 2) {
-			BYTE* pSubUV = m_pTempPicBuff.get() + (sub.cx * packsize) * sub.cy;
-			BYTE* pInUV = pDataIn + (in.cx * packsize) * in.cy;
-			sub.cy >>= 1;
-			in.cy >>= 1;
-
-			CopyPlane(pSubUV, pInUV, sub, in, m_blackUV);
+			CopyPlane(pSub2, pIn2, sub, in, m_blackUV);
+			CopyPlane(pSub3, pIn3, sub, in, m_blackUV);
 		}
 	}
 
