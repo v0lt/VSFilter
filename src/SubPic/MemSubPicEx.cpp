@@ -295,87 +295,84 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 	switch (dst.type) {
 		case MSP_P010:
 		case MSP_P016:
+			// Alpha blend the Y plane. Source is UYxAVYxA packed values (converted by Unlock())
+			// destination is P010/P016 surface.
+
+			for(ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch)
 			{
-				// Alpha blend the Y plane. Source is UYxAVYxA packed values (converted by Unlock())
-				// destination is P010/P016 surface.
-				int bitDepth = (dst.type == MSP_P016) ? 16 : 10;
-
-				for(ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch)
+				const BYTE* s2 = s;
+				const BYTE* s2end = s2 + w * 4;
+				WORD* d2 = (WORD*)d;
+				for(; s2 < s2end; s2 += 4, d2++)
 				{
-					const BYTE* s2 = s;
-					const BYTE* s2end = s2 + w * 4;
-					WORD* d2 = (WORD*)d;
-					for(; s2 < s2end; s2 += 4, d2++)
+					if(s2[3] < 0xff)
 					{
-						if(s2[3] < 0xff)
-						{
-							// Convert current luminance to 8-bit value.
-							WORD dstLum = d2[0] >> 8;
+						// Convert current luminance to 8-bit value.
+						WORD dstLum = d2[0] >> 8;
 
-							// Perform calculation in 8-bit.
-							WORD result = (((dstLum - 0x10) * s2[3]) >> 8) + s2[1];
+						// Perform calculation in 8-bit.
+						WORD result = (((dstLum - 0x10) * s2[3]) >> 8) + s2[1];
 
-							// Convert to 10/16 bit value.
-							d2[0] = result << 8;
-						}
+						// Convert to 10/16 bit value.
+						d2[0] = result << 8;
 					}
 				}
-
-				break;
 			}
+			break;
+		
 		case MSP_RGBA:
-				for (ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
-					const BYTE* s2 = s;
-					const BYTE* s2end = s2 + w * 4;
-					DWORD* d2 = (DWORD*)d;
-					for (; s2 < s2end; s2 += 4, d2++) {
-						if (s2[3] < 0xff) {
-							DWORD bd =0x00000100 -( (DWORD) s2[3]);
-							DWORD B = ((*((DWORD*)s2)&0x000000ff)<<8)/bd;
-							DWORD V = ((*((DWORD*)s2)&0x0000ff00)/bd)<<8;
-							DWORD R = (((*((DWORD*)s2)&0x00ff0000)>>8)/bd)<<16;
-							*d2 = B | V | R
-								  | (0xff000000-(*((DWORD*)s2)&0xff000000))&0xff000000;
-						}
+			for (ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
+				const BYTE* s2 = s;
+				const BYTE* s2end = s2 + w * 4;
+				DWORD* d2 = (DWORD*)d;
+				for (; s2 < s2end; s2 += 4, d2++) {
+					if (s2[3] < 0xff) {
+						DWORD bd =0x00000100 -( (DWORD) s2[3]);
+						DWORD B = ((*((DWORD*)s2)&0x000000ff)<<8)/bd;
+						DWORD V = ((*((DWORD*)s2)&0x0000ff00)/bd)<<8;
+						DWORD R = (((*((DWORD*)s2)&0x00ff0000)>>8)/bd)<<16;
+						*d2 = B | V | R
+							| (0xff000000-(*((DWORD*)s2)&0xff000000))&0xff000000;
 					}
 				}
+			}
 			break;
 		case MSP_RGB32:
 		case MSP_AYUV:
-				for (ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
-					const BYTE* s2 = s;
-					const BYTE* s2end = s2 + w*4;
+			for (ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
+				const BYTE* s2 = s;
+				const BYTE* s2end = s2 + w*4;
 
-					DWORD* d2 = (DWORD*)d;
-					for (; s2 < s2end; s2 += 4, d2++) {
+				DWORD* d2 = (DWORD*)d;
+				for (; s2 < s2end; s2 += 4, d2++) {
 #ifdef _WIN64
-						DWORD ia = 256-s2[3];
-						if (s2[3] < 0xff) {
-							*d2 = ((((*d2&0x00ff00ff)*s2[3])>>8) + (((*((DWORD*)s2)&0x00ff00ff)*ia)>>8)&0x00ff00ff)
-									| ((((*d2&0x0000ff00)*s2[3])>>8) + (((*((DWORD*)s2)&0x0000ff00)*ia)>>8)&0x0000ff00);
-						}
-#else
-						if (s2[3] < 0xff) {
-							*d2 = ((((*d2&0x00ff00ff)*s2[3])>>8) + (*((DWORD*)s2)&0x00ff00ff)&0x00ff00ff)
-									| ((((*d2&0x0000ff00)*s2[3])>>8) + (*((DWORD*)s2)&0x0000ff00)&0x0000ff00);
-						}
-#endif
+					DWORD ia = 256-s2[3];
+					if (s2[3] < 0xff) {
+						*d2 = ((((*d2&0x00ff00ff)*s2[3])>>8) + (((*((DWORD*)s2)&0x00ff00ff)*ia)>>8)&0x00ff00ff)
+							| ((((*d2&0x0000ff00)*s2[3])>>8) + (((*((DWORD*)s2)&0x0000ff00)*ia)>>8)&0x0000ff00);
 					}
+#else
+					if (s2[3] < 0xff) {
+						*d2 = ((((*d2&0x00ff00ff)*s2[3])>>8) + (*((DWORD*)s2)&0x00ff00ff)&0x00ff00ff)
+							| ((((*d2&0x0000ff00)*s2[3])>>8) + (*((DWORD*)s2)&0x0000ff00)&0x0000ff00);
+					}
+#endif
 				}
+			}
 			break;
 		case MSP_RGB24:
-				for (ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
-					const BYTE* s2 = s;
-					const BYTE* s2end = s2 + w * 4;
-					BYTE* d2 = d;
-					for (; s2 < s2end; s2 += 4, d2 += 3) {
-						if (s2[3] < 0xff) {
-							d2[0] = ((d2[0] *s2[3]) >> 8) + s2[0];
-							d2[1] = ((d2[1] *s2[3]) >> 8) + s2[1];
-							d2[2] = ((d2[2] *s2[3]) >> 8) + s2[2];
-						}
+			for (ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
+				const BYTE* s2 = s;
+				const BYTE* s2end = s2 + w * 4;
+				BYTE* d2 = d;
+				for (; s2 < s2end; s2 += 4, d2 += 3) {
+					if (s2[3] < 0xff) {
+						d2[0] = ((d2[0] *s2[3]) >> 8) + s2[0];
+						d2[1] = ((d2[1] *s2[3]) >> 8) + s2[1];
+						d2[2] = ((d2[2] *s2[3]) >> 8) + s2[2];
 					}
 				}
+			}
 			break;
 		case MSP_YUY2:
 			AlphaBlt_YUY2_SSE2(w, h, d, dst.pitch, s, src.pitch);
@@ -383,19 +380,19 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 		case MSP_YV12:
 		case MSP_NV12:
 		case MSP_IYUV:
-				for (ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
-					const BYTE* s2 = s;
-					const BYTE* s2end = s2 + w * 4;
-					BYTE* d2 = d;
-					for (; s2 < s2end; s2 += 4, d2++) {
-						if (s2[3] < 0xff) {
-							d2[0] = (((d2[0] - 0x10) * s2[3]) >> 8) + s2[1];
-						}
+			for (ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
+				const BYTE* s2 = s;
+				const BYTE* s2end = s2 + w * 4;
+				BYTE* d2 = d;
+				for (; s2 < s2end; s2 += 4, d2++) {
+					if (s2[3] < 0xff) {
+						d2[0] = (((d2[0] - 0x10) * s2[3]) >> 8) + s2[1];
 					}
 				}
+			}
 			break;
 		default:
-				return E_NOTIMPL;
+			return E_NOTIMPL;
 	}
 
 	dst.pitch = abs(dst.pitch);
