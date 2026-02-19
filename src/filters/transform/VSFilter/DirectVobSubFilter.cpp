@@ -1054,7 +1054,7 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	}
 	m_spd.w     = m_wout;
 	m_spd.h     = m_hout;
-	m_spd.bpp   = m_pInputVFormat->packsize * 8;
+	m_spd.bpp   = m_pInputVFormat->GetBihBitCount();
 	m_spd.pitch = (m_spd.w * m_pInputVFormat->packsize + 3) & ~3;
 
 	size_t picbufsize;
