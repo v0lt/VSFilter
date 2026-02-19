@@ -90,6 +90,25 @@ CMemSubPicEx::CMemSubPicEx(SubPicDesc& spd, int alpha_blt_dst_type)
 	: CMemSubPic(spd)
 	, m_alpha_blt_dst_type(alpha_blt_dst_type)
 {
+	switch (m_alpha_blt_dst_type) {
+	case MSP_RGB32:
+	case MSP_AYUV:
+		m_dst_packsize = 4;
+		break;
+	case MSP_RGB24:
+		m_dst_packsize = 3;
+		break;
+	case MSP_YUY2:
+	case MSP_P010:
+	case MSP_P016:
+		m_dst_packsize = 2;
+		break;
+	case MSP_YV12:
+	case MSP_IYUV:
+	case MSP_NV12:
+		m_dst_packsize = 1;
+		break;
+	}
 }
 
 STDMETHODIMP CMemSubPicEx::Unlock(RECT* pDirtyRect)
@@ -265,32 +284,11 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 
 	const int w = rs.Width();
 	const int h = rs.Height();
-	const BYTE* s = src.bits + src.pitch * rs.top + ((rs.left * src.bpp) >> 3); //rs.left * 4;
-	BYTE* d = dst.bits + dst.pitch * rd.top + ((rd.left * dst.bpp) >> 3);
+	const BYTE* s = src.bits + src.pitch * rs.top + rs.left * 4;
+	BYTE* d = dst.bits + dst.pitch * rd.top + rd.left * m_dst_packsize;
 
 	if (rd.top > rd.bottom) {
-		switch (dst.type) {
-		case MSP_RGB32:
-		case MSP_RGB24:
-		case MSP_YUY2:
-		case MSP_AYUV:
-			d = dst.bits + dst.pitch * (rd.top - 1) + (rd.left * dst.bpp >> 3);
-			break;
-		case MSP_YV12:
-		case MSP_IYUV:
-			d = dst.bits + dst.pitch * (rd.top - 1) + (rd.left * 8 >> 3);
-			break;
-		case MSP_NV12:
-			d = dst.bits + dst.pitch * (rd.top - 1) + rd.left;
-			break;
-		case MSP_P010:
-		case MSP_P016:
-			d = dst.bits + dst.pitch * (rd.top - 1) + rd.left * 2;
-			break;
-		default:
-			return E_NOTIMPL;
-		}
-
+		d = dst.bits + dst.pitch * (rd.top - 1) + rs.left * m_dst_packsize;
 		dst.pitch = -dst.pitch;
 	}
 

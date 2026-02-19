@@ -27,7 +27,8 @@
 class CMemSubPicEx : public CMemSubPic
 {
 protected:
-	int m_alpha_blt_dst_type;
+	const int m_alpha_blt_dst_type;
+	int m_dst_packsize = 0;
 
 public:
 	CMemSubPicEx(SubPicDesc& spd, int alpha_blt_dst_type);
@@ -41,7 +42,7 @@ public:
 
 class CMemSubPicExAllocator : public CMemSubPicAllocator
 {
-	int m_alpha_blt_dst_type;
+	const int m_alpha_blt_dst_type;
 
 	// CSubPicAllocatorImpl
 	bool Alloc(bool fStatic, ISubPic** ppSubPic) override;
