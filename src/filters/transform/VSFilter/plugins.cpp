@@ -619,10 +619,6 @@ namespace Plugin
 					dst.bits    = frame->GetWritePtr();
 					dst.bitsU   = frame->GetWritePtr(PLANAR_U); // n/a for RGB
 					dst.bitsV   = frame->GetWritePtr(PLANAR_V); // n/a for RGB
-					if (vi.IsRGB32()) {
-						dst.bits += (vi.height - 1) * dst.pitch;
-						dst.pitch = -dst.pitch;
-					}
 				}
 
 				// Common part
