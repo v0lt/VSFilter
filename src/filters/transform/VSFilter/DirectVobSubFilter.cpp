@@ -505,8 +505,8 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 	BITMAPINFOHEADER bihOut;
 	ExtractBIH(&m_pOutput->CurrentMediaType(), &bihOut);
 
-	bool fInputBottomUp = bihIn.biHeight >= 0 && bihIn.biCompression == BI_RGB;
-	bool fOutputBottomUp = bihOut.biHeight >= 0 && bihOut.biCompression == BI_RGB;
+	const bool fInputBottomUp  = bihIn.biCompression  == BI_RGB && bihIn.biHeight  > 0;
+	const bool fOutputBottomUp = bihOut.biCompression == BI_RGB && bihOut.biHeight > 0;
 
 	bool fFlip = fInputBottomUp != fOutputBottomUp;
 	//if (m_bFlipPicture) {
@@ -1101,7 +1101,7 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	static struct {
 		BITMAPINFOHEADER bih;
 		DWORD mask[3];
-	} b = {{sizeof(BITMAPINFOHEADER), m_win, -(int)m_hin, 1, 32, BI_BITFIELDS, 0, 0, 0, 0, 0}, 0xFF0000, 0x00FF00, 0x0000FF};
+	} b = {{sizeof(BITMAPINFOHEADER), m_win, -(LONG)m_hin, 1, 32, BI_BITFIELDS, 0, 0, 0, 0, 0}, 0xFF0000, 0x00FF00, 0x0000FF};
 	m_hdc = CreateCompatibleDC(nullptr);
 	m_hbm = CreateDIBSection(m_hdc, (BITMAPINFO*)&b, DIB_RGB_COLORS, nullptr, nullptr, 0);
 
