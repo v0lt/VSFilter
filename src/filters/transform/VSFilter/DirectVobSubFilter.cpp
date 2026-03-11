@@ -1065,7 +1065,8 @@ void CDirectVobSubFilter::InitSubPicQueue()
 
 	CComPtr<ISubPicAllocator> pSubPicAllocator = DNew CMemSubPicExAllocator(m_spd.type, CSize(m_wout, m_hout));
 
-	CSize video(bihIn.biWidth, bihIn.biHeight), window = video;
+	CSize video(bihIn.biWidth, std::abs(bihIn.biHeight));
+	CSize window = video;
 	if (AdjustFrameSize(window)) {
 		video += video;
 	}
