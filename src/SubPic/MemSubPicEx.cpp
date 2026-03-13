@@ -30,20 +30,13 @@
 unsigned char Clip_base[256*3];
 unsigned char* Clip = Clip_base + 256;
 
-const int c2y_cyb = int(0.114*219/255*65536+0.5);
-const int c2y_cyg = int(0.587*219/255*65536+0.5);
-const int c2y_cyr = int(0.299*219/255*65536+0.5);
-const int c2y_cu = int(1.0/2.018*1024+0.5);
-const int c2y_cv = int(1.0/1.596*1024+0.5);
+int c2y_cu;
+int c2y_cv;
 
 int c2y_yb[256];
 int c2y_yg[256];
 int c2y_yr[256];
 
-const int y2c_cbu = int(2.018*65536+0.5);
-const int y2c_cgu = int(0.391*65536+0.5);
-const int y2c_cgv = int(0.813*65536+0.5);
-const int y2c_crv = int(1.596*65536+0.5);
 int y2c_bu[256];
 int y2c_gu[256];
 int y2c_gv[256];
@@ -54,21 +47,56 @@ const int cy_cy2 = int(255.0/219.0*32768+0.5);
 
 bool fColorConvInitOK = false;
 
-void ColorConvInit()
+void ColorConvInit(const bool bt601)
 {
 	if (fColorConvInitOK) {
 		return;
 	}
 
-	int i;
+	int c2y_cyb;
+	int c2y_cyg;
+	int c2y_cyr;
 
-	for (i = 0; i < 256; i++) {
+	int y2c_cbu;
+	int y2c_cgu;
+	int y2c_cgv;
+	int y2c_crv;
+
+	// https://www.compression.ru/download/articles/color_space/ch03.pdf pages 18, 19
+
+	if (bt601) {
+		c2y_cyb = int(0.114 * 219 / 255 * 65536 + 0.5);
+		c2y_cyg = int(0.587 * 219 / 255 * 65536 + 0.5);
+		c2y_cyr = int(0.299 * 219 / 255 * 65536 + 0.5);
+
+		y2c_cbu = int(2.018 * 65536 + 0.5);
+		y2c_cgu = int(0.391 * 65536 + 0.5);
+		y2c_cgv = int(0.813 * 65536 + 0.5);
+		y2c_crv = int(1.596 * 65536 + 0.5);
+
+		c2y_cu = int(1.0 / 2.018 * 1024 + 0.5);
+		c2y_cv = int(1.0 / 1.596 * 1024 + 0.5);
+	} else {
+		c2y_cyb = int(0.072 * 219 / 255 * 65536 + 0.5);
+		c2y_cyg = int(0.715 * 219 / 255 * 65536 + 0.5);
+		c2y_cyr = int(0.213 * 219 / 255 * 65536 + 0.5);
+
+		y2c_cbu = int(2.115 * 65536 + 0.5);
+		y2c_cgu = int(0.213 * 65536 + 0.5);
+		y2c_cgv = int(0.534 * 65536 + 0.5);
+		y2c_crv = int(1.793 * 65536 + 0.5);
+
+		c2y_cu = int(1.0 / 2.115 * 1024 + 0.5);
+		c2y_cv = int(1.0 / 1.793 * 1024 + 0.5);
+	}
+
+	for (int i = 0; i < 256; i++) {
 		Clip_base[i] = 0;
 		Clip_base[i+256] = i;
 		Clip_base[i+512] = 255;
 	}
 
-	for (i = 0; i < 256; i++) {
+	for (int i = 0; i < 256; i++) {
 		c2y_yb[i] = c2y_cyb*i;
 		c2y_yg[i] = c2y_cyg*i;
 		c2y_yr[i] = c2y_cyr*i;
@@ -133,7 +161,7 @@ STDMETHODIMP CMemSubPicEx::Unlock(RECT* pDirtyRect)
 		m_rcDirty.right = (m_rcDirty.right + 1) & ~1;
 		[[fallthrough]];
 	case MSP_AYUV:
-		ColorConvInit();
+		ColorConvInit(true);
 		break;
 	}
 

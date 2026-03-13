@@ -26,7 +26,7 @@
 extern int c2y_yb[256];
 extern int c2y_yg[256];
 extern int c2y_yr[256];
-extern void ColorConvInit();
+extern void ColorConvInit(const bool bt601);
 
 union pixrgba {
 	uint32_t u32;
@@ -275,7 +275,7 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 		return;
 	}
 
-	ColorConvInit();
+	ColorConvInit(true);
 
 	BITMAPINFOHEADER bihOut;
 	ExtractBIH(&m_pOutput->CurrentMediaType(), &bihOut);
