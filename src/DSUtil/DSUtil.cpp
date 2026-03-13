@@ -1,6 +1,6 @@
 /*
  * (C) 2003-2006 Gabest
- * (C) 2006-2025 see Authors.txt
+ * (C) 2006-2026 see Authors.txt
  *
  * This file is part of MPC-BE.
  *
@@ -876,32 +876,56 @@ REFERENCE_TIME HMSF2RT(DVD_HMSF_TIMECODE hmsf, double fps)
 	return (REFERENCE_TIME)((((REFERENCE_TIME)hmsf.bHours*60+hmsf.bMinutes)*60+hmsf.bSeconds)*1000+1.0*hmsf.bFrames*1000/fps)*10000;
 }
 
+const BITMAPINFOHEADER* GetBitmapInfoHeader(const AM_MEDIA_TYPE* pmt)
+{
+	if (pmt) {
+		if (pmt->formattype == FORMAT_VideoInfo2) {
+			VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)pmt->pbFormat;
+			return &vih2->bmiHeader;
+		}
+		else if (pmt->formattype == FORMAT_VideoInfo) {
+			VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pmt->pbFormat;
+			return &vih->bmiHeader;
+		}
+		else if (pmt->formattype == FORMAT_MPEGVideo) {
+			MPEG1VIDEOINFO* m1vi = (MPEG1VIDEOINFO*)pmt->pbFormat;
+			return &m1vi->hdr.bmiHeader;
+		}
+		else if (pmt->formattype == FORMAT_MPEG2_VIDEO) {
+			MPEG2VIDEOINFO* m2vi = (MPEG2VIDEOINFO*)pmt->pbFormat;
+			return &m2vi->hdr.bmiHeader;
+		}
+		else if (pmt->formattype == FORMAT_DiracVideoInfo) {
+			DIRACINFOHEADER* dih = (DIRACINFOHEADER*)pmt->pbFormat;
+			return &dih->hdr.bmiHeader;
+		}
+	}
+
+	return nullptr;
+}
+
 bool ExtractBIH(const AM_MEDIA_TYPE* pmt, BITMAPINFOHEADER* bih)
 {
 	if (pmt && bih) {
-		memset(bih, 0, sizeof(*bih));
-
-		if (pmt->formattype == FORMAT_VideoInfo2) {
-			VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)pmt->pbFormat;
-			memcpy(bih, &vih2->bmiHeader, sizeof(BITMAPINFOHEADER));
+		if (const BITMAPINFOHEADER* pmtbih = GetBitmapInfoHeader(pmt)) {
+			memcpy(bih, pmtbih, sizeof(BITMAPINFOHEADER));
 			return true;
-		} else if (pmt->formattype == FORMAT_VideoInfo) {
-			VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pmt->pbFormat;
-			memcpy(bih, &vih->bmiHeader, sizeof(BITMAPINFOHEADER));
-			return true;
-		} else if (pmt->formattype == FORMAT_MPEGVideo) {
-			VIDEOINFOHEADER* vih = &((MPEG1VIDEOINFO*)pmt->pbFormat)->hdr;
-			memcpy(bih, &vih->bmiHeader, sizeof(BITMAPINFOHEADER));
-			return true;
-		} else if (pmt->formattype == FORMAT_MPEG2_VIDEO) {
-			VIDEOINFOHEADER2* vih2 = &((MPEG2VIDEOINFO*)pmt->pbFormat)->hdr;
-			memcpy(bih, &vih2->bmiHeader, sizeof(BITMAPINFOHEADER));
-			return true;
-		} else if (pmt->formattype == FORMAT_DiracVideoInfo) {
-			VIDEOINFOHEADER2* vih2 = &((DIRACINFOHEADER*)pmt->pbFormat)->hdr;
-			memcpy(bih, &vih2->bmiHeader, sizeof(BITMAPINFOHEADER));
-			return true;
+		} else {
+			memset(bih, 0, sizeof(*bih));
 		}
+	}
+
+	return false;
+}
+
+bool ExtractBIH(IMediaSample* pMS, BITMAPINFOHEADER* bih)
+{
+	AM_MEDIA_TYPE* pmt = nullptr;
+	pMS->GetMediaType(&pmt);
+	if (pmt) {
+		bool fRet = ExtractBIH(pmt, bih);
+		DeleteMediaType(pmt);
+		return fRet;
 	}
 
 	return false;
@@ -926,19 +950,6 @@ bool ExtractAvgTimePerFrame(const AM_MEDIA_TYPE* pmt, REFERENCE_TIME& rtAvgTimeP
 	}
 
 	return true;
-}
-
-bool ExtractBIH(IMediaSample* pMS, BITMAPINFOHEADER* bih)
-{
-	AM_MEDIA_TYPE* pmt = nullptr;
-	pMS->GetMediaType(&pmt);
-	if (pmt) {
-		bool fRet = ExtractBIH(pmt, bih);
-		DeleteMediaType(pmt);
-		return fRet;
-	}
-
-	return false;
 }
 
 bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, int& arx, int& ary)
@@ -1006,6 +1017,29 @@ bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, int& arx, int& ary)
 	ReduceDim(arx, ary);
 
 	return true;
+}
+
+UINT GetExColorInfo(const AM_MEDIA_TYPE* pmt)
+{
+	if (pmt) {
+		VIDEOINFOHEADER2* pVIH2 = nullptr;
+
+		if (pmt->formattype == FORMAT_VideoInfo2) {
+			pVIH2 = (VIDEOINFOHEADER2*)pmt->pbFormat;
+		}
+		else if (pmt->formattype == FORMAT_MPEG2_VIDEO) {
+			pVIH2 = &((MPEG2VIDEOINFO*)pmt->pbFormat)->hdr;
+		}
+		else if (pmt->formattype == FORMAT_DiracVideoInfo) {
+			pVIH2 = &((DIRACINFOHEADER*)pmt->pbFormat)->hdr;
+		}
+
+		if (pVIH2 && (pVIH2->dwControlFlags & (AMCONTROL_USED | AMCONTROL_COLORINFO_PRESENT))) {
+			return pVIH2->dwControlFlags;
+		}
+	}
+
+	return 0;
 }
 
 bool MakeMPEG2MediaType(CMediaType& mt, BYTE* seqhdr, DWORD len, int w, int h)
