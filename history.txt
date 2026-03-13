@@ -17,3 +17,8 @@ Fixed display of VirtualDub plugin settings.
 Removed support for Avisynth v1.0.
 Fixed saving subtitle search paths in the settings dialog.
 Added the ability to use the '*' symbol for the last folder in the subtitle search path.
+Removed support for RGB555 and RGB565 video.
+Added support for AYUV format.
+Fixed work with top-down and bottom-up bitmaps.
+The "Flip picture vertically" and "Flip subtitles vertically" settings have been removed.
+Added support for Rec.709 (will be used by default if Rec.601 is not recognized).
