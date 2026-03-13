@@ -69,14 +69,15 @@ namespace Plugin
 		CString m_fn;
 
 	protected:
-		float m_fps;
+		float m_fps = -1;
 		CCritSec m_csSubLock;
 		CComPtr<ISubPicQueue> m_pSubPicQueue;
 		CComPtr<ISubPicProvider> m_pSubPicProvider;
-		DWORD_PTR m_SubPicProviderId;
+		DWORD_PTR m_SubPicProviderId = 0;
+		bool m_bt601 = false;
 
 	public:
-		CFilter() : m_fps(-1), m_SubPicProviderId(0) {
+		CFilter() {
 			CAMThread::Create();
 		}
 		virtual ~CFilter() {
@@ -92,18 +93,20 @@ namespace Plugin
 			m_fn = fn;
 		}
 
+		void SetBt601(const bool bt601) {
+			m_bt601 = bt601;
+		}
+
 		bool Render(SubPicDesc& dst, REFERENCE_TIME rt, float fps) {
 			if (!m_pSubPicProvider) {
 				return false;
 			}
 
-			CSize size(dst.w, dst.h);
-
 			if (!m_pSubPicQueue) {
-				CComPtr<ISubPicAllocator> pAllocator = DNew CMemSubPicExAllocator(dst.type, size);
+				CComPtr<ISubPicAllocator> pSubPicAllocator = DNew CMemSubPicExAllocator(CSize(dst.w, dst.h), dst.type, m_bt601);
 
 				HRESULT hr;
-				if (!(m_pSubPicQueue = DNew CSubPicQueueNoThread(false, pAllocator, &hr)) || FAILED(hr)) {
+				if (!(m_pSubPicQueue = DNew CSubPicQueueNoThread(false, pSubPicAllocator, &hr)) || FAILED(hr)) {
 					m_pSubPicQueue.Release();
 					return false;
 				}
@@ -622,6 +625,9 @@ namespace Plugin
 				}
 
 				// Common part
+				const bool bt601 = (dst.w <= 1024 && dst.h <= 576); // TODO: get frame props
+				SetBt601(bt601);
+
 				float fps = m_fps > 0 ? m_fps : (float)vi.fps_numerator / vi.fps_denominator;
 
 				REFERENCE_TIME timestamp;

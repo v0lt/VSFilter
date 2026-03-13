@@ -26,7 +26,6 @@
 extern int c2y_yb[256];
 extern int c2y_yg[256];
 extern int c2y_yr[256];
-extern void ColorConvInit(const bool bt601);
 
 union pixrgba {
 	uint32_t u32;
@@ -277,14 +276,6 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 
 	BITMAPINFOHEADER bihOut;
 	ExtractBIH(&m_pOutput->CurrentMediaType(), &bihOut);
-
-	DXVA2_ExtendedFormat exfmt = {
-		.value = GetExColorInfo(&m_pOutput->CurrentMediaType())
-	};
-	const bool bt601 = (exfmt.VideoTransferMatrix == DXVA2_VideoTransferMatrix_BT601)
-		|| (exfmt.VideoTransferMatrix == DXVA2_VideoTransferMatrix_Unknown && bihOut.biWidth <= 1024 && bihOut.biHeight <= 576);
-
-	ColorConvInit(bt601);
 
 	CStringW msg, tmp;
 

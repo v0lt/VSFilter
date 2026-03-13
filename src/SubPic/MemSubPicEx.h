@@ -48,5 +48,5 @@ class CMemSubPicExAllocator : public CMemSubPicAllocator
 	bool Alloc(bool fStatic, ISubPic** ppSubPic) override;
 
 public:
-	CMemSubPicExAllocator(int alpha_blt_dst_type, SIZE maxsize);
+	CMemSubPicExAllocator(SIZE maxsize, const int alpha_blt_dst_type, const bool bt601);
 };

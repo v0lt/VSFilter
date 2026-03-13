@@ -45,14 +45,8 @@ int y2c_rv[256];
 const int cy_cy = int(255.0/219.0*65536+0.5);
 const int cy_cy2 = int(255.0/219.0*32768+0.5);
 
-bool fColorConvInitOK = false;
-
 void ColorConvInit(const bool bt601)
 {
-	if (fColorConvInitOK) {
-		return;
-	}
-
 	int c2y_cyb;
 	int c2y_cyg;
 	int c2y_cyr;
@@ -106,8 +100,6 @@ void ColorConvInit(const bool bt601)
 		y2c_gv[i] = y2c_cgv*(i-128);
 		y2c_rv[i] = y2c_crv*(i-128);
 	}
-
-	fColorConvInitOK = true;
 }
 
 //
@@ -153,15 +145,14 @@ STDMETHODIMP CMemSubPicEx::Unlock(RECT* pDirtyRect)
 	case MSP_IYUV:
 	case MSP_P010:
 	case MSP_P016:
+		// YUV 4:2:0
 		m_rcDirty.top &= ~1;
 		m_rcDirty.bottom = (m_rcDirty.bottom + 1) & ~1;
 		[[fallthrough]];
 	case MSP_YUY2:
+		// YUV 4:2:2
 		m_rcDirty.left &= ~1;
 		m_rcDirty.right = (m_rcDirty.right + 1) & ~1;
-		[[fallthrough]];
-	case MSP_AYUV:
-		ColorConvInit(true);
 		break;
 	}
 
@@ -565,10 +556,11 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 // CMemSubPicExAllocator
 //
 
-CMemSubPicExAllocator::CMemSubPicExAllocator(int alpha_blt_dst_type, SIZE maxsize)
+CMemSubPicExAllocator::CMemSubPicExAllocator(SIZE maxsize, const int alpha_blt_dst_type, const bool bt601)
 	: CMemSubPicAllocator(maxsize)
 	, m_alpha_blt_dst_type(alpha_blt_dst_type)
 {
+	ColorConvInit(bt601);
 }
 
 // ISubPicAllocatorImpl

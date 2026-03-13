@@ -1063,7 +1063,13 @@ void CDirectVobSubFilter::InitSubPicQueue()
 	m_pTempPicBuff.reset(new(std::nothrow) BYTE[picbufsize]);
 	m_spd.bits = m_pTempPicBuff.get();
 
-	CComPtr<ISubPicAllocator> pSubPicAllocator = DNew CMemSubPicExAllocator(m_spd.type, CSize(m_wout, m_hout));
+	DXVA2_ExtendedFormat exfmt = {
+	.value = GetExColorInfo(&m_pInput->CurrentMediaType())
+	};
+	const bool bt601 = (exfmt.VideoTransferMatrix == DXVA2_VideoTransferMatrix_BT601)
+		|| (exfmt.VideoTransferMatrix == DXVA2_VideoTransferMatrix_Unknown && bihIn.biWidth <= 1024 && bihIn.biHeight <= 576);
+
+	CComPtr<ISubPicAllocator> pSubPicAllocator = DNew CMemSubPicExAllocator(CSize(m_wout, m_hout), m_spd.type, bt601);
 
 	CSize video(bihIn.biWidth, std::abs(bihIn.biHeight));
 	CSize window = video;
