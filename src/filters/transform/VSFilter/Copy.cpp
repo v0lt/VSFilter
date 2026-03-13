@@ -275,10 +275,16 @@ void CDirectVobSubFilter::PrintMessages(BYTE* pOut)
 		return;
 	}
 
-	ColorConvInit(true);
-
 	BITMAPINFOHEADER bihOut;
 	ExtractBIH(&m_pOutput->CurrentMediaType(), &bihOut);
+
+	DXVA2_ExtendedFormat exfmt = {
+		.value = GetExColorInfo(&m_pOutput->CurrentMediaType())
+	};
+	const bool bt601 = (exfmt.VideoTransferMatrix == DXVA2_VideoTransferMatrix_BT601)
+		|| (exfmt.VideoTransferMatrix == DXVA2_VideoTransferMatrix_Unknown && bihOut.biWidth <= 1024 && bihOut.biHeight <= 576);
+
+	ColorConvInit(bt601);
 
 	CStringW msg, tmp;
 
