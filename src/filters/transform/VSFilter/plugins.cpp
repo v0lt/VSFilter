@@ -602,6 +602,53 @@ namespace Plugin
 				catch (const AvisynthError&) {
 					has_at_least_v8 = false;
 				}
+
+				if (has_at_least_v8) {
+					PVideoFrame VFrame;
+					try {
+						VFrame = child->GetFrame(0, env);
+					}
+					catch ([[maybe_unused]] const AvisynthError& e) {
+						env->ThrowError("The first frame was not received.");
+					}
+					auto& avsMap = VFrame->getConstProperties();
+					int numKeys = env->propNumKeys(&avsMap);
+
+					for (int i = 0; i < numKeys; i++) {
+						const char* keyName = env->propGetKey(&avsMap, i);
+						if (keyName) {
+							int64_t val_Int = 0;
+							double val_Float = 0;
+							const char* val_Data = 0;
+							int err = 0;
+							const char keyType = env->propGetType(&avsMap, keyName);
+
+							switch (keyType) {
+							case PROPTYPE_INT:
+								val_Int = env->propGetInt(&avsMap, keyName, 0, &err);
+								if (!err) {
+									if (strcmp(keyName, "_Matrix") == 0) {
+										bool bt601;
+
+										switch (val_Int) {
+										case 0:
+											bt601 = (vi.width <= 1024 && vi.height <= 576);
+										case 5:
+										case 6:
+											bt601 = true;
+											break;
+										default:
+											bt601 = false;
+										}
+
+										SetBt601(bt601);
+									}
+								}
+								break;
+							}
+						}
+					}
+				}
 			}
 
 			PVideoFrame __stdcall GetFrame(int n, IScriptEnvironment* env) {
@@ -625,9 +672,6 @@ namespace Plugin
 				}
 
 				// Common part
-				const bool bt601 = (dst.w <= 1024 && dst.h <= 576); // TODO: get frame props
-				SetBt601(bt601);
-
 				float fps = m_fps > 0 ? m_fps : (float)vi.fps_numerator / vi.fps_denominator;
 
 				REFERENCE_TIME timestamp;
