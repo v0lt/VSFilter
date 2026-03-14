@@ -90,7 +90,6 @@ CVSFilterApp theApp;
 //////////////////////////////////////////////////////////////////////////
 
 const AMOVIESETUP_MEDIATYPE sudPinTypesIn[] = {
-	{&MEDIATYPE_NULL,  &MEDIASUBTYPE_NULL},
 	{&MEDIATYPE_Video, &MEDIASUBTYPE_P010},
 	{&MEDIATYPE_Video, &MEDIASUBTYPE_P016},
 	{&MEDIATYPE_Video, &MEDIASUBTYPE_NV12},
