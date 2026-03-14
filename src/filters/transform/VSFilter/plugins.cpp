@@ -609,6 +609,7 @@ namespace Plugin
 						VFrame = child->GetFrame(0, env);
 					}
 					catch ([[maybe_unused]] const AvisynthError& e) {
+						DLog(L"PClip::GetFrame threw an exception: %s", UTF8orLocalToWStr(e.msg).GetString());
 						env->ThrowError("The first frame was not received.");
 					}
 					auto& avsMap = VFrame->getConstProperties();
@@ -633,6 +634,7 @@ namespace Plugin
 										switch (val_Int) {
 										case 0:
 											bt601 = (vi.width <= 1024 && vi.height <= 576);
+											break;
 										case 5:
 										case 6:
 											bt601 = true;

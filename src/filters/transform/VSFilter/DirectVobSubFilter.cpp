@@ -472,11 +472,8 @@ HRESULT CDirectVobSubFilter::Transform(IMediaSample* pIn)
 		}
 	}
 
-	DXVA2_ExtendedFormat dxvaExtFormat = { 0 };
-	if (mtInput.formattype == FORMAT_VideoInfo2) {
-		VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)mtInput.Format();
-		dxvaExtFormat.value = vih2->dwControlFlags;
-	}
+	DXVA2_ExtendedFormat dxvaExtFormat;
+	dxvaExtFormat.value = GetExColorInfo(&mtInput);
 
 	SubPicDesc spd = m_spd;
 	CComPtr<IMediaSample> pOut;
@@ -698,7 +695,7 @@ HRESULT CDirectVobSubFilter::GetMediaType(int iPosition, CMediaType* pmt)
 		vih2->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_DisplayModeBobOrWeave;
 	}
 
-	if (m_dxvaExtFormat.value && pmt->subtype != MEDIASUBTYPE_RGB32 && pmt->subtype != MEDIASUBTYPE_RGB48) {
+	if (m_dxvaExtFormat.value && vih2->bmiHeader.biCompression != BI_RGB/*&& pmt->subtype != MEDIASUBTYPE_RGB48*/) {
 		vih2->dwControlFlags = m_dxvaExtFormat.value;
 	}
 
@@ -906,8 +903,7 @@ HRESULT CDirectVobSubFilter::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tS
 
 HRESULT CDirectVobSubFilter::CheckInputType(const CMediaType* mtIn)
 {
-	BITMAPINFOHEADER bih;
-	ExtractBIH(mtIn, &bih);
+	auto pBIH = GetBitmapInfoHeader(mtIn);
 
 	CComPtr<IBaseFilter> pFilter;
 
@@ -924,7 +920,7 @@ HRESULT CDirectVobSubFilter::CheckInputType(const CMediaType* mtIn)
 		 || mtIn->subtype == MEDIASUBTYPE_RGB32
 		 || mtIn->subtype == MEDIASUBTYPE_RGB24)
 		&& (mtIn->formattype == FORMAT_VideoInfo || mtIn->formattype == FORMAT_VideoInfo2)
-		&& bih.biWidth > 0 && bih.biHeight != 0
+		&& pBIH->biWidth > 0 && pBIH->biHeight != 0
 		? S_OK
 		: VFW_E_TYPE_NOT_ACCEPTED;
 }
@@ -2200,11 +2196,9 @@ void CDirectVobSubFilter::SetSubtitle(ISubStream* pSubStream, bool fApplyDefStyl
 			pRTS->Deinit();
 		}
 
-		const CMediaType& mt = m_pOutput->CurrentMediaType();
-		DXVA2_ExtendedFormat extFormat; extFormat.value = 0;
-		if (mt.formattype == FORMAT_VideoInfo2) {
-			extFormat.value = ((VIDEOINFOHEADER2*)mt.Format())->dwControlFlags;
-		}
+		DXVA2_ExtendedFormat extFormat;
+		extFormat.value = GetExColorInfo(&m_pOutput->CurrentMediaType());
+
 		CString yuvMatrix = extFormat.VideoTransferMatrix == DXVA2_VideoTransferMatrix_BT601 ? L"601" : L"709";
 		CString inputRange = extFormat.NominalRange == DXVA2_NominalRange_Normal ? L"PC" : L"TV";
 		CString outpuRange(L"PC");
