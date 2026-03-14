@@ -903,26 +903,18 @@ HRESULT CDirectVobSubFilter::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tS
 
 HRESULT CDirectVobSubFilter::CheckInputType(const CMediaType* mtIn)
 {
-	auto pBIH = GetBitmapInfoHeader(mtIn);
+	if (mtIn->majortype == MEDIATYPE_Video && (mtIn->formattype == FORMAT_VideoInfo || mtIn->formattype == FORMAT_VideoInfo2)) {
+		auto pBIH = GetBitmapInfoHeader(mtIn);
+		if (pBIH && pBIH->biWidth > 0 && pBIH->biHeight != 0) {
+			for (const auto& vformat : VSFilterDefaultFormats) {
+				if (mtIn->subtype == *vformat.subtype) {
+					return S_OK;
+				}
+			}
+		}
+	}
 
-	CComPtr<IBaseFilter> pFilter;
-
-	return mtIn->majortype == MEDIATYPE_Video
-		&& (mtIn->subtype == MEDIASUBTYPE_P016
-		 || mtIn->subtype == MEDIASUBTYPE_P010
-		 || mtIn->subtype == MEDIASUBTYPE_NV12
-		 || mtIn->subtype == MEDIASUBTYPE_YV12
-		 || mtIn->subtype == MEDIASUBTYPE_I420
-		 || (mtIn->subtype == MEDIASUBTYPE_IYUV && FAILED(m_pGraph->FindFilterByName(L"Lentoid HEVC Decoder", &pFilter)))
-		 || mtIn->subtype == MEDIASUBTYPE_YUY2
-		 || mtIn->subtype == MEDIASUBTYPE_AYUV
-		 || mtIn->subtype == MEDIASUBTYPE_ARGB32
-		 || mtIn->subtype == MEDIASUBTYPE_RGB32
-		 || mtIn->subtype == MEDIASUBTYPE_RGB24)
-		&& (mtIn->formattype == FORMAT_VideoInfo || mtIn->formattype == FORMAT_VideoInfo2)
-		&& pBIH->biWidth > 0 && pBIH->biHeight != 0
-		? S_OK
-		: VFW_E_TYPE_NOT_ACCEPTED;
+	return VFW_E_TYPE_NOT_ACCEPTED;
 }
 
 HRESULT CDirectVobSubFilter::CheckOutputType(const CMediaType& mtOut)

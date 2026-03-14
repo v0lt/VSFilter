@@ -36,6 +36,8 @@ struct SystrayIconData {
 	bool fRunOnce, fShowIcon;
 };
 
+constexpr VFormatDesc VFormat_I420 = { L"I420", &MEDIASUBTYPE_I420, FCC('I420'), Cm_YUV420, 1, 3, 8 }; // same as 'IYUV'
+
 static const VFormatDesc VSFilterDefaultFormats[] = {
 	VFormat_P010,
 	VFormat_P016,
@@ -43,7 +45,7 @@ static const VFormatDesc VSFilterDefaultFormats[] = {
 	VFormat_YV12,
 	VFormat_YUY2,
 	VFormat_IYUV,
-	VFormat_YV24,
+	VFormat_I420,
 	VFormat_AYUV,
 	VFormat_ARGB32,
 	VFormat_RGB32,
