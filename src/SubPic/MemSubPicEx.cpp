@@ -357,23 +357,34 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 			}
 			break;
 		case MSP_RGB32:
-		case MSP_AYUV:
-			for (ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
+			for (int j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
 				const uint32_t* s2 = (uint32_t*)s;
 				const uint32_t* s2end = s2 + w;
 				uint32_t* d2 = (uint32_t*)d;
 
 				for (; s2 < s2end; s2++, d2++) {
-					uint32_t a = *s2 >> 24;
-					if (a < 0xff) {
-#ifdef _WIN64
-						uint32_t ia = 256-a;
-						*d2 = ((((*d2&0x00ff00ff)*a)>>8) + (((*s2&0x00ff00ff)*ia)>>8)&0x00ff00ff)
-							| ((((*d2&0x0000ff00)*a)>>8) + (((*s2&0x0000ff00)*ia)>>8)&0x0000ff00);
-#else
-						*d2 = ((((*d2&0x00ff00ff)*a)>>8) + (*s2&0x00ff00ff)&0x00ff00ff)
-							| ((((*d2&0x0000ff00)*a)>>8) + (*s2&0x0000ff00)&0x0000ff00);
-#endif
+					uint32_t alpha = *s2 >> 24;
+					if (alpha < 0xff) {
+						uint32_t rb = (*s2 & 0x00FF00FF) + ((alpha * (*d2 & 0x00FF00FF)) >> 8);
+						uint32_t g  = (*s2 & 0x0000FF00) + ((alpha * (*d2 & 0x0000FF00)) >> 8);
+						*d2 = (rb & 0x00FF00FF) + (g & 0x0000FF00);
+					}
+				}
+			}
+			break;
+		case MSP_AYUV:
+			for (int j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
+				const uint32_t* s2 = (uint32_t*)s;
+				const uint32_t* s2end = s2 + w;
+				uint32_t* d2 = (uint32_t*)d;
+
+				for (; s2 < s2end; s2++, d2++) {
+					uint32_t alpha = *s2 >> 24;
+					if (alpha < 0xff) {
+						uint32_t inv_alpha = 256 - alpha;
+						uint32_t rb = (inv_alpha * (*s2 & 0x00FF00FF) + alpha * (*d2 & 0x00FF00FF)) >> 8;
+						uint32_t g  = (inv_alpha * (*s2 & 0x0000FF00) + alpha * (*d2 & 0x0000FF00)) >> 8;
+						*d2 = (rb & 0x00FF00FF) + (g & 0x0000FF00);
 					}
 				}
 			}
