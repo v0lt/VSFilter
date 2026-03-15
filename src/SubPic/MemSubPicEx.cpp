@@ -366,7 +366,7 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 				for (; s2 < s2end; s2++, d2++) {
 					uint32_t a = *s2 >> 24;
 					if (a < 0xff) {
-#if 0
+#ifdef _WIN64
 						uint32_t ia = 256-a;
 						*d2 = ((((*d2&0x00ff00ff)*a)>>8) + (((*s2&0x00ff00ff)*ia)>>8)&0x00ff00ff)
 							| ((((*d2&0x0000ff00)*a)>>8) + (((*s2&0x0000ff00)*ia)>>8)&0x0000ff00);
