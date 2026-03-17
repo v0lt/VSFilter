@@ -340,18 +340,20 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 			break;
 		
 		case MSP_RGBA:
-			for (ptrdiff_t j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
-				const BYTE* s2 = s;
-				const BYTE* s2end = s2 + w * 4;
-				DWORD* d2 = (DWORD*)d;
-				for (; s2 < s2end; s2 += 4, d2++) {
-					if (s2[3] < 0xff) {
-						DWORD bd =0x00000100 -( (DWORD) s2[3]);
-						DWORD B = ((*((DWORD*)s2)&0x000000ff)<<8)/bd;
-						DWORD V = ((*((DWORD*)s2)&0x0000ff00)/bd)<<8;
-						DWORD R = (((*((DWORD*)s2)&0x00ff0000)>>8)/bd)<<16;
+			for (int j = 0; j < h; j++, s += src.pitch, d += dst.pitch) {
+				const uint32_t* s2 = (uint32_t*)s;
+				const uint32_t* s2end = s2 + w;
+				uint32_t* d2 = (uint32_t*)d;
+
+				for (; s2 < s2end; s2++, d2++) {
+					uint32_t alpha = *s2 >> 24;
+					if (alpha < 0xff) {
+						uint32_t inv_alpha = 256 - alpha;
+						uint32_t B = ((*s2 & 0x000000ff) << 8) / inv_alpha;
+						uint32_t V = ((*s2 & 0x0000ff00) / inv_alpha) << 8;
+						uint32_t R = (((*s2 & 0x00ff0000) >> 8) / inv_alpha) << 16;
 						*d2 = B | V | R
-							| (0xff000000-(*((DWORD*)s2)&0xff000000))&0xff000000;
+							| (0xff000000 - (*s2 & 0xff000000)) & 0xff000000;
 					}
 				}
 			}
