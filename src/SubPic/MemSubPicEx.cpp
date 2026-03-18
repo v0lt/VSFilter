@@ -349,11 +349,11 @@ STDMETHODIMP CMemSubPicEx::AlphaBlt(RECT* pSrc, RECT* pDst, SubPicDesc* pTarget)
 					uint32_t alpha = *s2 >> 24;
 					if (alpha < 0xff) {
 						uint32_t inv_alpha = 256 - alpha;
-						uint32_t B = ((*s2 & 0x000000ff) << 8) / inv_alpha;
-						uint32_t V = ((*s2 & 0x0000ff00) / inv_alpha) << 8;
+						uint32_t B =  ((*s2 & 0x000000ff) << 8) / inv_alpha;
+						uint32_t V =  ((*s2 & 0x0000ff00) / inv_alpha) << 8;
 						uint32_t R = (((*s2 & 0x00ff0000) >> 8) / inv_alpha) << 16;
 						*d2 = B | V | R
-							| (0xff000000 - (*s2 & 0xff000000)) & 0xff000000;
+							| (0xff000000 - (*s2 & 0xff000000));
 					}
 				}
 			}
