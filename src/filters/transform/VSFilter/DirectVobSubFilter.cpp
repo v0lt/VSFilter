@@ -305,12 +305,6 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 			BitBltYUV420P(w, h, pOut, pOutU, pOutV, bihOut.biWidth, pIn, pInU, pInV, pitchIn);
 		} else if(bihOut.biCompression == FCC('NV12')) {
 			BitBltYUV420PtoNV12(w, h, pOut, pOutU, pOutV, bihOut.biWidth, pIn, pInU, pInV, pitchIn);
-		} else if (bihOut.biCompression == BI_RGB) {
-			if (!BitBltYUV420PtoRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pIn, pInU, pInV, pitchIn)) {
-				for (int y = 0; y < h; y++, pOut += pitchOut) {
-					memset_u32(pOut, 0, pitchOut);
-				}
-			}
 		}
 	}
 	else if ((subtype == MEDIASUBTYPE_P010 || subtype == MEDIASUBTYPE_P016)
@@ -323,16 +317,8 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 		// We currently don't support outputting NV12 input to something other than NV12
 		::CopyPlane(abs_h * 3 / 2, pOut, bihOut.biWidth, pIn, pitchIn);
 	}
-	else if (subtype == MEDIASUBTYPE_YUY2) {
-		if (bihOut.biCompression == FCC('YUY2')) {
-			::CopyPlane(abs_h, pOut, bihOut.biWidth * 2, pIn, pitchIn);
-		} else if (bihOut.biCompression == BI_RGB) {
-			if (!BitBltYUY2toRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pInYUV[0], pitchIn)) {
-				for (int y = 0; y < h; y++, pOut += pitchOut) {
-					memset_u32(pOut, 0, pitchOut);
-				}
-			}
-		}
+	else if (subtype == MEDIASUBTYPE_YUY2 && bihOut.biCompression == FCC('YUY2')) {
+		::CopyPlane(abs_h, pOut, bihOut.biWidth * 2, pIn, pitchIn);
 	}
 	else if (subtype == MEDIASUBTYPE_AYUV && bihOut.biCompression == FCC('AYUV')) {
 		::CopyPlane(abs_h, pOut, bihOut.biWidth * 4, pIn, pitchIn);
@@ -950,26 +936,16 @@ HRESULT CDirectVobSubFilter::DoCheckTransform(const CMediaType* mtIn, const CMed
 				&& mtOut->subtype != MEDIASUBTYPE_NV12
 				&& mtOut->subtype != MEDIASUBTYPE_I420
 				&& mtOut->subtype != MEDIASUBTYPE_IYUV
-				&& mtOut->subtype != MEDIASUBTYPE_YUY2
-				&& mtOut->subtype != MEDIASUBTYPE_ARGB32
-				&& mtOut->subtype != MEDIASUBTYPE_RGB32
-				&& mtOut->subtype != MEDIASUBTYPE_RGB24) {
+				&& mtOut->subtype != MEDIASUBTYPE_YUY2) {
 			return VFW_E_TYPE_NOT_ACCEPTED;
 		}
 	}
 	else if (mtIn->subtype == MEDIASUBTYPE_P010
 			|| mtIn->subtype == MEDIASUBTYPE_P016
 			|| mtIn->subtype == MEDIASUBTYPE_NV12
+			|| mtIn->subtype == MEDIASUBTYPE_YUY2
 			|| mtIn->subtype == MEDIASUBTYPE_AYUV) {
 		if (mtIn->subtype != mtOut->subtype) {
-			return VFW_E_TYPE_NOT_ACCEPTED;
-		}
-	}
-	else if (mtIn->subtype == MEDIASUBTYPE_YUY2) {
-		if (mtOut->subtype != MEDIASUBTYPE_YUY2
-				&& mtOut->subtype != MEDIASUBTYPE_ARGB32
-				&& mtOut->subtype != MEDIASUBTYPE_RGB32
-				&& mtOut->subtype != MEDIASUBTYPE_RGB24) {
 			return VFW_E_TYPE_NOT_ACCEPTED;
 		}
 	}

@@ -79,41 +79,6 @@ bool BitBltYUV420PtoNV12(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int d
 	return true;
 }
 
-bool BitBltYUV420PtoRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
-{
-	const VDPixmap srcbm = {
-		.data   = srcy,
-		.w      = w,
-		.h      = h,
-		.pitch  = srcpitch,
-		.format = nsVDPixmap::kPixFormat_YUV420_Planar,
-		.data2  = srcu,
-		.pitch2 = srcpitch/2,
-		.data3  = srcv,
-		.pitch3 = srcpitch/2
-	};
-
-	VDPixmap dstpxm = {
-		.data   = dst + dstpitch * (h - 1),
-		.w      = w,
-		.h      = h,
-		.pitch  = -dstpitch
-	};
-
-	switch(dbpp) {
-	case 24:
-		dstpxm.format = nsVDPixmap::kPixFormat_RGB888;
-		break;
-	case 32:
-		dstpxm.format = nsVDPixmap::kPixFormat_XRGB8888;
-		break;
-	default:
-		VDASSERT(false);
-	}
-
-	return VDPixmapBlt(dstpxm, srcbm);
-}
-
 bool BitBltYUV420PtoYUY2(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
 {
 	BYTE* src[3] = { srcy, srcu, srcv };
@@ -210,37 +175,4 @@ bool BitBltRGBStretch(int dstw, int dsth, BYTE* dst, int dstpitch, int dbpp, int
 	}
 
 	return VDPixmapResample(dstpxm, srcbm, IVDPixmapResampler::kFilterPoint);
-}
-
-bool BitBltYUY2toRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* src, int srcpitch)
-{
-	if(srcpitch == 0) srcpitch = w;
-
-	const VDPixmap srcbm = {
-		.data   = src,
-		.w      = w,
-		.h      = h,
-		.pitch  = srcpitch,
-		.format = nsVDPixmap::kPixFormat_YUV422_YUYV
-	};
-
-	VDPixmap dstpxm = {
-		.data   = dst + dstpitch * (h - 1),
-		.w      = w,
-		.h      = h,
-		.pitch  = -dstpitch
-	};
-
-	switch(dbpp) {
-	case 24:
-		dstpxm.format = nsVDPixmap::kPixFormat_RGB888;
-		break;
-	case 32:
-		dstpxm.format = nsVDPixmap::kPixFormat_XRGB8888;
-		break;
-	default:
-		VDASSERT(false);
-	}
-
-	return VDPixmapBlt(dstpxm, srcbm);
 }
