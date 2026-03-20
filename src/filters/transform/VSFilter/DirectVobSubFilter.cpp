@@ -295,13 +295,7 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 
 		ASSERT(w <= abs(pitchIn));
 
-		if (bihOut.biCompression == FCC('YUY2')) {
-			if (!fInterlaced) {
-				BitBltYUV420PtoYUY2(w, h, pOut, bihOut.biWidth * 2, pIn, pInU, pInV, pitchIn);
-			} else {
-				BitBltYUV420PtoYUY2Interlaced(w, h, pOut, bihOut.biWidth * 2, pIn, pInU, pInV, pitchIn);
-			}
-		} else if (bihOut.biCompression == FCC('I420') || bihOut.biCompression == FCC('IYUV') || bihOut.biCompression == FCC('YV12')) {
+		if (bihOut.biCompression == FCC('I420') || bihOut.biCompression == FCC('IYUV') || bihOut.biCompression == FCC('YV12')) {
 			BitBltYUV420P(w, h, pOut, pOutU, pOutV, bihOut.biWidth, pIn, pInU, pInV, pitchIn);
 		} else if(bihOut.biCompression == FCC('NV12')) {
 			BitBltYUV420PtoNV12(w, h, pOut, pOutU, pOutV, bihOut.biWidth, pIn, pInU, pInV, pitchIn);
@@ -935,8 +929,7 @@ HRESULT CDirectVobSubFilter::DoCheckTransform(const CMediaType* mtIn, const CMed
 		if (mtOut->subtype != MEDIASUBTYPE_YV12
 				&& mtOut->subtype != MEDIASUBTYPE_NV12
 				&& mtOut->subtype != MEDIASUBTYPE_I420
-				&& mtOut->subtype != MEDIASUBTYPE_IYUV
-				&& mtOut->subtype != MEDIASUBTYPE_YUY2) {
+				&& mtOut->subtype != MEDIASUBTYPE_IYUV) {
 			return VFW_E_TYPE_NOT_ACCEPTED;
 		}
 	}

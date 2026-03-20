@@ -79,22 +79,6 @@ bool BitBltYUV420PtoNV12(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int d
 	return true;
 }
 
-bool BitBltYUV420PtoYUY2(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
-{
-	BYTE* src[3] = { srcy, srcu, srcv };
-	ConvertI420toYUY2(h, dst, dstpitch, src, srcpitch, false);
-
-	return true;
-}
-
-bool BitBltYUV420PtoYUY2Interlaced(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
-{
-	BYTE* src[3] = { srcy, srcu, srcv };
-	ConvertI420toYUY2(h, dst, dstpitch, src, srcpitch, true);
-
-	return true;
-}
-
 bool BitBltRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* src, int srcpitch, int sbpp)
 {
 	VDPixmap srcbm = {
