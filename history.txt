@@ -22,3 +22,5 @@ Added support for AYUV format.
 Fixed work with top-down and bottom-up bitmaps.
 The "Flip picture vertically" and "Flip subtitles vertically" settings have been removed.
 Added support for Rec.709 (will be used by default if Rec.601 is not recognized).
+Removed YUV to RGB conversion.
+Removed YUV420 to YUY2 conversion.
