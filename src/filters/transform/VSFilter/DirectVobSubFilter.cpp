@@ -250,8 +250,6 @@ STDMETHODIMP CDirectVobSubFilter::NonDelegatingQueryInterface(REFIID riid, void*
 HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int pitchIn, const GUID& subtype, bool fInterlaced)
 {
 	int abs_h = abs(h);
-	BYTE* pInYUV[3] = { pIn, pIn + pitchIn * abs_h, pIn + pitchIn * abs_h + (pitchIn / 2) * (abs_h / 2) };
-
 	BITMAPINFOHEADER bihOut;
 	ExtractBIH(&m_pOutput->CurrentMediaType(), &bihOut);
 
@@ -265,40 +263,27 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 		}
 	}
 
-	if (h < 0) {
-		h = -h;
-		pInYUV[0] += pitchIn * (h - 1);
-		if (subtype == MEDIASUBTYPE_I420 || subtype == MEDIASUBTYPE_IYUV || subtype == MEDIASUBTYPE_YV12) {
-			pInYUV[1] += (pitchIn >> 1) * ((h >> 1) - 1);
-			pInYUV[2] += (pitchIn >> 1) * ((h >> 1) - 1);
-		} else if(subtype == MEDIASUBTYPE_P010 || subtype == MEDIASUBTYPE_P016 || subtype == MEDIASUBTYPE_NV12) {
-			pInYUV[1] += pitchIn * ((h >> 1) - 1);
-		}
-		pitchIn = -pitchIn;
-	}
-
-	if (subtype == MEDIASUBTYPE_I420 || subtype == MEDIASUBTYPE_IYUV || subtype == MEDIASUBTYPE_YV12) {
-		BYTE* pIn  = pInYUV[0];
-		BYTE* pInU = pInYUV[1];
-		BYTE* pInV = pInYUV[2];
-
+	if (subtype == MEDIASUBTYPE_YV12 || subtype == MEDIASUBTYPE_IYUV || subtype == MEDIASUBTYPE_I420) {
+		const BYTE* srcYUV[3] = {
+			pIn,
+			pIn + pitchIn * abs_h,
+			pIn + pitchIn * abs_h + (pitchIn / 2) * (abs_h / 2)
+		};
 		if (subtype == MEDIASUBTYPE_YV12) {
-			std::swap(pInU, pInV);
+			std::swap(srcYUV[1], srcYUV[2]);
 		}
 
-		BYTE* pOutU = pOut + bihOut.biWidth * h;
-		BYTE* pOutV = pOut + bihOut.biWidth * h * 5 / 4;
-
-		if (bihOut.biCompression == FCC('YV12')) {
-			std::swap(pOutU, pOutV);
-		}
-
-		ASSERT(w <= abs(pitchIn));
-
-		if (bihOut.biCompression == FCC('I420') || bihOut.biCompression == FCC('IYUV') || bihOut.biCompression == FCC('YV12')) {
-			BitBltYUV420P(w, h, pOut, pOutU, pOutV, bihOut.biWidth, pIn, pInU, pInV, pitchIn);
-		} else if(bihOut.biCompression == FCC('NV12')) {
-			BitBltYUV420PtoNV12(w, h, pOut, pOutU, pOutV, bihOut.biWidth, pIn, pInU, pInV, pitchIn);
+		switch (bihOut.biCompression) {
+		case FCC('I420'):
+		case FCC('IYUV'):
+			CopyYUV420P(abs_h, pOut, bihOut.biWidth, srcYUV, pitchIn);
+			break;
+		case FCC('YV12'):
+			CopyYUV420PSwapUV(abs_h, pOut, bihOut.biWidth, srcYUV, pitchIn);
+			break;
+		case FCC('NV12'):
+			CopyYUV420PtoNV12(w, abs_h, pOut, bihOut.biWidth, srcYUV, pitchIn);
+			break;
 		}
 	}
 	else if ((subtype == MEDIASUBTYPE_P010 || subtype == MEDIASUBTYPE_P016)
@@ -321,7 +306,7 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 		int sbpp = (subtype == MEDIASUBTYPE_RGB24) ? 24 : 32;
 
 		if (bihOut.biCompression == BI_RGB) {
-			if (!BitBltRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pInYUV[0], pitchIn, sbpp)) {
+			if (!BitBltRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pIn, pitchIn, sbpp)) {
 				for (int y = 0; y < h; y++, pOut += pitchOut) {
 					memset_u32(pOut, 0, pitchOut);
 				}
@@ -929,7 +914,8 @@ HRESULT CDirectVobSubFilter::DoCheckTransform(const CMediaType* mtIn, const CMed
 		if (mtOut->subtype != MEDIASUBTYPE_YV12
 				&& mtOut->subtype != MEDIASUBTYPE_NV12
 				&& mtOut->subtype != MEDIASUBTYPE_I420
-				&& mtOut->subtype != MEDIASUBTYPE_IYUV) {
+				&& mtOut->subtype != MEDIASUBTYPE_IYUV
+				&& mtOut->subtype != MEDIASUBTYPE_YUY2) {
 			return VFW_E_TYPE_NOT_ACCEPTED;
 		}
 	}

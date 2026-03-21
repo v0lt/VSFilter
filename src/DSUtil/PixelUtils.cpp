@@ -41,7 +41,37 @@ void CopyPlane(const UINT lines, BYTE* dst, UINT dst_pitch, const BYTE* src, int
 	}
 }
 
-void CopyI420toNV12(UINT w, UINT h, BYTE* dst, UINT dst_pitch, const BYTE* const src[3], UINT src_pitch)
+void CopyYUV420P(UINT h, BYTE* dst, UINT dst_pitch, const BYTE* const src[3], UINT src_pitch)
+{
+	CopyPlane(h, dst, dst_pitch, src[0], src_pitch); // Y
+	dst += dst_pitch * h;
+
+	h /= 2;
+	src_pitch /= 2;
+	dst_pitch /= 2;
+
+	CopyPlane(h, dst, dst_pitch, src[1], src_pitch);
+	dst += dst_pitch * h;
+
+	CopyPlane(h, dst, dst_pitch, src[2], src_pitch);
+}
+
+void CopyYUV420PSwapUV(UINT h, BYTE* dst, UINT dst_pitch, const BYTE* const src[3], UINT src_pitch)
+{
+	CopyPlane(h, dst, dst_pitch, src[0], src_pitch); // Y
+	dst += dst_pitch * h;
+
+	h /= 2;
+	src_pitch /= 2;
+	dst_pitch /= 2;
+
+	CopyPlane(h, dst, dst_pitch, src[2], src_pitch);
+	dst += dst_pitch * h;
+
+	CopyPlane(h, dst, dst_pitch, src[1], src_pitch);
+}
+
+void CopyYUV420PtoNV12(UINT w, UINT h, BYTE* dst, UINT dst_pitch, const BYTE* const src[3], UINT src_pitch)
 {
 	if (!(dst_pitch % 32) && !(src_pitch % 16)) {
 		const ptrdiff_t srcStride[3] = { src_pitch, src_pitch / 2, src_pitch / 2 };
@@ -74,21 +104,7 @@ void CopyI420toNV12(UINT w, UINT h, BYTE* dst, UINT dst_pitch, const BYTE* const
 	}
 }
 
-void CopyI420toYV12(UINT h, BYTE* dst, UINT dst_pitch, const BYTE* const src[3], UINT src_pitch)
-{
-	CopyPlane(h, dst, dst_pitch, src[0], src_pitch); // Y
-
-	dst += dst_pitch * h;
-	h /= 2;
-	src_pitch /= 2;
-	dst_pitch /= 2;
-	CopyPlane(h, dst, dst_pitch, src[2], src_pitch); // V
-
-	dst += dst_pitch * h;
-	CopyPlane(h, dst, dst_pitch, src[1], src_pitch); // U
-}
-
-void ConvertI420toYUY2(UINT h, BYTE* dst, UINT dst_pitch, const BYTE* const src[3], UINT src_pitch, const bool bInterlaced)
+void ConvertYUV420PtoYUY2(UINT h, BYTE* dst, UINT dst_pitch, const BYTE* const src[3], UINT src_pitch, const bool bInterlaced)
 {
 	const int src_pitch_uv = src_pitch / 2;
 

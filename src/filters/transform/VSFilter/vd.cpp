@@ -57,28 +57,6 @@ void VDCPUTest() {
 	VDFastMemcpyAutodetect();
 }
 
-bool BitBltYUV420P(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
-{
-	CopyPlane(h, dsty, dstpitch, srcy, srcpitch);
-
-	h /= 2;
-	dstpitch /= 2;
-	srcpitch /= 2;
-
-	CopyPlane(h, dstu, dstpitch, srcu, srcpitch);
-	CopyPlane(h, dstv, dstpitch, srcv, srcpitch);
-
-	return true;
-}
-
-bool BitBltYUV420PtoNV12(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
-{
-	BYTE* src[3] = { srcy, srcu, srcv };
-	CopyI420toNV12(w, h, dsty, dstpitch, src, srcpitch);
-
-	return true;
-}
-
 bool BitBltRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* src, int srcpitch, int sbpp)
 {
 	VDPixmap srcbm = {
