@@ -134,6 +134,45 @@ void ShowPPage(IUnknown* pUnk, HWND hParentWnd)
 	}
 }
 
+static void ConvertRGB24toRGB32(const UINT lines, BYTE* dst, UINT dst_pitch, const BYTE* src, int src_pitch)
+{
+	UINT line_pixels = abs(src_pitch) / 3;
+	UINT line_pixels4 = line_pixels & ~(4u - 1);
+
+	for (UINT y = 0; y < lines; ++y) {
+		uint32_t* src32 = (uint32_t*)src;
+		uint32_t* dst32 = (uint32_t*)dst;
+
+		UINT i = 0;
+		for (; i < line_pixels4; i += 4) {
+			uint32_t sa = *src32++;
+			uint32_t sb = *src32++;
+			uint32_t sc = *src32++;
+
+			*dst32++ = sa;
+			*dst32++ = (sa >> 24) | (sb << 8);
+			*dst32++ = (sb >> 16) | (sc << 16);
+			*dst32++ = sc >> 8;
+		}
+
+		if (i < line_pixels) {
+			if (line_pixels & 1) {
+				*dst32 = *src32;
+			}
+			else {
+				uint32_t sa = *src32++;
+				uint32_t sb = *src32;
+
+				*dst32++ = sa;
+				*dst32 = (sa >> 24) | (sb << 8);
+			}
+		}
+
+		src += src_pitch;
+		dst += dst_pitch;
+	}
+}
+
 ////////////////////////////////////////////////////////////////////////////
 //
 // Constructor
@@ -249,19 +288,11 @@ STDMETHODIMP CDirectVobSubFilter::NonDelegatingQueryInterface(REFIID riid, void*
 
 HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int pitchIn, const GUID& subtype, bool fInterlaced)
 {
-	int abs_h = abs(h);
+	const int abs_h = abs(h);
 	BITMAPINFOHEADER bihOut;
 	ExtractBIH(&m_pOutput->CurrentMediaType(), &bihOut);
 
-	int pitchOut = bihOut.biWidth * m_pOutputVFormat->packsize;
-
-	if (bihOut.biCompression == BI_RGB && bihOut.biHeight > 0) {
-		pOut += pitchOut * (h - 1);
-		pitchOut = -pitchOut;
-		if (h < 0) {
-			h = -h;
-		}
-	}
+	const UINT pitchOut = ALIGN(bihOut.biWidth * m_pOutputVFormat->packsize, 4);
 
 	if (subtype == MEDIASUBTYPE_YV12 || subtype == MEDIASUBTYPE_IYUV || subtype == MEDIASUBTYPE_I420) {
 		const BYTE* srcYUV[3] = {
@@ -276,13 +307,13 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 		switch (bihOut.biCompression) {
 		case FCC('I420'):
 		case FCC('IYUV'):
-			CopyYUV420P(abs_h, pOut, bihOut.biWidth, srcYUV, pitchIn);
+			CopyYUV420P(abs_h, pOut, pitchOut, srcYUV, pitchIn);
 			break;
 		case FCC('YV12'):
-			CopyYUV420PSwapUV(abs_h, pOut, bihOut.biWidth, srcYUV, pitchIn);
+			CopyYUV420PSwapUV(abs_h, pOut, pitchOut, srcYUV, pitchIn);
 			break;
 		case FCC('NV12'):
-			CopyYUV420PtoNV12(w, abs_h, pOut, bihOut.biWidth, srcYUV, pitchIn);
+			CopyYUV420PtoNV12(w, abs_h, pOut, pitchOut, srcYUV, pitchIn);
 			break;
 		}
 	}
@@ -290,26 +321,37 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 		&& (bihOut.biCompression == FCC('P010') || bihOut.biCompression == FCC('P016'))) {
 		// We currently don't support outputting P010/P016 input to something other than P010/P016
 		// P010 and P016 share the same memory layout
-		::CopyPlane(abs_h * 3 / 2, pOut, bihOut.biWidth * 2, pIn, pitchIn);
+		::CopyPlane(abs_h * 3 / 2, pOut, pitchOut, pIn, pitchIn);
 	}
 	else if (subtype == MEDIASUBTYPE_NV12 && bihOut.biCompression == FCC('NV12')) {
 		// We currently don't support outputting NV12 input to something other than NV12
-		::CopyPlane(abs_h * 3 / 2, pOut, bihOut.biWidth, pIn, pitchIn);
+		::CopyPlane(abs_h * 3 / 2, pOut, pitchOut, pIn, pitchIn);
 	}
 	else if (subtype == MEDIASUBTYPE_YUY2 && bihOut.biCompression == FCC('YUY2')) {
-		::CopyPlane(abs_h, pOut, bihOut.biWidth * 2, pIn, pitchIn);
+		::CopyPlane(abs_h, pOut, pitchOut, pIn, pitchIn);
 	}
 	else if (subtype == MEDIASUBTYPE_AYUV && bihOut.biCompression == FCC('AYUV')) {
-		::CopyPlane(abs_h, pOut, bihOut.biWidth * 4, pIn, pitchIn);
+		::CopyPlane(abs_h, pOut, pitchOut, pIn, pitchIn);
 	}
-	else if (subtype == MEDIASUBTYPE_ARGB32 || subtype == MEDIASUBTYPE_RGB32 || subtype == MEDIASUBTYPE_RGB24) {
-		int sbpp = (subtype == MEDIASUBTYPE_RGB24) ? 24 : 32;
+	if (bihOut.biCompression == BI_RGB) {
+		if (h < 0 && bihOut.biHeight < 0) {
+			pIn += pitchIn * (abs_h - 1);
+			pitchIn = -pitchIn;
+		}
 
-		if (bihOut.biCompression == BI_RGB) {
-			if (!BitBltRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pIn, pitchIn, sbpp)) {
-				for (int y = 0; y < h; y++, pOut += pitchOut) {
-					memset_u32(pOut, 0, pitchOut);
-				}
+		if (subtype == MEDIASUBTYPE_RGB32 || subtype == MEDIASUBTYPE_ARGB32) {
+			if (bihOut.biBitCount) {
+				::CopyPlane(abs_h, pOut, pitchOut, pIn, pitchIn);
+			}
+		}
+		else if (subtype == MEDIASUBTYPE_RGB24) {
+			switch (bihOut.biBitCount) {
+			case 24:
+				::CopyPlane(abs_h, pOut, pitchOut, pIn, pitchIn);
+				break;
+			case 32:
+				ConvertRGB24toRGB32(abs_h, pOut, pitchOut, pIn, pitchIn);
+				break;
 			}
 		}
 	}
@@ -909,13 +951,12 @@ HRESULT CDirectVobSubFilter::DoCheckTransform(const CMediaType* mtIn, const CMed
 		}
 	}
 	else if (mtIn->subtype == MEDIASUBTYPE_YV12
-			|| mtIn->subtype == MEDIASUBTYPE_I420
-			|| mtIn->subtype == MEDIASUBTYPE_IYUV) {
+			|| mtIn->subtype == MEDIASUBTYPE_IYUV
+			|| mtIn->subtype == MEDIASUBTYPE_I420) {
 		if (mtOut->subtype != MEDIASUBTYPE_YV12
-				&& mtOut->subtype != MEDIASUBTYPE_NV12
-				&& mtOut->subtype != MEDIASUBTYPE_I420
 				&& mtOut->subtype != MEDIASUBTYPE_IYUV
-				&& mtOut->subtype != MEDIASUBTYPE_YUY2) {
+				&& mtOut->subtype != MEDIASUBTYPE_I420
+				&& mtOut->subtype != MEDIASUBTYPE_NV12) {
 			return VFW_E_TYPE_NOT_ACCEPTED;
 		}
 	}
@@ -929,11 +970,15 @@ HRESULT CDirectVobSubFilter::DoCheckTransform(const CMediaType* mtIn, const CMed
 		}
 	}
 	else if (mtIn->subtype == MEDIASUBTYPE_ARGB32
-			|| mtIn->subtype == MEDIASUBTYPE_RGB32
-			|| mtIn->subtype == MEDIASUBTYPE_RGB24) {
+			|| mtIn->subtype == MEDIASUBTYPE_RGB32) {
 		if (mtOut->subtype != MEDIASUBTYPE_ARGB32
-				&& mtOut->subtype != MEDIASUBTYPE_RGB32
-				&& mtOut->subtype != MEDIASUBTYPE_RGB24) {
+				&& mtOut->subtype != MEDIASUBTYPE_RGB32) {
+			return VFW_E_TYPE_NOT_ACCEPTED;
+		}
+	}
+	else if (mtIn->subtype == MEDIASUBTYPE_RGB24) {
+		if (mtOut->subtype != MEDIASUBTYPE_RGB32
+			&& mtOut->subtype != MEDIASUBTYPE_RGB24) {
 			return VFW_E_TYPE_NOT_ACCEPTED;
 		}
 	}
