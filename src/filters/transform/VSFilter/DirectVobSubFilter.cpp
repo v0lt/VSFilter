@@ -340,7 +340,7 @@ HRESULT CDirectVobSubFilter::CopyBuffer(BYTE* pOut, BYTE* pIn, int w, int h, int
 		}
 
 		if (subtype == MEDIASUBTYPE_RGB32 || subtype == MEDIASUBTYPE_ARGB32) {
-			if (bihOut.biBitCount) {
+			if (bihOut.biBitCount == 32) {
 				::CopyPlane(abs_h, pOut, pitchOut, pIn, pitchIn);
 			}
 		}
