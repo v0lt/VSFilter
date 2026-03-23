@@ -78,8 +78,6 @@
     <ClCompile Include="StyleEditorDialog.cpp" />
     <ClCompile Include="Systray.cpp" />
     <ClCompile Include="TextInputPin.cpp" />
-    <ClCompile Include="vd.cpp" />
-    <ClCompile Include="vd_asm.cpp" />
     <ClCompile Include="vfr.cpp" />
     <ClCompile Include="VSFilter.cpp" />
   </ItemGroup>
@@ -104,8 +102,6 @@
     <ClInclude Include="StyleEditorDialog.h" />
     <ClInclude Include="Systray.h" />
     <ClInclude Include="TextInputPin.h" />
-    <ClInclude Include="vd.h" />
-    <ClInclude Include="vd_asm.h" />
     <ClInclude Include="vfr.h" />
     <ClInclude Include="VSFilter.h" />
   </ItemGroup>

@@ -30,7 +30,6 @@
 #include "DSUtil/FileHandle.h"
 #include "DSUtil/FileVersion.h"
 #include "DSUtil/std_helper.h"
-#include "vd.h"
 #include "SubPic/MemSubPicEx.h"
 #include "SubPic/SubPicQueueImpl.h"
 #include "Subtitles/VobSubFile.h"
@@ -232,8 +231,6 @@ CDirectVobSubFilter::CDirectVobSubFilter(LPUNKNOWN punk, HRESULT* phr, const GUI
 	m_frd.RefreshEvent.Create(0, FALSE, FALSE, 0);
 
 	m_hEvtTransform = CreateEventW(nullptr, FALSE, TRUE, nullptr);
-
-	VDCPUTest();
 }
 
 CDirectVobSubFilter::~CDirectVobSubFilter()
